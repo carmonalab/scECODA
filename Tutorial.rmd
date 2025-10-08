@@ -1,0 +1,541 @@
+---
+title: "scECODA tutorial"
+author: "Christian Halter"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+# Load example seurat object
+
+```{r}
+# SeuratData::InstallData("pbmc3k")
+data("pbmc3k")
+pbmc3k <- Seurat::UpdateSeuratObject(pbmc3k)
+head(pbmc3k@meta.data)
+```
+
+
+# Add condition metadata
+The cells of this example dataset are annotated but not assigned to samples or biological conditions.
+To proceed, you'll need to artificially assign them by creating a sample and condition column in the metadata.
+
+```{r pressure, echo=FALSE}
+n_samples <- 40
+n_groups <- 2
+
+pbmc3k$sample_id <- ""
+pbmc3k$sample_id <- rep(x = paste0("sample", seq(n_samples)), length.out = length(pbmc3k$sample_id))
+pbmc3k$condition <- ""
+pbmc3k$condition <- c(rep("condition1", n_samples/n_groups),
+                      rep("condition2", n_samples/n_groups))
+```
+
+
+# Create ecoda object
+You can create an ECODA object from a Seurat or SingleCellExperiment object.
+This will automatically calculate:
+* Cell counts per sample
+* Relative abundance in %
+* Centered log-ratio (CLR) transformed abundance
+
+Now you can visualize how samples group together based on their cell type composition.
+Let's plot a principal component analysis (PCA) plot.
+
+```{r}
+ecoda_object <- create_ecoda_object(
+  pbmc3k,
+  sample_col = "sample_id",
+  celltype_col = "seurat_annotations",
+  get_pb = TRUE
+)
+
+plot_pca(ecoda_object@clr, labels = ecoda_object@metadata$condition, title = "PCA cell type composition")
+plot_pca(ecoda_object@pb, labels = ecoda_object@metadata$condition, title = "PCA pseudobulk")
+```
+
+
+```{r}
+#' Augment a Seurat object by multiplying cells based on BOTH condition and cell type criteria.
+#'
+#' @param seurat_object The Seurat object to modify.
+#' @param condition_column The name of the metadata column containing the overall condition (e.g., "condition").
+#' @param target_condition The specific value in the condition_column to select (e.g., "condition2").
+#' @param celltype_column The name of the metadata column containing the cell type annotation (e.g., "seurat_annotation").
+#' @param target_celltypes A vector of specific cell types to select (e.g., c("CD8 T", "NK")).
+#' @param multiplier The factor by which to multiply the selected cells.
+#' @return A new Seurat object with the augmented cell counts and metadata.
+augment_seurat_condition <- function(
+    seurat_object, 
+    condition_column, 
+    target_condition,
+    celltype_column, 
+    target_celltypes, 
+    multiplier
+) {
+  
+  if (multiplier < 1) {
+    stop("Multiplier must be 1 or greater.")
+  }
+  
+  # --- Input Validation ---
+  if (!(condition_column %in% names(seurat_object@meta.data))) {
+    stop(paste("Condition column '", condition_column, "' not found in Seurat metadata."))
+  }
+  if (!(celltype_column %in% names(seurat_object@meta.data))) {
+    stop(paste("Cell type column '", celltype_column, "' not found in Seurat metadata."))
+  }
+
+  # 1. Identify the cells to be duplicated (Logical AND)
+  original_cell_names <- rownames(seurat_object@meta.data)
+  metadata <- seurat_object@meta.data
+  
+  # Logical vector 1: Cells matching the target condition
+  condition_logic <- metadata[[condition_column]] == target_condition
+  
+  # Logical vector 2: Cells matching ANY of the target cell types
+  celltype_logic <- metadata[[celltype_column]] %in% target_celltypes
+  
+  # Final selection: Cells that satisfy BOTH criteria (logical AND: &)
+  cells_to_copy_logic <- condition_logic & celltype_logic
+  cells_to_copy_names <- original_cell_names[cells_to_copy_logic]
+  
+  
+  if (length(cells_to_copy_names) == 0) {
+    warning(paste0("No cells found matching both '", target_condition, 
+                   "' and any of the specified cell types."))
+    return(seurat_object)
+  }
+
+  # Initial data to start the accumulation
+  augmented_counts <- seurat_object@assays[["RNA"]]@counts
+  augmented_metadata <- metadata
+
+  # 2. Iterate and Duplicate (Multiplier - 1) times
+  # We subset the original data once to ensure we don't accidentally subset the growing augmented data
+  original_counts_to_copy <- augmented_counts[, cells_to_copy_names]
+  original_metadata_to_copy <- augmented_metadata[cells_to_copy_names, ]
+  
+  for (i in 1:(multiplier - 1)) {
+    suffix <- paste0("_", i)
+    
+    # --- Counts Duplication ---
+    new_cell_names_counts <- paste0(cells_to_copy_names, suffix)
+    counts_to_copy <- original_counts_to_copy
+    colnames(counts_to_copy) <- new_cell_names_counts
+    
+    augmented_counts <- cbind(augmented_counts, counts_to_copy)
+
+    # --- Metadata Duplication ---
+    new_cell_names_meta <- paste0(rownames(original_metadata_to_copy), suffix)
+    metadata_to_copy <- original_metadata_to_copy
+    rownames(metadata_to_copy) <- new_cell_names_meta
+    
+    augmented_metadata <- rbind(augmented_metadata, metadata_to_copy)
+  }
+
+  # 3. Create the new Seurat Object
+  new_seurat_object <- Seurat::CreateSeuratObject(
+    counts = augmented_counts,
+    meta.data = augmented_metadata,
+    assay = "RNA"
+  )
+  
+  new_seurat_object@project.name <- paste0(seurat_object@project.name, "_Targeted_Augmented")
+  
+  return(new_seurat_object)
+}
+```
+
+
+```{r}
+# ---------------- Usage Example -----------------
+
+# To multiply CD8 T cells AND NK cells ONLY within "condition2" by 5:
+pbmc3k_DiffAbu <- augment_seurat_condition(
+  seurat_object = pbmc3k,
+  condition_column = "condition",
+  target_condition = "condition2",
+  celltype_column = "seurat_annotations",
+  target_celltypes = c("CD8 T", "NK"),
+  multiplier = 5
+)
+
+# Verification (Optional):
+# Check the cell counts before:
+table(pbmc3k@meta.data$condition, pbmc3k@meta.data$seurat_annotation)
+# Check the cell counts after:
+table(pbmc3k_DiffAbu@meta.data$condition, pbmc3k_DiffAbu@meta.data$seurat_annotations)
+```
+
+
+
+
+As you would expect, the principal component analysis (PCA) shows that the samples of our two conditions do not separate based on cell type composition, the cells were randomly assigned to samples and conditions.
+
+The quantification of sample separation can be quantified with different metrics, for example:
+* Analysis of similarities (ANOSIM)
+* Adjusted rand index (ARI)
+* Modularity score
+All separation metrics show low scores around zero, indicating indeed a random distribution of our samples between conditions.
+
+
+# Separating groups of samples
+Observe what happens if you introduce a differential abundance of CD8 T and NK cells between the two groups.
+
+```{r}
+ecoda_object_DiffAbu <- create_ecoda_object(
+  pbmc3k_DiffAbu,
+  sample_col = "sample_id",
+  celltype_col = "seurat_annotations",
+  get_pb = TRUE
+)
+
+# Plot 2D PCA, showing the two most variable cell types
+plot_pca(
+  ecoda_object_DiffAbu@clr,
+  labels = ecoda_object_DiffAbu@metadata$condition,
+  invisible = "quali",
+  labelsize = 4,
+  n_ct_show = 2,
+  title = "PCA cell type composition\nWith differential abundance"
+)
+plot_pca(ecoda_object_DiffAbu@pb, labels = ecoda_object@metadata$condition, title = "PCA pseudobulk\nWith differential abundance")
+```
+
+```{r}
+library(splatter)
+library(scuttle)
+library(BiocSingular)
+
+vcf <- mockVCF(n.samples = 20)
+gff <- mockGFF()
+
+cell_type_prob <- c(0.01, 0.05, 0.1, 0.3, 0.5) 
+
+params.group <- newSplatPopParams(
+    nCells.sample = TRUE,
+    nCells.shape = 11,
+    nCells.rate = 0.01,
+    
+    # How samples are distributed between conditions
+    condition.prob = c(0.5, 0.5),
+    
+    # How cells are distributed across cell type ("group")
+    group.prob = cell_type_prob,
+    
+    # Cell type similarity parameters
+    similarity.scale = 8,
+    eqtl.group.specific = 0.6,
+    de.prob = 0.5,
+    de.facLoc = 0.5,
+    de.facScale = 0.5,
+    
+    # === FIXES TO PREVENT DIFFERENTIAL EXPRESSION ===
+    # 1. Eliminate standard DE
+    cde.facLoc = 0,
+    cde.facScale = 0,
+    
+    # 2. Eliminate condition-specific eQTL effects
+    eqtl.condition.specific = 0
+)
+
+sim.sc.gr2 <- splatPopSimulate(
+    vcf = vcf,
+    gff = gff,
+    params = params.group,
+    sparsify = FALSE
+)
+
+
+
+
+
+#' Transfer a fraction of cells for specific groups between two conditions.
+#'
+#' @param sce_object The SingleCellExperiment object.
+#' @param transfer_map A named list where names are Group/CellType IDs 
+#'   and values are the fraction (0 to 1) of cells to move.
+#' @param source_cond The condition to move cells FROM (e.g., "Condition1").
+#' @param dest_cond The condition to move cells TO (e.g., "Condition2").
+#' @param sample_col The column defining the sample/batch (usually "Batch").
+#' @param group_col The column defining the cell type (usually "Group").
+#' @param condition_col The column defining the condition (usually "Condition").
+#' @return The SCE object with updated Batch and Condition metadata for moved cells.
+transfer_cells_between_conditions <- function(
+    sce_object, 
+    transfer_map, 
+    source_cond, 
+    dest_cond, 
+    sample_col = "Sample", 
+    group_col = "Group", 
+    condition_col = "Condition"
+) {
+  
+  metadata <- as.data.frame(colData(sce_object))
+  
+  # 1. Identify samples for Source and Destination
+  source_samples <- unique(metadata[[sample_col]][metadata[[condition_col]] == source_cond])
+  dest_samples <- unique(metadata[[sample_col]][metadata[[condition_col]] == dest_cond])
+  
+  if (length(source_samples) == 0 || length(dest_samples) == 0) {
+    stop("Source or Destination condition/samples not found.")
+  }
+  
+  # Initialize new metadata columns (copying original values)
+  new_samples <- as.character(metadata[[sample_col]])
+  new_conditions <- as.character(metadata[[condition_col]])
+  
+  # 2. Iterate through each target Cell Type/Group for transfer
+  for (group_name in names(transfer_map)) {
+    fraction_to_move <- transfer_map[[group_name]]
+    
+    if (fraction_to_move <= 0) next
+    
+    # Get all indices for the current Group/CellType in the Source Condition
+    group_source_indices <- which(
+      metadata[[group_col]] == group_name & 
+      metadata[[condition_col]] == source_cond
+    )
+    
+    if (length(group_source_indices) == 0) next
+    
+    # Calculate the total number of cells of this type to move
+    n_total_to_move <- round(length(group_source_indices) * fraction_to_move)
+    
+    # Randomly select the cells of this group to move (indices in the full dataset)
+    cells_to_move_idx <- sample(group_source_indices, size = n_total_to_move)
+    
+    # 3. Distribute the moved cells across destination samples
+    # Randomly assign each moved cell to a destination batch
+    destination_assignment <- sample(
+      x = dest_samples, 
+      size = n_total_to_move, 
+      replace = TRUE
+    )
+    
+    # 4. Apply the metadata changes
+    if (n_total_to_move > 0) {
+      # Change Batch ID to a random Destination Batch
+      new_samples[cells_to_move_idx] <- destination_assignment
+      
+      # Change Condition ID to the Destination Condition
+      new_conditions[cells_to_move_idx] <- dest_cond
+    }
+  }
+  
+  # 5. Update the SCE object's metadata columns
+  # Use character vectors as requested
+  sce_object[["Sample_Transferred"]] <- new_samples
+  sce_object[["Condition_Transferred"]] <- new_conditions
+  
+  return(sce_object)
+}
+
+# ----------------- USAGE EXAMPLE ------------------
+
+# 1. Define the transfer: Move half of Group 5 cells and half of Group 4 cells 
+#    from Condition1 samples to Condition2 samples.
+transfer_map <- list(
+  "Group1" = 0.5, # Move 50% of Group 1 cells from Cond1 to Cond2
+  "Group2" = 0.5  # Move 50% of Group 2 cells from Cond1 to Cond2
+  # This makes Group 5 relatively depleted in Condition1 and enriched in Condition2.
+)
+
+sim.sc.gr2_transferred <- transfer_cells_between_conditions(
+  sce_object = sim.sc.gr2,
+  transfer_map = transfer_map,
+  source_cond = "Condition1",
+  dest_cond = "Condition2"
+)
+
+
+# 1. Define the transfer: Move half of Group 5 cells and half of Group 4 cells 
+#    from Condition1 samples to Condition2 samples.
+transfer_map <- list(
+  "Group3" = 0.5,
+  "Group4" = 0.5,
+  "Group5" = 0.5
+  # This makes Group 5 relatively depleted in Condition1 and enriched in Condition2.
+)
+
+sim.sc.gr2_transferred <- transfer_cells_between_conditions(
+  sce_object = sim.sc.gr2,
+  transfer_map = transfer_map,
+  source_cond = "Condition2",
+  dest_cond = "Condition1"
+)
+
+
+table(sim.sc.gr2@colData$Sample, sim.sc.gr2@colData$Condition)
+table(sim.sc.gr2_transferred@colData$Sample_Transferred, sim.sc.gr2_transferred@colData$Condition_Transferred)
+
+table(sim.sc.gr2@colData$Sample, sim.sc.gr2@colData$Group)
+table(sim.sc.gr2_transferred@colData$Sample_Transferred, sim.sc.gr2_transferred@colData$Group)
+
+
+
+
+ecoda_object <- create_ecoda_object(
+  sim.sc.gr2,
+  sample_col = "Sample",
+  celltype_col = "Group",
+  get_pb = TRUE
+)
+
+# Plot 2D PCA, showing the two most variable cell types
+plot_pca(
+  ecoda_object@clr,
+  labels = ecoda_object@metadata$Condition,
+  invisible = "quali",
+  labelsize = 4,
+  n_ct_show = 2,
+  title = "PCA cell type composition\nWith differential abundance"
+)
+plot_pca(ecoda_object@pb, labels = ecoda_object@metadata$Condition, title = "PCA pseudobulk\nWith differential abundance")
+
+
+ecoda_object_DiffAbu <- create_ecoda_object(
+  sim.sc.gr2_transferred,
+  sample_col = "Sample_Transferred",
+  celltype_col = "Group",
+  get_pb = TRUE
+)
+
+# Plot 2D PCA, showing the two most variable cell types
+plot_pca(
+  ecoda_object_DiffAbu@clr,
+  labels = ecoda_object_DiffAbu@metadata$Condition_Transferred,
+  invisible = "quali",
+  labelsize = 4,
+  n_ct_show = 2,
+  title = "PCA cell type composition\nWith differential abundance"
+)
+plot_pca(ecoda_object_DiffAbu@pb, labels = ecoda_object_DiffAbu@metadata$Condition_Transferred, title = "PCA pseudobulk\nWith differential abundance")
+
+
+
+```
+
+
+All separation metrics increased and are now close to their maximum value of 1, indicating almost perfect separation of the two groups of samples.
+
+It can be seen that CD8 T and NK cells are significantly higher in the condition2. Interestingly, it can also be seen that all the other cell types seem to be lower abundant, even though their counts were not changed. However, their relative abundance decreased. Remember that parts of a composition are not independent.
+
+```{r}
+plot_clr_boxplot(ecoda_object, group_var = "Condition", title = "CLR Abundance by Cell Type (with Wilcoxon Test)")
+plot_clr_boxplot(ecoda_object_DiffAbu, group_var = "Condition_Transferred", title = "CLR Abundance by Cell Type (with Wilcoxon Test)")
+```
+
+This can also be plotted as stacked bar plots but it is harder to read.
+
+```{r}
+# 1. Plotting Summary by Condition (your original plot)
+plot_freq_barplot(ecoda_object, plot_by = "condition", title = "Mean Relative Abundance by Condition")
+plot_freq_barplot(ecoda_object_DiffAbu, plot_by = "condition", title = "Mean Relative Abundance by Condition")
+
+# 2. Plotting Each Sample Separately (the new request)
+plot_freq_barplot(ecoda_object, plot_by = "sample", title = "Relative Abundance for Each Sample")
+plot_freq_barplot(ecoda_object_DiffAbu, plot_by = "sample", title = "Relative Abundance for Each Sample")
+```
+
+Before you introduced an artificial differential abundance, there was no major correlation between any of the cell types. Afterwards, however, it can be clearly seen that CD8 T and NK cells strongly correlate.
+
+```{r}
+cor_matrix <- cor(ecoda_object@clr, use = "pairwise.complete.obs")
+corrplot(cor_matrix, order = 'AOE' , method = 'shade', diag = FALSE, type = 'lower')
+
+cor_matrix <- cor(ecoda_object_DiffAbu@clr, use = "pairwise.complete.obs")
+corrplot(cor_matrix, order = 'AOE' , method = 'shade', diag = FALSE, type = 'lower')
+```
+
+# Finding highly variable cell types
+In the example above, it is known which cell types are differentially abundant. However, in your dataset you will most likely not know that a priori. One method to identify possibly relevant cell types is to look at their variance across all samples. One would expect that cell types that are differentially abundant between biological groups show increased variance across samples.
+scECODA provides convenient functions calculate and plot cell type variances:
+
+```{r}
+df_var <- get_ct_var(ecoda_object@clr)
+df_var <- get_ct_var(ecoda_object_DiffAbu@clr)
+
+get_hvcs()
+
+varmeanplot()
+
+```
+
+
+ct_vars <- get_ct_var(ecoda_object@clr)
+
+# Plot 3D PCA, interactive with plotly
+plot_pca(
+  ecoda_object@clr,
+  labels = ecoda_object@metadata$condition,
+  plotly_3d = TRUE
+)
+
+# Get the variance per cell type and show mean-variance plot
+ct_vars <- get_ct_var(ecoda_object@clr)
+
+
+
+
+* Variance of each cell type (in CLR)
+* Highly variable cell types (sorted descending by CLR)
+
+
+
+
+
+
+```{r}
+readRDS("data/example_data.rds")
+```
+
+
+
+```{r}
+feat_mat <- get_pb_deseq2(
+  seurat = pbmc3k,
+  sample_col = "sample_id",
+  hvg = NULL,
+  nvar_genes = 2000
+)
+res.pca <- prcomp(feat_mat)
+labels <- c(
+  rep(1, nrow(feat_mat) / 2),
+  rep(2, nrow(feat_mat) / 2)
+)
+factoextra::fviz_pca(
+  res.pca,
+  habillage = labels,
+  # invisible = c("var", "quali"),
+  select.var = list(contrib = 10)
+)
+
+
+library(pheatmap)
+
+df_heatmap <- feat_mat %>%
+  scale(center = TRUE, scale = TRUE) %>%
+  # t() %>%
+  as.data.frame()
+# my_sample_col <- list(
+#   subtype = as.factor(meta$subtype),
+#   dataset = as.factor(meta$source)
+# ) %>% as.data.frame()
+# row.names(my_sample_col) <- colnames(df_heatmap)
+
+pheatmap(
+  df_heatmap,
+  # annotation_col = my_sample_col,
+  # cluster_rows = FALSE,
+  # cluster_cols = FALSE,
+  scale = "none",
+  clustering_method = "ward.D2",
+  show_colnames = FALSE,
+  # cutree_rows = 6,
+  # cutree_cols = 6
+)
+
+```
+
