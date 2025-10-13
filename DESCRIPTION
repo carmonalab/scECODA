@@ -1,14 +1,51 @@
 Package: scECODA
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Title: Single-Cell Compositional Data Analysis
+Version: 1.0
+Authors@R: c(
+    person("Christian", "Halter",
+      email = "Christian.Halter@unil.ch",
+      role = c("aut")),
+    person("Massimo", "Andreatta",
+      email = "Massimo.Andreatta@unige.ch",
+      role = c("aut", "cre"),
+      comment = c(ORCID = '0000-0002-8036-2647')),
+    person("Santiago", "Carmona",
+      email = "Santiago.Carmona@unige.ch",
+      role = c("aut"),
+      comment = c(ORCID = '0000-0002-2495-0671'))
+    )
+Description: The scECODA R package provides a complete workflow for the analysis and visualization of compositional data, primarily focusing on cell type proportions derived from single-cell data. It implements specialized methods, such as the Centered Log-Ratio (CLR) transformation, to properly analyze proportional data while avoiding the biases introduced by the compositional constraint. The package encapsulates data management, transformation, and analysis into a single ECODA S4 object, offering downstream tools for dimensionality reduction via PCA, calculating critical metrics like the Adjusted Rand Index (ARI) and Modularity to quantify sample grouping quality, and generating high-quality visualizations like heatmaps and scatter plots.
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
-Depends: 
-    R (>= 3.5)
+RoxygenNote: 7.3.3
+Depends: R (>= 4.4)
 LazyData: true
+Suggests: 
+    Seurat (>= 5.0.0),
+    SingleCellExperiment (>= 1.26.0)
+Config/testthat/edition: 3
+URL: https://github.com/carmonalab/scECODA
+Imports: 
+    BiocGenerics,
+    cluster,
+    DESeq2,
+    dplyr,
+    factoextra,
+    ggplot2,
+    ggpubr,
+    ggrepel,
+    gtools,
+    igraph,
+    MatrixGenerics,
+    mclust,
+    methods,
+    pheatmap,
+    plotly,
+    RANN,
+    rlang,
+    stringr,
+    SummarizedExperiment,
+    tibble,
+    tidyr,
+    vegan

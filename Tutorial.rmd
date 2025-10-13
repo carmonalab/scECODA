@@ -40,10 +40,6 @@ plot_pca(
 ```
 
 
-```{r}
-plot(ecoda_object@celltype_variances$)
-```
-
 
 
 The quantification of sample separation can be quantified with different metrics, for example:
@@ -163,7 +159,9 @@ plot_heatmap(ecoda_object, label_col = "Tissue")
 # Load example seurat object
 
 ```{r}
-# SeuratData::InstallData("pbmc3k")
+library(SeuratData)
+
+InstallData("pbmc3k")
 data("pbmc3k")
 pbmc3k <- Seurat::UpdateSeuratObject(pbmc3k)
 head(pbmc3k@meta.data)
@@ -183,6 +181,46 @@ pbmc3k$sample_id <- rep(x = paste0("sample", seq(n_samples)), length.out = lengt
 pbmc3k$condition_id <- ""
 pbmc3k$condition_id <- c(rep("condition1", n_samples/n_groups),
                       rep("condition2", n_samples/n_groups))
+
+
+# n_samples <- 40 # Total number of unique samples
+# n_groups <- 3 # Total number of conditions/groups to distribute samples across
+# 
+# 
+# # 1. Create Sample IDs (retains original structure)
+# # This assigns sample1...sample40 repeatedly to every cell.
+# pbmc3k$sample_id <- rep(
+#   x = paste0("sample", seq_len(n_samples)),
+#   length.out = length(pbmc3k$sample_id)
+# )
+# 
+# # 2. Dynamically Assign Conditions to Samples
+# # This logic ensures the n_samples are split as evenly as possible among n_groups.
+# 
+# # Define the condition names (e.g., "condition1", "condition2", ...)
+# condition_names <- paste0("condition", seq_len(n_groups))
+# 
+# # Calculate how many samples get assigned to each group (uses ceiling for even distribution)
+# reps_per_group <- ceiling(n_samples / n_groups)
+# 
+# # Create a condition assignment vector that is exactly n_samples long
+# sample_conditions_vector <- rep(
+#   condition_names,
+#   each = reps_per_group,
+#   length.out = n_samples
+# )
+# 
+# # Create a map to link sample ID strings to their condition strings
+# sample_ids_vector <- paste0("sample", seq_len(n_samples))
+# sample_condition_map <- data.frame(
+#   sample_id = sample_ids_vector,
+#   condition_id_sample = sample_conditions_vector
+# )
+# 
+# # 3. Apply the Condition Map to the Cell-Level Data
+# # Use 'match' to efficiently look up the condition for every cell based on its sample ID.
+# match_indices <- match(pbmc3k$sample_id, sample_condition_map$sample_id)
+# pbmc3k$condition_id <- sample_condition_map$condition_id_sample[match_indices]
 ```
 
 
@@ -289,6 +327,21 @@ plot_varmean(ecoda_object)
 
 
 
+```{r}
+library(scRNAseq)
+all.ds <- surveyDatasets()
+ds <- 1
+sce <- fetchDataset(all.ds@listData[["name"]][ds], all.ds@listData[["version"]][ds])
+
+ecoda_object <- create_ecoda_object(
+  test,
+  sample_col = "sample",
+  celltype_col = "cluster",
+  get_pb = F
+)
+
+plot_pca(ecoda_object@clr, labels = ecoda_object@metadata$condition_id, title = "PCA cell type composition")
+```
 
 
 
