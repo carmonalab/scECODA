@@ -1,9 +1,61 @@
-library(dplyr)
-library(ggplot2)
-library(gtools)
-library(pheatmap)
-library(rlang) # for !!sym() and as_label()
-library(tidyr)
+# Define ECODA object to store data
+
+#' An S4 class to represent a compositional data analysis object (ECODA).
+#'
+#' This class is designed to store various forms of compositional data derived
+#' from cell counts (or similar proportional data), alongside associated metadata,
+#' transformation results, and variability analysis outcomes.
+#'
+#' @slot counts Original cell count data (samples as rows, cell types as columns).
+#' @slot counts_imp Imputed cell count data, typically used to handle zero counts.
+#' @slot freq Relative frequency (percentage) of cell types derived from `counts`.
+#' @slot freq_imp Relative frequency (percentage) derived from `counts_imp`.
+#' @slot clr Centered Log-Ratio transformed data, derived from `freq_imp`.
+#' @slot celltype_variances Data frame detailing the variance metrics for each cell type.
+#' @slot variance_explained Numeric value indicating the total variance captured by
+#'                        highly variable cell types (HVCs).
+#' @slot top_n_hvcs Integer specifying the number of top highly variable cell types selected.
+#' @slot highly_variable_celltypes Character vector of names of the highly variable cell types.
+#' @slot metadata Data frame of sample-level metadata (samples as rows).
+#' @slot pb Data frame of pseudobulk gene expression.
+#' @slot sample_distances Data frame storing calculated distances between samples.
+#'
+#' #' @importFrom methods setClass
+setClass(
+  Class = "ECODA",
+  slots = list(
+    counts = "data.frame",
+    counts_imp = "data.frame",
+    freq = "data.frame",
+    freq_imp = "data.frame",
+    clr = "data.frame",
+    celltype_variances = "data.frame",
+    variance_explained = "numeric",
+    top_n_hvcs = "integer",
+    highly_variable_celltypes = "character",
+    metadata = "data.frame",
+    pb = "data.frame",
+    sample_distances = "data.frame"
+  ),
+  # Define the default values for each slot.
+  prototype = list(
+    counts = NULL,
+    counts_imp = NULL,
+    freq = NULL,
+    freq_imp = NULL,
+    clr = NULL,
+    celltype_variances = NULL,
+    variance_explained = NULL,
+    top_n_hvcs = NULL,
+    highly_variable_celltypes = NULL,
+    metadata = NULL,
+    pb = NULL,
+    sample_distances = NULL
+  )
+)
+
+
+
 
 
 #' Creates an ECODA object from various data types.
@@ -218,8 +270,192 @@ create_ecoda_object_from_counts <- function(counts = NULL,
 
 
 
-# Find highly variable cell types ####
+#' Calculate relative frequencies (percentages) row-wise.
+#'
+#' This function takes a matrix or data frame of counts and transforms each row
+#' (assumed to be a sample or observation) into relative frequencies,
+#' expressing each component as a percentage of the row's total sum.
+#'
+#' @param df A data frame or matrix of counts (samples/observations as rows,
+#'           components as columns). Must contain only numeric, non-negative values.
+#' @return A data frame of the same dimensions, where each row sums to 100.
+#' @export calc_freq
+#' @importFrom base t apply sum as.data.frame
+#' @examples
+#' counts <- data.frame(A = c(10, 50), B = c(90, 50))
+#' calc_freq(counts)
+calc_freq <- function(df) {
+  df <- t(apply(df, 1, function(row) (row / sum(row)) * 100)) %>%
+    as.data.frame()
+  return(df)
+}
 
+
+
+#' Perform the Centered Log-Ratio (CLR) transformation.
+#'
+#' The CLR transformation is a common technique used for compositional data
+#' analysis, mapping the data from the Aitchison simplex to Euclidean space.
+#' It is defined as the log of the ratio between each component and the geometric
+#' mean of all components in that sample. **Note:** This function assumes the input
+#' data is strictly positive (i.e., does not contain zeros). Use an imputation
+#' or pseudocount method prior to this function if zeros are present.
+#'
+#' @param df A data frame or matrix of strictly positive relative frequencies
+#'           or counts (samples/observations as rows, components as columns).
+#' @return A data frame of the same dimensions containing the CLR-transformed values.
+#' @export clr
+#' @importFrom base apply exp mean log as.data.frame
+#' @examples
+#' freq_imp <- data.frame(A = c(10.1, 50.1), B = c(89.9, 49.9))
+#' clr(freq_imp)
+clr <- function(df) {
+  geometric_mean <- apply(df, 1, function(row) exp(mean(log(row))))
+  clr_df <- apply(df, 2, function(row) log(row) - log(geometric_mean)) %>%
+    as.data.frame()
+
+  return(clr_df)
+}
+
+
+
+
+#' Get the cell type counts from a long data frame (e.g. seurat object metadata) where each cell is a row.
+#'
+#' @param sample_col The column that defines the sample ID for each cell
+#' @param celltype_col The column that defines the cell type annotation for each cell
+#'
+#' @return A data frame with samples as rows and cell types as columns,
+#'         containing the count of each cell type per sample.
+#' @export get_celltype_counts
+#' @importFrom base table as.data.frame.matrix
+#' @examples
+#' # Create example data frame
+#' cell_data_df <- data.frame(
+#'   Cell_ID = paste0("C", 1:10),
+#'   Sample_Name = c(rep("S1", 5), rep("S2", 5)),
+#'   Cluster_Annotation = factor(c(
+#'     "B_Cell", "T_Cell", "B_Cell", NA, "T_Cell",
+#'     "T_Cell", "Macrophage", "B_Cell", "T_Cell", "T_Cell"
+#'   ))
+#' )
+#'
+#' # Calculate cell type counts per sample
+#' celltype_counts <- get_celltype_counts(
+#'   cell_data_df = cell_data_df,
+#'   sample_col = "Sample_Name",
+#'   celltype_col = "Cluster_Annotation"
+#' )
+#'
+#' print(celltype_counts)
+#' # Note how the NA cell type count is handled and renamed to "NA".
+get_celltype_counts <- function(cell_data_df,
+                                sample_col,
+                                celltype_col) {
+  cellcount_df <- table(cell_data_df[[sample_col]], cell_data_df[[celltype_col]], useNA = "ifany") %>%
+    as.data.frame.matrix()
+
+  # Check if any name is NA (the special missing value)
+  dim_names <- colnames(cellcount_df)
+  na_index <- is.na(dim_names)
+
+  # Replace the NA entry with the character string "NA"
+  dim_names[na_index] <- "NA"
+
+  # Assign the fixed names back to the table
+  colnames(cellcount_df) <- dim_names
+
+  return(cellcount_df)
+}
+
+
+
+#' Extracts constant metadata for each sample from a cell-level data frame.
+#'
+#' This function identifies columns in a cell-level metadata data frame that
+#' have a **constant** value for all cells belonging to the same sample.
+#' It aggregates this constant information, returning a new data frame where
+#' each row represents a unique sample. Columns that vary within any sample
+#' are excluded from the output.
+#'
+#' @param cell_data_df A data frame containing cell-level metadata.
+#'                     This should include the sample ID column and all
+#'                     potential metadata columns.
+#' @param sample_col A character string specifying the name of the column
+#'                   that defines the unique sample ID for each cell (e.g., "Sample_ID").
+#' @return A new data frame where:
+#'         \itemize{
+#'           \item Each row corresponds to a unique sample from the input data.
+#'           \item The row names are set to the values of the input `sample_col`.
+#'           \item Columns contain only the metadata fields that were constant
+#'                 across all cells within **each** sample. The `sample_col` itself
+#'                 is excluded from the final columns but used for row names.
+#'         }
+#' @importFrom dplyr group_by summarise across everything n_distinct ungroup select where all_of distinct
+#' @importFrom rlang sym
+#' @examples
+#' \dontrun{
+#' # Assuming you have a data frame 'cell_df'
+#' cell_df <- data.frame(
+#'   Cell_ID = paste0("C", 1:10),
+#'   Sample_ID = c(rep("S1", 5), rep("S2", 5)),
+#'   Age = c(rep(30, 5), rep(45, 5)),
+#'   Gender = c(rep("M", 5), rep("F", 5)),
+#'   Cell_Type = c(rep("A", 3), rep("B", 2), rep("A", 3), rep("B", 2))
+#' )
+#'
+#' # The 'Age' and 'Gender' columns are constant within each sample (S1 and S2).
+#' # The 'Cell_ID' and 'Cell_Type' columns vary within sample S1 and/or S2.
+#'
+#' sample_meta <- get_sample_metadata(cell_df, "Sample_ID")
+#' print(sample_meta)
+#' # Output will have 'Age' and 'Gender' as columns, with row names 'S1' and 'S2'.
+#' }
+get_sample_metadata <- function(cell_data_df,
+                                sample_col) {
+  # Step 1: Group the data by `sample_col` and check for uniqueness
+  distinct_counts <- cell_data_df %>%
+    group_by(!!sym(sample_col)) %>%
+    summarise(across(everything(), ~ n_distinct(.x))) %>%
+    ungroup()
+
+  # Step 2: Identify columns that are constant across all samples
+  # The column is considered constant if the max distinct count within that column is 1.
+  constant_cols <- distinct_counts %>%
+    select(where(~ max(.x) == 1)) %>%
+    names()
+
+  # Ensure the sample column itself is not checked for constancy but is included in the final set
+  cols_to_keep <- unique(c(sample_col, constant_cols))
+
+  # Step 3: Select the constant columns and unique rows
+  metadata <- cell_data_df %>%
+    # Select only the relevant constant columns
+    select(all_of(cols_to_keep)) %>%
+    distinct()
+
+  # Step 4: Ensure the result is a data frame using the safe subsetting operator
+  # Set row names to the sample column
+  # Use double-bracket subsetting for extraction, but keep metadata as a data frame.
+  rownames(metadata) <- metadata[[sample_col]]
+
+  # Remove the sample column from the final metadata table
+  # Use safe subsetting to keep the data frame structure (df[, cols] returns a df)
+  cols_to_return <- setdiff(colnames(metadata), sample_col)
+
+  # Ensure the result is a data frame even if only one column is left or if no columns are left (empty df)
+  metadata <- metadata[, cols_to_return, drop = FALSE]
+
+  return(metadata)
+}
+
+
+
+
+
+
+
+# Find highly variable cell types ---------------------------
 
 #' Identifies and stores Highly Variable Cell Types (HVCs) in an ECODA object.
 #'
@@ -541,913 +777,203 @@ plot_varmean <- function(ecoda_object,
 
 
 
-# Plotting functions ####
 
-## Box and bar plots ####
+# Get Pseudobulk and normalize ---------------------------
 
-#' Reshapes ECODA data into a long format for plotting and analysis.
+#' Calculate Pseudobulk from Count Matrix
 #'
-#' This function takes either the relative abundance (\code{freq}) or CLR-transformed
-#' abundance (\code{clr}) matrix from an \code{\link{ECODA}} object, converts it
-#' from a wide (samples x cell types) to a long (sample, celltype, value) format,
-#' and optionally joins it with a specified column from the sample metadata.
+#' This function aggregates single-cell count data into a "pseudobulk" matrix
+#' by summing the counts for all cells belonging to the same sample ID.
+#' It is robust to both dense and sparse count matrices. It also includes
+#' filtering logic to exclude samples that do not meet a minimum cell count threshold.
 #'
-#' @param ecoda_object An initialized \code{\link{ECODA}} object.
-#' @param data_slot Character string specifying the data matrix to use. Must be
-#'                  either \code{"freq"} (for relative abundance) or \code{"clr"}
-#'                  (for CLR-transformed abundance).
-#' @param label_col Character string (optional, default: \code{NULL}). The name of a
-#'                  column in the \code{ecoda_object@metadata} slot to merge into
-#'                  the long data frame (e.g., "Disease_State" or "Batch"). If \code{NULL},
-#'                  only the abundance data and sample/celltype IDs are returned.
+#' @param count_matrix A gene x cell count matrix (can be a dense matrix or sparse Matrix).
+#'                     Gene identifiers should be row names and cell barcodes should be column names.
+#' @param sample_ids A vector of sample identifiers, one for each column (cell) in
+#'                   \code{count_matrix}. The length must equal \code{ncol(count_matrix)}.
+#'                   Must not contain \code{NA} values.
+#' @param min_cells Minimum number of cells required per sample (default: 1).
+#'                  Samples with fewer cells than this threshold will be excluded
+#'                  from the final pseudobulk matrix.
 #'
-#' @return A tidy, long format data frame with columns:
-#'         \itemize{
-#'           \item \code{sample_id}: Sample identifier.
-#'           \item \code{celltype}: Cell type name.
-#'           \item \code{rel_abundance} or \code{clr_abundance}: The quantitative value
-#'                 depending on the chosen \code{data_slot}.
-#'           \item \code{...}: Additional column specified by \code{label_col} (if provided).
-#'         }
-#'
-#' @importFrom base as.data.frame stop ifelse slot slotNames is.null
-#' @importFrom dplyr %>% left_join select
-#' @importFrom tidyr pivot_longer everything
-#' @importFrom tibble rownames_to_column
-#' @importFrom rlang sym
-#'
-#' @export create_long_data
-#'
-#' @seealso \code{\link{ECODA}}
-#'
+#' @return A gene x sample pseudobulk count matrix. The columns correspond to
+#'         the unique sample IDs, and the rows correspond to the genes.
+#' @export calculate_pseudobulk
+#' @importFrom base ncol length any is.na as.factor table names paste droplevels message rowsum t stop
 #' @examples
 #' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object
+#' # Assuming seurat is a loaded Seurat object
+#' pb_seurat <- calculate_pseudobulk(
+#'   count_matrix = seurat[["RNA"]]$counts,
+#'   sample_ids = seurat$sample_id
+#' )
 #'
-#' # 1. Create long data with CLR abundance only
-#' long_clr <- create_long_data(ecoda_obj, data_slot = "clr")
-#'
-#' # 2. Create long data with relative abundance and merge the 'Treatment' metadata column
-#' long_freq_labeled <- create_long_data(
-#'   ecoda_obj,
-#'   data_slot = "freq",
-#'   label_col = "Treatment"
+#' # Assuming sce is a loaded SingleCellExperiment object
+#' pb_sce <- calculate_pseudobulk(
+#'   count_matrix = assay(sce, "counts"),
+#'   sample_ids = colData(sce)$sample_id,
+#'   min_cells = 5 # Example of filtering samples with < 5 cells
 #' )
 #' }
-create_long_data <- function(ecoda_object,
-                             data_slot,
-                             label_col = NULL) {
-  # Ensure the data_slot is valid (freq or clr)
-  if (!(data_slot %in% c("freq", "clr"))) {
-    stop("Invalid data_slot. Must be 'freq' (Relative Abundance) or 'clr' (CLR Abundance).")
+calculate_pseudobulk <- function(count_matrix,
+                                 sample_ids,
+                                 min_cells = 1) {
+  # Input validation
+  if (ncol(count_matrix) != length(sample_ids)) {
+    stop("Length of sample_ids must equal the number of columns in count_matrix")
   }
 
-  # Determine the appropriate value column name based on the slot
-  value_name <- ifelse(data_slot == "freq", "rel_abundance", "clr_abundance")
-
-  # 1. Extract data (either @freq or @clr)
-  data_matrix <- slot(ecoda_object, data_slot)
-  data_df <- as.data.frame(data_matrix) %>%
-    rownames_to_column("sample_id")
-
-  # 2. Reshape the data from wide to long format
-  long_data <- data_df %>%
-    pivot_longer(
-      cols = -sample_id,
-      names_to = "celltype",
-      values_to = value_name
-    )
-
-  # 3. Prepare the metadata (only if label_col is provided)
-  if (!is.null(label_col)) {
-    # --- Check 1: Ensure metadata exists ---
-    if (!("metadata" %in% slotNames(ecoda_object)) || is.null(ecoda_object@metadata)) {
-      stop("label_col was provided but ecoda_object@metadata slot is missing or NULL.")
-    }
-
-    # --- Check 2: Ensure label_col exists in metadata ---
-    meta_colnames <- colnames(ecoda_object@metadata)
-    if (!(label_col %in% meta_colnames)) {
-      stop(paste0("label_col '", label_col, "' not found in ecoda_object@metadata."))
-    }
-
-    metadata_df <- as.data.frame(ecoda_object@metadata) %>%
-      rownames_to_column("sample_id") %>%
-      select(sample_id, !!sym(label_col))
-
-    # 4. Join the long data with the metadata by sample_id
-    plot_data <- long_data %>%
-      left_join(metadata_df, by = "sample_id")
-  } else {
-    # If no label_col, just return the long data without joining metadata
-    plot_data <- long_data
+  if (any(is.na(sample_ids))) {
+    stop("sample_ids contains NA values. Please remove or impute missing values.")
   }
 
-  return(plot_data)
+  # Convert sample_ids to factor for grouping
+  sample_ids <- as.factor(sample_ids)
+
+  # Count cells per sample
+  cells_per_sample <- table(sample_ids)
+
+  # Filter samples with insufficient cells
+  if (min_cells > 1) {
+    valid_samples <- names(cells_per_sample)[cells_per_sample >= min_cells]
+
+    if (length(valid_samples) == 0) {
+      stop(paste("No samples have >=", min_cells, "cells"))
+    }
+
+    # Subset to valid samples
+    keep_cells <- sample_ids %in% valid_samples
+    count_matrix <- count_matrix[, keep_cells, drop = FALSE]
+    sample_ids <- droplevels(sample_ids[keep_cells])
+
+    # Report filtered samples
+    n_filtered <- length(cells_per_sample) - length(valid_samples)
+    if (n_filtered > 0) {
+      message(paste("Filtered out", n_filtered, "sample(s) with <", min_cells, "cells"))
+    }
+  }
+
+  # Aggregate by summing across samples
+  # Note: rowsum works on rows, so we transpose, aggregate, then transpose back
+  pb <- rowsum(t(count_matrix), group = sample_ids)
+  pb <- t(pb) # Transpose back to genes x samples format
+
+  # Report summary
+  message(paste("Pseudobulk matrix created:", nrow(pb), "genes x", ncol(pb), "samples"))
+
+  return(pb)
 }
 
 
 
 
-
-#' Generates a Stacked Bar Plot of Cell Type Relative Abundance.
+#' DESeq2 Normalization of Pseudobulk Data
 #'
-#' This function visualizes the relative abundance (composition) of cell types
-#' across samples or across aggregated groups. It automatically handles data
-#' preparation and ordering based on the provided parameters.
+#' This function normalizes a gene x sample pseudobulk count matrix using the
+#' Variance Stabilizing Transformation (VST) from the \code{DESeq2} package.
+#' It estimates size factors and variance for all genes, performs the VST, and then
+#' subsets the results to include only highly variable genes (HVCs),
+#' either specified by the user or automatically selected based on variance.
 #'
-#' @param ecoda_object An \code{\link{ECODA}} object containing cell type relative
-#'                     frequencies in the \code{freq} slot.
-#' @param label_col Character string (optional, default: \code{NULL}). The name of a
-#'                  column in \code{ecoda_object@metadata} used to define grouping
-#'                  or groups (required if \code{plot_by = "group"}).
-#' @param plot_by Character string (default: \code{"sample"}). Specifies whether
-#'                to plot the relative abundance for each individual sample (\code{"sample"})
-#'                or the average relative abundance aggregated by a group (\code{"group"})
-#'                defined by \code{label_col}.
-#' @param custom_sample_order Character vector (optional, default: \code{NULL}).
-#'                            A vector of sample IDs to enforce a specific order
-#'                            when \code{plot_by = "sample"}. If \code{NULL}, samples
-#'                            are ordered first by \code{label_col} (if provided)
-#'                            and then naturally.
-#' @param title Character string (default: \code{""}). The main title for the plot.
-#' @param facet_by_label_col Logical (default: \code{TRUE}). If \code{TRUE} and
-#'                           \code{plot_by = "sample"}, the plot will be faceted
-#'                           (split) horizontally by the categories in \code{label_col}.
+#' @param pb A gene x sample pseudobulk count matrix (Genes as rows, Samples as columns).
+#'           Must contain non-negative integer counts.
+#' @param metadata A data.frame with sample-level metadata. Row names must exactly
+#'                 match the column names of \code{pb}. The function will reorder
+#'                 the metadata to match \code{pb}.
+#' @param hvg Optional character vector of gene names to use as highly variable genes.
+#'            If provided, only these genes will be returned after VST.
+#' @param nvar_genes Number of top variable genes to select (default: 2000).
+#'                   Only used if \code{hvg = NULL}; the function will select the
+#'                   top \code{nvar_genes} by variance after VST.
 #'
-#' @return A \code{ggplot} object representing the stacked bar plot.
+#' @return A normalized expression matrix (VST-transformed) with **samples as rows**
+#'         and **genes as columns**.
 #'
-#' @importFrom base paste stop unique as.factor factor all match.arg is.null
-#' @importFrom dplyr %>% group_by summarise mutate distinct arrange pull
-#' @importFrom ggplot2 ggplot aes geom_col theme_minimal theme element_text labs facet_grid
-#' @importFrom rlang sym
-#' @importFrom gtools mixedsort
+#' @export deseq2_normalize
 #'
-#' @export plot_freq_barplot
-#'
-#' @seealso \code{\link{create_long_data}}, \code{\link{ECODA}}
+#' @importFrom base all colnames rownames stop paste length warning message t as.data.frame
+#' @importFrom base is.null setdiff min order rowMeans sum seq_len
+#' @importFrom stats formula
+#' @importFrom DESeq2 DESeqDataSetFromMatrix estimateSizeFactors vst
+#' @importFrom SummarizedExperiment assay
+#' @importFrom BiocGenerics counts
+#' @importFrom MatrixGenerics rowVars
 #'
 #' @examples
 #' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object with metadata
+#' # Assuming 'pb' is the pseudobulk matrix and 'metadata' is the sample annotation
 #'
-#' # 1. Plot frequency for every sample, ordered by sample ID:
-#' p1 <- plot_freq_barplot(ecoda_obj)
+#' # 1. Auto-select top 2000 most variable genes after VST
+#' pb_norm_auto <- deseq2_normalize(pb, metadata)
 #'
-#' # 2. Plot frequency for every sample, faceted and ordered by 'Treatment' column:
-#' p2 <- plot_freq_barplot(ecoda_obj, label_col = "Treatment", plot_by = "sample")
-#'
-#' # 3. Plot average frequency aggregated by 'Treatment' group:
-#' p3 <- plot_freq_barplot(ecoda_obj, label_col = "Treatment", plot_by = "group")
-#'
-#' # 4. Plot with a custom order:
-#' custom_order <- c("S2", "S1", "S4", "S3")
-#' p4 <- plot_freq_barplot(ecoda_obj, custom_sample_order = custom_order)
+#' # 2. Use pre-defined set of highly variable genes
+#' my_hvgs <- c("Gene1", "Gene2", "Gene3")
+#' pb_norm_hvg <- deseq2_normalize(pb, metadata, hvg = my_hvgs)
 #' }
-plot_freq_barplot <- function(ecoda_object,
-                              label_col = NULL,
-                              plot_by = c("sample", "group"),
-                              custom_sample_order = NULL,
-                              title = "",
-                              facet_by_label_col = TRUE) {
-  # Use the helper function to get the long data from @freq
-  plot_data <- create_long_data(ecoda_object, data_slot = "freq", label_col = label_col)
+deseq2_normalize <- function(pb,
+                             metadata,
+                             hvg = NULL,
+                             nvar_genes = 2000) {
+  # Check that all samples in pb are in metadata
+  if (!all(colnames(pb) %in% rownames(metadata))) {
+    stop("Not all sample names in pb are found in metadata rownames")
+  }
 
-  plot_by <- match.arg(plot_by, c("sample", "group"))
+  # Reorder metadata to match pb
+  metadata <- metadata[colnames(pb), , drop = FALSE]
 
-  if (plot_by == "group") {
-    if (is.null(label_col)) {
-      stop("label_col must be provided when plot_by = 'group'")
-    }
+  suppressMessages({
+    suppressWarnings({
+      # Create DESeq2 dataset
+      dds <- DESeqDataSetFromMatrix(
+        countData = pb,
+        colData = metadata,
+        design = formula(paste("~ 1"))
+      )
 
-    # Plotting by group
-    plot_df <- plot_data %>%
-      group_by(celltype, !!sym(label_col)) %>%
-      summarise(mean_rel_abund = mean(rel_abundance, na.rm = TRUE), .groups = "drop") %>%
-      mutate(x_var = !!sym(label_col), y_var = mean_rel_abund)
+      # Estimate size factors
+      dds <- estimateSizeFactors(dds)
 
-    # Ensure group is a factor
-    plot_df$x_var <- factor(plot_df$x_var)
-  } else if (plot_by == "sample") {
-    # Plotting by Sample
-    plot_df <- plot_data %>%
-      mutate(x_var = sample_id, y_var = rel_abundance)
+      # Set minimum number of counts per gene for VST
+      nsub <- min(1000, sum(rowMeans(counts(dds, normalized = TRUE)) > 10))
 
-    current_levels <- unique(plot_df$x_var)
+      # Transform counts using variance stabilizing transformation (VST)
+      dds <- vst(dds, blind = TRUE, nsub = nsub)
+      pb_norm <- assay(dds) # Genes x Samples format
 
-    # --- Sample Ordering Logic ---
-    if (!is.null(custom_sample_order)) {
-      if (!all(current_levels %in% custom_sample_order)) {
-        stop("Custom sample order is incomplete or contains unknown sample IDs.")
-      }
-      ordered_levels <- custom_sample_order
-    } else {
-      # DEFAULT: Sort samples by label_col (group) if provided, then naturally
+      # Select highly variable genes
+      if (!is.null(hvg)) {
+        # Use user-provided HVGs
+        message(paste("Using", length(hvg), "user-provided highly variable genes"))
 
-      if (!is.null(label_col)) {
-        # 1. Get a unique list of samples and their corresponding label_col values
-        sample_group_map <- plot_data %>%
-          distinct(sample_id, !!sym(label_col))
+        hvg_available <- hvg[hvg %in% rownames(pb_norm)]
+        hvg_missing <- setdiff(hvg, hvg_available)
 
-        # 2. Order the samples by the group column first (using mixedsort on its values)
-        #    and then by sample_id (using mixedsort on its values).
-        ordered_levels <- sample_group_map %>%
-          mutate(
-            ordered_group = factor(
-              !!sym(label_col),
-              levels = mixedsort(unique(!!sym(label_col))),
-              ordered = TRUE
-            )
-          ) %>%
-          arrange(ordered_group, mixedsort(sample_id)) %>%
-          pull(sample_id)
+        if (length(hvg_missing) > 0) {
+          warning(paste(length(hvg_missing), "genes not found in the data and will be excluded"))
+        }
+
+        if (length(hvg_available) == 0) {
+          stop("None of the provided HVGs are found in the data")
+        }
+
+        pb_norm <- pb_norm[hvg_available, , drop = FALSE]
       } else {
-        # If no label_col, just sort samples naturally by sample_id
-        ordered_levels <- mixedsort(unique(plot_data$sample_id))
+        # Auto-select top variable genes
+        rv <- rowVars(pb_norm)
+        n_genes_to_select <- min(nvar_genes, length(rv))
+        select <- order(rv, decreasing = TRUE)[seq_len(n_genes_to_select)]
+        select <- rownames(pb_norm)[select]
+        pb_norm <- pb_norm[select, , drop = FALSE]
+
+        message(paste("Selected top", nrow(pb_norm), "highly variable genes"))
       }
-    }
+    })
+  })
 
-    # Apply the ordered factor to the x_var column
-    plot_df$x_var <- factor(plot_df$x_var, levels = ordered_levels)
-  }
+  # --- Transpose to Samples x Genes format (REQUIRED FORMAT) ---
+  # Current format: Genes x Samples (pb_norm)
+  pb_norm <- t(pb_norm) # New format: Samples x Genes
 
-  # --- Generate the plot ---
-  p <- ggplot(plot_df, aes(x = x_var, y = y_var, fill = celltype)) +
-    geom_col(position = "stack") +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-      legend.title = element_text(face = "bold")
-    ) +
-    labs(
-      title = title,
-      x = "",
-      y = "Relative Abundance (%)",
-      fill = "Cell Type"
-    )
-
-  if (!is.null(label_col) & plot_by == "sample" & facet_by_label_col) {
-    p <- p +
-      facet_grid(reformulate(label_col), scales = "free_x")
-  }
-
-  return(p)
-}
-
-
-
-
-
-#' Generates Boxplots for CLR-transformed Cell Type Abundances with Optional Group Comparison.
-#'
-#' This function visualizes the distribution of CLR-transformed abundance for each
-#' cell type using boxplots, optionally splitting the data by a sample metadata
-#' column and performing statistical tests for comparison between groups.
-#'
-#' \strong{Statistical Test Logic:}
-#' \itemize{
-#'   \item If the number of groups (\code{label_col} levels) is \strong{2}, the function
-#'         uses the specified \code{stat_method} (default: "wilcox.test") and displays
-#'         pairwise significance labels or stars.
-#'   \item If the number of groups is \strong{3 or more}, and \code{stat_method} is
-#'         "wilcox.test" or "t.test", the function automatically switches to the
-#'         global non-parametric test, \strong{"kruskal.test"}, and displays the
-#'         overall p-value for the comparison across all groups.
-#' }
-#'
-#' @param ecoda_object An \code{\link{ECODA}} object containing the CLR-transformed
-#'                     abundances in the \code{clr} slot.
-#' @param label_col Character string (optional, default: \code{NULL}). The name of a
-#'                  column in \code{ecoda_object@metadata} used to define groups for
-#'                  comparison. If \code{NULL}, a single boxplot is generated per cell type.
-#' @param title Character string (default: \code{""}). The main title for the plot.
-#' @param stat_method Character string (default: \code{"wilcox.test"}). The statistical
-#'                    method used for comparisons between 2 groups (e.g., "t.test",
-#'                    "wilcox.test"). Note: This is overridden by "kruskal.test" for 3+ groups.
-#' @param paired Logical (default: \code{FALSE}). If \code{TRUE}, performs a paired
-#'               statistical test (e.g., paired t-test or paired Wilcoxon test). Only
-#'               applicable for 2-group comparisons.
-#' @param signif_label Character string (default: \code{"signif_label"}). Controls
-#'                     how p-values are displayed for 2-group comparisons (e.g.,
-#'                     "signif_label" for stars, "p.format" for numeric p-value).
-#'
-#' @return A \code{ggplot} object (enhanced by \code{ggpubr}) representing the
-#'         CLR abundance boxplot, including jittered data points and dynamic
-#'         significance information (pairwise stars for 2 groups, overall p-value
-#'         for 3+ groups).
-#'
-#' @importFrom base as.data.frame factor is.null unique length paste warning
-#' @importFrom ggplot2 aes geom_jitter labs theme element_text guides position_jitterdodge
-#' @importFrom ggpubr ggboxplot stat_compare_means
-#' @importFrom stringr str_to_title
-#' @importFrom rlang sym
-#'
-#' @export plot_clr_boxplot
-#'
-#' @seealso \code{\link{create_long_data}}, \code{\link{ECODA}}
-#'
-#' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object with metadata
-#'
-#' # 1. Boxplots for CLR abundance without grouping (no stats calculated):
-#' p1 <- plot_clr_boxplot(ecoda_obj)
-#'
-#' # 2. Boxplots grouped by 'Treatment' (2 groups) and applying Wilcoxon test:
-#' p2 <- plot_clr_boxplot(
-#'   ecoda_obj,
-#'   label_col = "Treatment",
-#'   stat_method = "wilcox.test",
-#'   title = "CLR Abundance by Treatment Group"
-#' )
-#'
-#' # 3. Boxplots grouped by 'Dose' (3+ groups) - automatically uses Kruskal-Wallis:
-#' p3 <- plot_clr_boxplot(
-#'   ecoda_obj,
-#'   label_col = "Dose",
-#'   stat_method = "wilcox.test", # will be overridden by kruskal.test
-#'   title = "CLR Abundance by Dose Group (Kruskal-Wallis)"
-#' )
-#' }
-plot_clr_boxplot <- function(ecoda_object,
-                             label_col = NULL,
-                             title = "",
-                             stat_method = "wilcox.test",
-                             paired = FALSE,
-                             signif_label = "signif_label") {
-  plot_data <- create_long_data(ecoda_object, data_slot = "clr", label_col = label_col)
-
-  # Ensure celltype is a factor for plotting
-  plot_data$celltype <- factor(plot_data$celltype)
-
-  # --- Setup for Plotting ---
-
-  # Determine color mapping for ggboxplot
-  box_color_map <- if (!is.null(label_col)) label_col else "black"
-
-  # Generate the base boxplot
-  p <- ggboxplot(plot_data,
-    x = "celltype",
-    y = "clr_abundance",
-    xlab = "",
-    ylab = "CLR Abundance",
-    outlier.shape = NA,
-    color = box_color_map # Color by group variable or "black"
-  )
-
-  # --- Add Jittered Points and Significance ---
-
-  if (is.null(label_col)) {
-    # SCENARIO 1: No grouping variable provided (Single boxplot per cell type)
-
-    # Add simple jitter (no dodging, color determined by the base 'black' mapping)
-    p <- p + geom_jitter(
-      width = 0.2,
-      size = 1,
-      alpha = 0.6
-    ) +
-      # SUPPRESS THE LEGEND
-      guides(color = "none")
-  } else {
-    # SCENARIO 2: Grouping variable is provided (Comparison between groups)
-
-    # Calculate the number of boxplots for correct jitter-dodging
-    nr_of_boxplots <- length(unique(plot_data[[label_col]]))
-    label_col_sym <- sym(label_col)
-
-    # --- DYNAMIC STATISTICAL TEST SELECTION ---
-    current_stat_method <- stat_method
-
-    if (nr_of_boxplots > 2) {
-      # For 3+ non-parametric groups, use Kruskal-Wallis (overall test)
-      # We only override if the user used a 2-group method like wilcox.test or t.test
-      if (stat_method %in% c("wilcox.test", "t.test")) {
-        current_stat_method <- "kruskal.test"
-        warning(paste0(
-          "stat_method automatically switched from '", stat_method,
-          "' to 'kruskal.test' for multi-group (N=", nr_of_boxplots, ") comparison."
-        ))
-      }
-    }
-    # ---------------------------------------------
-
-    # Add jittered points with dodging
-    p <- p + geom_jitter(
-      mapping = aes(color = !!label_col_sym), # Map color to group
-      position = position_jitterdodge(jitter.width = 1 / nr_of_boxplots),
-      size = 1,
-      alpha = 0.6
-    )
-
-    # Add significance testing: logic changes based on Kruskal-Wallis vs. Pairwise test
-    if (current_stat_method == "kruskal.test") {
-      # Kruskal-Wallis: Overall test (no 'group' aesthetic needed)
-      p <- p + stat_compare_means(
-        method = current_stat_method,
-        label.y.npc = "top", # Place label at the top
-        label.x.npc = "center",
-        label = "p.format" # Show the overall p-value
-      )
-    } else {
-      # Wilcoxon or t.test: Pairwise test (requires 'group' aesthetic)
-      p <- p + stat_compare_means(
-        aes(group = !!label_col_sym),
-        method = stat_method,
-        paired = paired,
-        label = signif_label, # Show significance stars
-        tip.length = 0,
-        hide.ns = TRUE
-      )
-    }
-
-    # Add legend title
-    p <- p + labs(color = str_to_title(label_col))
-  }
-
-  # --- Final Theme and Labels ---
-  p <- p +
-    theme(
-      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, ),
-      legend.title = element_text(face = "bold")
-    ) +
-    labs(title = title)
-
-  return(p)
-}
-
-
-
-## Heatmap ####
-
-#' Generates a Heatmap of CLR-transformed Cell Type Abundances.
-#'
-#' This function visualizes the CLR-transformed abundance matrix after mean-centering,
-#' allowing for clustering of both cell types and samples, and includes
-#' a sample annotation sidebar based on a specified metadata column.
-#' It is important to not re-scale in order to avoid amplifying tiny differences.
-#'
-#' @param ecoda_object An \code{\link{ECODA}} object containing the CLR-transformed
-#'                     abundances in the \code{clr} slot.
-#' @param label_col Character string. The name of the column in \code{ecoda_object@metadata}
-#'                  to use for annotating the samples (columns) of the heatmap.
-#' @param cluster_rows Logical (default: \code{TRUE}). Whether to apply hierarchical
-#'                     clustering to the cell types (rows).
-#' @param cluster_cols Logical (default: \code{TRUE}). Whether to apply hierarchical
-#'                     clustering to the samples (columns).
-#' @param scale Character string (default: \code{"none"}). Method for scaling the
-#'              CLR abundance values within the heatmap. Options include "none",
-#'              "row", or "column". Note: The data is mean-centered before passing
-#'              to \code{pheatmap}, but further scaling is controlled here.
-#' @param clustering_method Character string (default: \code{"ward.D2"}). The clustering
-#'                          method to use for hierarchical clustering. Options are
-#'                          passed directly to \code{hclust} (e.g., "complete", "average", "ward.D2").
-#' @param angle_col Character string (default: \code{"90"}). Angle of the sample
-#'                  labels (columns).
-#' @param ... Additional arguments passed directly to the \code{pheatmap} function.
-#'
-#' @return A \code{pheatmap} object, which is typically visualized automatically
-#'         when called interactively.
-#'
-#' @importFrom base as.data.frame scale t as.factor lapply
-#' @importFrom dplyr %>%
-#' @importFrom pheatmap pheatmap
-#'
-#' @export plot_heatmap
-#'
-#' @seealso \code{\link{ECODA}}, \code{\link{pheatmap}}
-#'
-#' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object with metadata
-#'
-#' # Generate a heatmap clustered by both cell types and samples,
-#' # annotated by the 'Condition' column in the metadata:
-#' p1 <- plot_heatmap(
-#'   ecoda_obj,
-#'   label_col = "Condition",
-#'   main = "CLR Abundance Heatmap",
-#'   fontsize = 8
-#' )
-#'
-#' # Generate a heatmap without clustering the samples:
-#' p2 <- plot_heatmap(
-#'   ecoda_obj,
-#'   label_col = "Batch",
-#'   cluster_cols = FALSE
-#' )
-#' }
-plot_heatmap <- function(ecoda_object,
-                         label_col,
-                         cluster_rows = TRUE,
-                         cluster_cols = TRUE,
-                         scale = "none",
-                         clustering_method = "ward.D2",
-                         angle_col = "90",
-                         ...) {
-  df_heatmap <- ecoda_object@clr %>%
-    scale(center = TRUE, scale = FALSE) %>%
-    t() %>%
-    as.data.frame()
-
-  metadata <- ecoda_object@metadata[, label_col, drop = FALSE]
-  metadata[] <- lapply(metadata, as.factor)
-
-  heatmap <- pheatmap(
-    df_heatmap,
-    annotation_col = metadata,
-    cluster_rows = cluster_rows,
-    cluster_cols = cluster_cols,
-    scale = scale,
-    clustering_method = clustering_method,
-    angle_col = angle_col,
-    ...
-  )
-
-  return(heatmap)
-}
-
-
-
-
-
-
-
-
-## PCA ####
-
-#' @title Plot Principal Component Analysis and Calculate Clustering Scores
-#'
-#' @description
-#' Performs Principal Component Analysis (PCA) on the CLR-transformed abundance
-#' matrix (\code{ecoda_object@clr}) and visualizes the results in 2D or 3D.
-#' It can also calculate and display several metrics to evaluate the separation
-#' of groups defined by \code{label_col}.
-#'
-#' @details
-#' The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess how well
-#' the sample groupings (\code{labels}) align with the underlying data structure
-#' in the feature space.
-#'
-#' @param ecoda_object An \code{\link{ECODA}} object containing the CLR-transformed
-#'                     abundances in the \code{clr} slot.
-#' @param label_col Character string (optional, default: \code{NULL}). The name of a
-#'                  column in \code{ecoda_object@metadata} used to color and group
-#'                  samples in the plot, and for calculating clustering scores.
-#' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
-#'               variables should be scaled to have unit variance before the analysis.
-#' @param pca_dims Integer (optional, default: \code{NULL}). The number of principal
-#'                 components (dimensions) to retain for the PCA calculation and
-#'                 downstream clustering score calculations. If \code{NULL}, all
-#'                 dimensions are retained.
-#' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
-#'              neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN)
-#'              graph construction, required for Modularity score calculation. If
-#'              \code{NULL}, it defaults to \code{max(3, round(sqrt(N)))}, where
-#'              \code{N} is the number of samples.
-#' @param title Character string (optional, default: \code{NULL}). The main title
-#'              for the plot. If clustering scores are calculated, they are appended
-#'              to this title.
-#' @param score_digits Integer (default: \code{3}). The number of decimal places to
-#'                     round the clustering and ANOSIM scores appended to the plot title.
-#' @param cluster_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates
-#'                      the Adjusted Rand Index (ARI) using \code{\link{calc_ari}}.
-#' @param mod_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates the
-#'                  adjusted Modularity score using \code{\link{calc_modularity}}.
-#' @param sil_score Logical (default: \code{FALSE}). If \code{TRUE}, calculates the
-#'                  average Silhouette width using \code{\link{calc_sil}}.
-#' @param anosim_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates
-#'                     the ANOSIM statistic (R) using \code{vegan::anosim}.
-#' @param pointsize Numeric (default: \code{3}). Size of the points in the plot.
-#' @param labelsize Numeric (default: \code{4}). Size of the variable labels in the plot.
-#' @param coord_equal Logical (default: \code{TRUE}). If \code{TRUE}, forces the
-#'                    aspect ratio of the plot to be equal.
-#' @param axes Numeric vector (default: \code{c(1, 2)}). The principal components
-#'             to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).
-#' @param plotly_3d Logical (default: \code{FALSE}). If \code{TRUE}, generates an
-#'                  interactive 3D scatter plot using \code{plotly} (requires \code{pca_dims >= 3}).
-#' @param invisible Character vector (default: \code{c("var", "quali")}). Elements to
-#'                    hide in the 2D plot. Can include "var" (variables/cell types),
-#'                    "ind" (samples), or "quali" (group centroids).
-#' @param n_ct_show Integer (default: \code{Inf}). Number of cell types (variables)
-#'                  to show based on their contribution to the selected axes. Set to
-#'                  \code{Inf} to show all.
-#' @param repel Logical (default: \code{TRUE}). Whether to use \code{ggrepel} to
-#'                prevent label overlap for variable names.
-#'
-#' @return A \code{ggplot} object (2D, via \code{factoextra}) or a \code{plotly}
-#'         object (3D) visualizing the PCA results.
-#'
-#' @importFrom base as.data.frame seq_len nrow round
-#' @importFrom stats prcomp dist hclust cutree
-#' @importFrom utils as.data.frame
-#' @importFrom vegan anosim
-#' @importFrom factoextra fviz_pca
-#' @importFrom plotly plot_ly add_markers add_paths
-#' @importFrom dplyr bind_rows
-#' @importFrom gplots group2NA
-#'
-#' @export plot_pca
-plot_pca <- function(ecoda_object,
-                     label_col = NULL,
-                     scale. = FALSE,
-                     pca_dims = NULL,
-                     knn_k = NULL,
-                     title = NULL,
-                     score_digits = 3,
-                     cluster_score = TRUE,
-                     mod_score = TRUE,
-                     sil_score = FALSE,
-                     anosim_score = TRUE,
-                     pointsize = 3,
-                     labelsize = 4,
-                     coord_equal = TRUE,
-                     axes = c(1, 2),
-                     plotly_3d = FALSE,
-                     invisible = c("var", "quali"),
-                     n_ct_show = Inf,
-                     repel = TRUE) {
-  feat_mat <- ecoda_object@clr
-
-  res.pca <- prcomp(feat_mat, scale. = scale., rank. = pca_dims)
-
-
-  if (!is.null(label_col)) {
-    labels <- ecoda_object@metadata[[label_col]]
-
-    if (anosim_score) {
-      anosim_score <- round(anosim(x = feat_mat, grouping = labels, distance = "euclidean")[["statistic"]], score_digits)
-      title <- paste0(title, "\nANOSIM score: ", anosim_score)
-    }
-    if (cluster_score) {
-      cluster_score <- calc_ari(feat_mat, labels, digits = score_digits)
-      title <- paste0(title, "\nARI: ", cluster_score)
-    }
-    if (mod_score) {
-      mod_score <- calc_modularity(feat_mat, labels, knn_k, digits = score_digits)
-      title <- paste0(title, "\nModularity score: ", mod_score)
-    }
-    if (sil_score) {
-      sil_score <- calc_sil(feat_mat, labels, digits = score_digits)
-      title <- paste0(title, "\nSilhouette score: ", sil_score)
-    }
-  } else {
-    labels <- "none"
-  }
-
-  if (plotly_3d) {
-    df <- as.data.frame(res.pca$x)
-    df$id <- seq_len(nrow(df))
-    df$vs <- factor(labels)
-    ms <- replicate(2, df, simplify = F)
-    ms[[2]]$PC3 <- min(df$PC3)
-    m <- ms %>%
-      bind_rows() %>%
-      group2NA("id", "vs")
-    # Plotting with plotly
-    p <- plot_ly(color = ~vs) %>%
-      add_markers(data = df, x = ~PC1, y = ~PC2, z = ~PC3) %>%
-      add_paths(data = m, x = ~PC1, y = ~PC2, z = ~PC3, opacity = 0.2)
-  } else {
-    if (!is.infinite(n_ct_show) & all(invisible %in% c("var", "quali"))) {
-      invisible <- "quali"
-    }
-
-    p <- fviz_pca(res.pca,
-      axes = axes,
-      habillage = labels,
-      label = "var",
-      pointsize = pointsize,
-      labelsize = labelsize,
-      invisible = invisible,
-      select.var = list(contrib = n_ct_show),
-      repel = repel,
-      geom = "point"
-    ) +
-      ggtitle(title)
-
-    if (!is.null(label_col)) {
-      p <- p + scale_shape_manual(values = rep(19, length(unique(labels))))
-    }
-
-    if (coord_equal) {
-      p <- p + coord_equal()
-    }
-  }
-
-  return(p)
-}
-
-
-
-
-#' Calculate Average Silhouette Width
-#'
-#' Calculates the average silhouette width for a given feature matrix, using pre-defined
-#' cluster assignments (\code{labels}). This metric assesses the quality of the clustering.
-#'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR-transformed
-#'                 abundances or PCA scores) on which the distance calculation is based.
-#' @param labels Vector of factors or character strings. The cluster assignments for
-#'               each row in \code{feat_mat} (i.e., the grouping variable).
-#' @param digits Integer (default: \code{3}). The number of decimal places to round the final score.
-#'
-#' @return A numeric value representing the mean silhouette width, typically ranging
-#'         from -1 (poor clustering) to +1 (excellent clustering).
-#'
-#' @importFrom cluster silhouette
-#' @importFrom stats dist
-#' @importFrom base as.data.frame as.numeric factor mean round
-#'
-#' @export calc_sil
-calc_sil <- function(feat_mat,
-                     labels,
-                     digits = 3) {
-  sils <- silhouette(
-    x = as.numeric(factor(labels)),
-    dist = dist(feat_mat)
-  ) %>%
-    as.data.frame()
-  score <- mean(sils[["sil_width"]])
-  return(round(score, digits))
-}
-
-
-
-#' Calculate Adjusted Modularity Score
-#'
-#' Calculates the Modularity score for a given clustering (\code{labels}) based on
-#' a Shared Nearest Neighbor (SNN) graph constructed from the feature matrix
-#' (\code{feat_mat}). The score is adjusted by the theoretical maximum modularity
-#' for the number of groups to always be between
-#' -0.5 (poor clustering) and +1 (excellent clustering)).
-#'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix used to compute
-#'                 the SNN graph (e.g., CLR abundances).
-#' @param labels Vector of factors or character strings. The cluster assignments for
-#'               each row in \code{feat_mat}.
-#' @param digits Integer (default: \code{3}). The number of decimal places to round the final adjusted score.
-#' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
-#'              neighbors (\code{k}) used for SNN graph construction. If \code{NULL},
-#'              it defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is
-#'              the number of samples.
-#'
-#' @return A numeric value representing the adjusted modularity score.
-#'
-#' @importFrom base unique length round max
-#' @importFrom igraph modularity
-#'
-#' @export calc_modularity
-calc_modularity <- function(feat_mat,
-                            labels,
-                            digits = 3,
-                            knn_k = NULL) {
-  ngroups <- length(unique(labels))
-
-  if (is.null(knn_k)) {
-    knn_k <- max(3, round(sqrt(nrow(feat_mat))))
-  }
-
-  # Create a graph object
-  g <- compute_snn_graph(feat_mat = feat_mat, knn_k = knn_k)
-
-  # Compute modularity
-  modularity_score <- modularity(g, membership = as.numeric(factor(labels)))
-
-  # NOTE:
-  # Maximum modularity depends on the number of groups: max(mod) = 1 - 1 / (number of groups)
-  # see Brandes, Ulrik, et al. On finding graph clusterings with maximum modularity.
-
-  # Adjust modularity score for number of groups
-  maximum_modularity_score <- 1 - (1 / ngroups)
-  adjusted_modularity_score <- modularity_score / maximum_modularity_score
-
-  return(round(adjusted_modularity_score, digits))
-}
-
-
-
-#' Compute K-Nearest Neighbors (KNN)
-#'
-#' Calculates the indices of the K-nearest neighbors for each sample (row) in a
-#' feature matrix using the \code{RANN} package.
-#'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
-#' @param knn_k Integer. The number of neighbors (\code{k}) to return.
-#'
-#' @return A matrix where each row corresponds to a sample and contains the indices
-#'         of its \code{k} nearest neighbors.
-#'
-#' @importFrom RANN nn2
-#' @importFrom base as.matrix
-#'
-#' @export compute_KNN
-compute_KNN <- function(feat_mat, knn_k) {
-  # Compute KNN
-  knn <- nn2(as.matrix(feat_mat), k = knn_k + 1)$nn.idx
-  knn <- knn[, -1] # Remove self-neighbor
-  return(knn)
-}
-
-
-
-#' Compute Shared Nearest Neighbor (SNN) Graph
-#'
-#' Constructs a graph where nodes are samples and edges are weighted by the number
-#' of shared nearest neighbors (SNN) between them. This graph is used for community
-#' detection or, in this context, modularity calculation.
-#'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
-#' @param knn_k Integer. The number of nearest neighbors (\code{k}) used for SNN calculation.
-#'
-#' @return An \code{igraph} graph object where edge weights represent shared neighbors.
-#'
-#' @importFrom igraph graph_from_adjacency_matrix
-#' @importFrom base matrix seq_len nrow intersect
-#'
-#' @export compute_snn_graph
-compute_snn_graph <- function(feat_mat,
-                              knn_k) {
-  knn <- compute_KNN(feat_mat = feat_mat, knn_k = knn_k)
-
-  # Initialize adjacency matrix
-  n <- nrow(as.matrix(feat_mat))
-  adj_matrix <- matrix(0, n, n)
-
-  # Count shared neighbors
-  for (i in seq_len(n)) {
-    for (j in knn[i, ]) {
-      shared_neighbors <- length(intersect(knn[i, ], knn[j, ]))
-      adj_matrix[i, j] <- shared_neighbors
-      adj_matrix[j, i] <- shared_neighbors # Ensure symmetry
-    }
-  }
-
-  # Create graph object
-  g <- graph_from_adjacency_matrix(adj_matrix,
-    mode = "undirected",
-    weighted = TRUE,
-    diag = FALSE
-  )
-
-  return(g)
-}
-
-
-
-
-#' Calculate Adjusted Rand Index (ARI)
-#'
-#' Calculates the Adjusted Rand Index (ARI) to measure the agreement between the
-#' known cluster assignments (\code{labels}) and the cluster assignments derived
-#' from two unsupervised clustering methods: Hierarchical Clustering (\code{hclust})
-#' and Partitioning Around Medoids (\code{pam}).
-#'
-#' @param matrix Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
-#' @param labels Vector of factors or character strings. The true or known cluster
-#'               assignments for each row in the matrix.
-#' @param nclusts Integer (optional, default: \code{NULL}). The target number of clusters
-#'                (\code{k}) to use for \code{hclust} and \code{pam}. If \code{NULL},
-#'                it defaults to the number of unique levels in \code{labels}.
-#' @param digits Integer (default: \code{3}). The number of decimal places to round the result.
-#' @param return_mean Logical (default: \code{TRUE}). If \code{TRUE}, returns the
-#'                    mean of the ARI scores from \code{hclust} and \code{pam}.
-#'                    If \code{FALSE}, returns a named list with both individual scores.
-#'
-#' @return A numeric value (mean ARI) or a list of two ARI scores. ARI ranges from
-#'         -1 (disagreement) to +1 (perfect agreement).
-#'
-#' @importFrom stats dist hclust cutree
-#' @importFrom cluster pam
-#' @importFrom mclust adjustedRandIndex
-#' @importFrom base as.numeric as.factor mean unlist list round
-#'
-#' @export calc_ari
-calc_ari <- function(matrix,
-                     labels,
-                     nclusts = NULL,
-                     digits = 3,
-                     return_mean = TRUE) {
-  results <- list()
-  dist_mat <- dist(matrix)
-
-  if (is.null(nclusts)) {
-    nclusts <- length(unique(labels))
-  }
-
-  # Perform hierarchical clustering
-  hc <- hclust(dist_mat, method = "ward.D2")
-  clust_labels <- cutree(hc, k = nclusts)
-  results[["hclust_accuracy"]] <- adjustedRandIndex(as.numeric(as.factor(labels)), clust_labels)
-
-  # Perform PAM clustering
-  clust_labels <- pam(matrix, k = nclusts)$cluster
-  results[["pamclust_accuracy"]] <- adjustedRandIndex(as.numeric(as.factor(labels)), clust_labels)
-
-  if (return_mean) {
-    return(round(mean(unlist(results)), digits))
-  } else {
-    results[["hclust_accuracy"]] <- round(results[["hclust_accuracy"]], digits)
-    results[["pamclust_accuracy"]] <- round(results[["pamclust_accuracy"]], digits)
-    return(results)
-  }
+  return(as.data.frame(pb_norm))
 }
