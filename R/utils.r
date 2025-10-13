@@ -1,5 +1,27 @@
 # Define ECODA object to store data
-methods::setClass(
+
+#' An S4 class to represent a compositional data analysis object (ECODA).
+#'
+#' This class is designed to store various forms of compositional data derived
+#' from cell counts (or similar proportional data), alongside associated metadata,
+#' transformation results, and variability analysis outcomes.
+#'
+#' @slot counts Original cell count data (samples as rows, cell types as columns).
+#' @slot counts_imp Imputed cell count data, typically used to handle zero counts.
+#' @slot freq Relative frequency (percentage) of cell types derived from `counts`.
+#' @slot freq_imp Relative frequency (percentage) derived from `counts_imp`.
+#' @slot clr Centered Log-Ratio transformed data, derived from `freq_imp`.
+#' @slot celltype_variances Data frame detailing the variance metrics for each cell type.
+#' @slot variance_explained Numeric value indicating the total variance captured by
+#'                        highly variable cell types (HVCs).
+#' @slot top_n_hvcs Integer specifying the number of top highly variable cell types selected.
+#' @slot highly_variable_celltypes Character vector of names of the highly variable cell types.
+#' @slot metadata Data frame of sample-level metadata (samples as rows).
+#' @slot pb Data frame of pseudobulk gene expression.
+#' @slot sample_distances Data frame storing calculated distances between samples.
+#'
+#' #' @importFrom methods setClass
+setClass(
   Class = "ECODA",
   slots = list(
     counts = "data.frame",
@@ -33,6 +55,21 @@ methods::setClass(
 )
 
 
+
+#' Calculate relative frequencies (percentages) row-wise.
+#'
+#' This function takes a matrix or data frame of counts and transforms each row
+#' (assumed to be a sample or observation) into relative frequencies,
+#' expressing each component as a percentage of the row's total sum.
+#'
+#' @param df A data frame or matrix of counts (samples/observations as rows,
+#'           components as columns). Must contain only numeric, non-negative values.
+#' @return A data frame of the same dimensions, where each row sums to 100.
+#' @export calc_freq
+#' @importFrom base t apply sum as.data.frame
+#' @examples
+#' counts <- data.frame(A = c(10, 50), B = c(90, 50))
+#' calc_freq(counts)
 calc_freq <- function(df) {
   df <- t(apply(df, 1, function(row) (row / sum(row)) * 100)) %>%
     as.data.frame()
@@ -41,6 +78,23 @@ calc_freq <- function(df) {
 
 
 
+#' Perform the Centered Log-Ratio (CLR) transformation.
+#'
+#' The CLR transformation is a common technique used for compositional data
+#' analysis, mapping the data from the Aitchison simplex to Euclidean space.
+#' It is defined as the log of the ratio between each component and the geometric
+#' mean of all components in that sample. **Note:** This function assumes the input
+#' data is strictly positive (i.e., does not contain zeros). Use an imputation
+#' or pseudocount method prior to this function if zeros are present.
+#'
+#' @param df A data frame or matrix of strictly positive relative frequencies
+#'           or counts (samples/observations as rows, components as columns).
+#' @return A data frame of the same dimensions containing the CLR-transformed values.
+#' @export clr
+#' @importFrom base apply exp mean log as.data.frame
+#' @examples
+#' freq_imp <- data.frame(A = c(10.1, 50.1), B = c(89.9, 49.9))
+#' clr(freq_imp)
 clr <- function(df) {
   geometric_mean <- apply(df, 1, function(row) exp(mean(log(row))))
   clr_df <- apply(df, 2, function(row) log(row) - log(geometric_mean)) %>%
@@ -60,6 +114,27 @@ clr <- function(df) {
 #' @return A data frame with samples as rows and cell types as columns,
 #'         containing the count of each cell type per sample.
 #' @export get_celltype_counts
+#' @importFrom base table as.data.frame.matrix
+#' @examples
+#' # Create example data frame
+#' cell_data_df <- data.frame(
+#'   Cell_ID = paste0("C", 1:10),
+#'   Sample_Name = c(rep("S1", 5), rep("S2", 5)),
+#'   Cluster_Annotation = factor(c(
+#'     "B_Cell", "T_Cell", "B_Cell", NA, "T_Cell",
+#'     "T_Cell", "Macrophage", "B_Cell", "T_Cell", "T_Cell"
+#'   ))
+#' )
+#'
+#' # Calculate cell type counts per sample
+#' celltype_counts <- get_celltype_counts(
+#'   cell_data_df = cell_data_df,
+#'   sample_col = "Sample_Name",
+#'   celltype_col = "Cluster_Annotation"
+#' )
+#'
+#' print(celltype_counts)
+#' # Note how the NA cell type count is handled and renamed to "NA".
 get_celltype_counts <- function(cell_data_df,
                                 sample_col,
                                 celltype_col) {
@@ -83,26 +158,57 @@ get_celltype_counts <- function(cell_data_df,
 
 #' Extracts constant metadata for each sample from a cell-level data frame.
 #'
-#' This function identifies and returns metadata columns that have the same value
-#' for all cells within a given sample.
+#' This function identifies columns in a cell-level metadata data frame that
+#' have a **constant** value for all cells belonging to the same sample.
+#' It aggregates this constant information, returning a new data frame where
+#' each row represents a unique sample. Columns that vary within any sample
+#' are excluded from the output.
 #'
 #' @param cell_data_df A data frame containing cell-level metadata.
-#' @param sample_col The column that defines the sample ID for each cell.
-#' @return A new data frame containing one row per sample and only the columns
-#'         that were constant for all cells within each sample.
+#'                     This should include the sample ID column and all
+#'                     potential metadata columns.
+#' @param sample_col A character string specifying the name of the column
+#'                   that defines the unique sample ID for each cell (e.g., "Sample_ID").
+#' @return A new data frame where:
+#'         \itemize{
+#'           \item Each row corresponds to a unique sample from the input data.
+#'           \item The row names are set to the values of the input `sample_col`.
+#'           \item Columns contain only the metadata fields that were constant
+#'                 across all cells within **each** sample. The `sample_col` itself
+#'                 is excluded from the final columns but used for row names.
+#'         }
+#' @importFrom dplyr group_by summarise across everything n_distinct ungroup select where all_of distinct
+#' @importFrom rlang sym
+#' @examples
+#' \dontrun{
+#' # Assuming you have a data frame 'cell_df'
+#' cell_df <- data.frame(
+#'   Cell_ID = paste0("C", 1:10),
+#'   Sample_ID = c(rep("S1", 5), rep("S2", 5)),
+#'   Age = c(rep(30, 5), rep(45, 5)),
+#'   Gender = c(rep("M", 5), rep("F", 5)),
+#'   Cell_Type = c(rep("A", 3), rep("B", 2), rep("A", 3), rep("B", 2))
+#' )
+#'
+#' # The 'Age' and 'Gender' columns are constant within each sample (S1 and S2).
+#' # The 'Cell_ID' and 'Cell_Type' columns vary within sample S1 and/or S2.
+#'
+#' sample_meta <- get_sample_metadata(cell_df, "Sample_ID")
+#' print(sample_meta)
+#' # Output will have 'Age' and 'Gender' as columns, with row names 'S1' and 'S2'.
+#' }
 get_sample_metadata <- function(cell_data_df,
                                 sample_col) {
   # Step 1: Group the data by `sample_col` and check for uniqueness
   distinct_counts <- cell_data_df %>%
-    dplyr::group_by(!!rlang::sym(sample_col)) %>%
-    dplyr::summarise(across(everything(), ~ n_distinct(.x))) %>%
-    dplyr::ungroup()
+    group_by(!!sym(sample_col)) %>%
+    summarise(across(everything(), ~ n_distinct(.x))) %>%
+    ungroup()
 
   # Step 2: Identify columns that are constant across all samples
   # The column is considered constant if the max distinct count within that column is 1.
   constant_cols <- distinct_counts %>%
-    # Use select(where(...)) to find constant columns, excluding the grouping column (sample_col)
-    dplyr::select(where(~ max(.x) == 1)) %>%
+    select(where(~ max(.x) == 1)) %>%
     names()
 
   # Ensure the sample column itself is not checked for constancy but is included in the final set
@@ -111,8 +217,8 @@ get_sample_metadata <- function(cell_data_df,
   # Step 3: Select the constant columns and unique rows
   metadata <- cell_data_df %>%
     # Select only the relevant constant columns
-    dplyr::select(all_of(cols_to_keep)) %>%
-    dplyr::distinct()
+    select(all_of(cols_to_keep)) %>%
+    distinct()
 
   # Step 4: Ensure the result is a data frame using the safe subsetting operator
   # Set row names to the sample column
@@ -134,25 +240,39 @@ get_sample_metadata <- function(cell_data_df,
 
 #' Calculate Pseudobulk from Count Matrix
 #'
-#' @param count_matrix A gene x cell count matrix (can be dense matrix or sparse Matrix)
-#' @param sample_ids A vector of sample identifiers, one per cell (same length as ncol(count_matrix))
-#' @param min_cells Minimum number of cells required per sample (default: 1). Samples with fewer cells will be excluded.
+#' This function aggregates single-cell count data into a "pseudobulk" matrix
+#' by summing the counts for all cells belonging to the same sample ID.
+#' It is robust to both dense and sparse count matrices. It also includes
+#' filtering logic to exclude samples that do not meet a minimum cell count threshold.
 #'
-#' @return A gene x sample pseudobulk count matrix
+#' @param count_matrix A gene x cell count matrix (can be a dense matrix or sparse Matrix).
+#'                     Gene identifiers should be row names and cell barcodes should be column names.
+#' @param sample_ids A vector of sample identifiers, one for each column (cell) in
+#'                   \code{count_matrix}. The length must equal \code{ncol(count_matrix)}.
+#'                   Must not contain \code{NA} values.
+#' @param min_cells Minimum number of cells required per sample (default: 1).
+#'                  Samples with fewer cells than this threshold will be excluded
+#'                  from the final pseudobulk matrix.
 #'
+#' @return A gene x sample pseudobulk count matrix. The columns correspond to
+#'         the unique sample IDs, and the rows correspond to the genes.
+#' @export calculate_pseudobulk
+#' @importFrom base ncol length any is.na as.factor table names paste droplevels message rowsum t stop
 #' @examples
-#' # From Seurat object
-#' pb <- calculate_pseudobulk(
+#' \dontrun{
+#' # Assuming seurat is a loaded Seurat object
+#' pb_seurat <- calculate_pseudobulk(
 #'   count_matrix = seurat[["RNA"]]$counts,
 #'   sample_ids = seurat$sample_id
 #' )
 #'
-#' # From SingleCellExperiment object
-#' pb <- calculate_pseudobulk(
+#' # Assuming sce is a loaded SingleCellExperiment object
+#' pb_sce <- calculate_pseudobulk(
 #'   count_matrix = assay(sce, "counts"),
-#'   sample_ids = colData(sce)$sample_id
+#'   sample_ids = colData(sce)$sample_id,
+#'   min_cells = 5 # Example of filtering samples with < 5 cells
 #' )
-#'
+#' }
 calculate_pseudobulk <- function(count_matrix,
                                  sample_ids,
                                  min_cells = 1) {
@@ -207,23 +327,47 @@ calculate_pseudobulk <- function(count_matrix,
 
 #' DESeq2 Normalization of Pseudobulk Data
 #'
-#' @param pb A gene x sample pseudobulk count matrix (Genes as rows, Samples as columns).
-#' @param metadata A data.frame with sample-level metadata (rownames or a column must match colnames of pb).
-#' @param hvg Optional character vector of gene names to use as highly variable genes.
-#'             If NULL, will select top variable genes automatically.
-#' @param nvar_genes Number of top variable genes to select (default: 2000).
-#'                   Only used if hvg = NULL.
+#' This function normalizes a gene x sample pseudobulk count matrix using the
+#' Variance Stabilizing Transformation (VST) from the \code{DESeq2} package.
+#' It estimates size factors and variance for all genes, performs the VST, and then
+#' subsets the results to include only highly variable genes (HVCs),
+#' either specified by the user or automatically selected based on variance.
 #'
-#' @return A normalized expression matrix (VST-transformed) with **samples as rows** and **genes as columns**.
+#' @param pb A gene x sample pseudobulk count matrix (Genes as rows, Samples as columns).
+#'           Must contain non-negative integer counts.
+#' @param metadata A data.frame with sample-level metadata. Row names must exactly
+#'                 match the column names of \code{pb}. The function will reorder
+#'                 the metadata to match \code{pb}.
+#' @param hvg Optional character vector of gene names to use as highly variable genes.
+#'            If provided, only these genes will be returned after VST.
+#' @param nvar_genes Number of top variable genes to select (default: 2000).
+#'                   Only used if \code{hvg = NULL}; the function will select the
+#'                   top \code{nvar_genes} by variance after VST.
+#'
+#' @return A normalized expression matrix (VST-transformed) with **samples as rows**
+#'         and **genes as columns**.
+#'
+#' @export deseq2_normalize
+#'
+#' @importFrom base all colnames rownames stop paste length warning message t as.data.frame
+#' @importFrom base is.null setdiff min order rowMeans sum seq_len
+#' @importFrom stats formula
+#' @importFrom DESeq2 DESeqDataSetFromMatrix estimateSizeFactors vst
+#' @importFrom SummarizedExperiment assay
+#' @importFrom BiocGenerics counts
+#' @importFrom MatrixGenerics rowVars
 #'
 #' @examples
-#' # Auto-select HVGs
-#' # pb_norm <- deseq2_normalize(pb, metadata)
+#' \dontrun{
+#' # Assuming 'pb' is the pseudobulk matrix and 'metadata' is the sample annotation
 #'
-#' # Use pre-defined HVGs
-#' # my_hvgs <- c("Gene1", "Gene2", "Gene3")
-#' # pb_norm <- deseq2_normalize(pb, metadata, hvg = my_hvgs)
+#' # 1. Auto-select top 2000 most variable genes after VST
+#' pb_norm_auto <- deseq2_normalize(pb, metadata)
 #'
+#' # 2. Use pre-defined set of highly variable genes
+#' my_hvgs <- c("Gene1", "Gene2", "Gene3")
+#' pb_norm_hvg <- deseq2_normalize(pb, metadata, hvg = my_hvgs)
+#' }
 deseq2_normalize <- function(pb,
                              metadata,
                              hvg = NULL,
@@ -239,21 +383,21 @@ deseq2_normalize <- function(pb,
   suppressMessages({
     suppressWarnings({
       # Create DESeq2 dataset
-      dds <- DESeq2::DESeqDataSetFromMatrix(
+      dds <- DESeqDataSetFromMatrix(
         countData = pb,
         colData = metadata,
-        design = stats::formula(paste("~ 1"))
+        design = formula(paste("~ 1"))
       )
 
       # Estimate size factors
-      dds <- DESeq2::estimateSizeFactors(dds)
+      dds <- estimateSizeFactors(dds)
 
       # Set minimum number of counts per gene for VST
-      nsub <- min(1000, sum(rowMeans(BiocGenerics::counts(dds, normalized = TRUE)) > 10))
+      nsub <- min(1000, sum(rowMeans(counts(dds, normalized = TRUE)) > 10))
 
       # Transform counts using variance stabilizing transformation (VST)
-      dds <- DESeq2::vst(dds, blind = TRUE, nsub = nsub)
-      pb_norm <- SummarizedExperiment::assay(dds) # Genes x Samples format
+      dds <- vst(dds, blind = TRUE, nsub = nsub)
+      pb_norm <- assay(dds) # Genes x Samples format
 
       # Select highly variable genes
       if (!is.null(hvg)) {
@@ -274,7 +418,7 @@ deseq2_normalize <- function(pb,
         pb_norm <- pb_norm[hvg_available, , drop = FALSE]
       } else {
         # Auto-select top variable genes
-        rv <- MatrixGenerics::rowVars(pb_norm)
+        rv <- rowVars(pb_norm)
         n_genes_to_select <- min(nvar_genes, length(rv))
         select <- order(rv, decreasing = TRUE)[seq_len(n_genes_to_select)]
         select <- rownames(pb_norm)[select]
