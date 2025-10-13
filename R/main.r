@@ -89,10 +89,7 @@ setClass(
 #' @return A new \code{\link{ECODA}} object populated with \code{counts}, \code{metadata},
 #'         and optionally \code{pb} and the initial compositional analysis results.
 #'
-#' @importFrom base inherits is.null stop as.data.frame names
-#' @importFrom Seurat Seurat
-#' @importFrom SingleCellExperiment SingleCellExperiment assay
-#' @importFrom SummarizedExperiment colData
+#' @importFrom SummarizedExperiment assay colData
 #' @importFrom methods new
 #' @importFrom utils read.csv
 #'
@@ -191,14 +188,10 @@ create_ecoda_object <- function(data = NULL,
 #' @return A fully initialized \code{\link{ECODA}} object, populated with counts,
 #'         frequency data, CLR transformed data, sample distances, and HVCs.
 #'
-#' @importFrom base is.null any all stop rownames
 #' @importFrom methods new
 #' @importFrom gtools mixedsort
 #' @importFrom dplyr %>%
-#' @importFrom stats dist as.matrix
-#' @import calc_freq
-#' @import clr
-#' @import find_highly_variable_celltypes
+#' @importFrom stats dist
 #'
 #' @export create_ecoda_object_from_counts
 #'
@@ -280,7 +273,6 @@ create_ecoda_object_from_counts <- function(counts = NULL,
 #'           components as columns). Must contain only numeric, non-negative values.
 #' @return A data frame of the same dimensions, where each row sums to 100.
 #' @export calc_freq
-#' @importFrom base t apply sum as.data.frame
 #' @examples
 #' counts <- data.frame(A = c(10, 50), B = c(90, 50))
 #' calc_freq(counts)
@@ -305,7 +297,6 @@ calc_freq <- function(df) {
 #'           or counts (samples/observations as rows, components as columns).
 #' @return A data frame of the same dimensions containing the CLR-transformed values.
 #' @export clr
-#' @importFrom base apply exp mean log as.data.frame
 #' @examples
 #' freq_imp <- data.frame(A = c(10.1, 50.1), B = c(89.9, 49.9))
 #' clr(freq_imp)
@@ -328,7 +319,6 @@ clr <- function(df) {
 #' @return A data frame with samples as rows and cell types as columns,
 #'         containing the count of each cell type per sample.
 #' @export get_celltype_counts
-#' @importFrom base table as.data.frame.matrix
 #' @examples
 #' # Create example data frame
 #' cell_data_df <- data.frame(
@@ -482,10 +472,6 @@ get_sample_metadata <- function(cell_data_df,
 #'           \item \code{highly_variable_celltypes}: Character vector of the names of the selected HVCs.
 #'         }
 #'
-#' @importFrom base sum length
-#' @import get_celltype_variances
-#' @import get_highly_variable_celltypes
-#'
 #' @export find_highly_variable_celltypes
 #'
 #' @seealso \code{\link{ECODA}}, \code{\link{get_celltype_variances}}, \code{\link{get_highly_variable_celltypes}}
@@ -556,10 +542,9 @@ find_highly_variable_celltypes <- function(ecoda_object,
 #'           \item \code{variance_exp}: The proportion of total variance explained cumulatively.
 #'         }
 #'
-#' @importFrom base as.data.frame print mean var sum
+#' @importFrom stats var
 #' @importFrom dplyr %>% everything group_by summarize arrange desc mutate
 #' @importFrom tidyr pivot_longer
-#' @import varmeanplot
 #'
 #' @export get_celltype_variances
 #'
@@ -649,7 +634,6 @@ get_celltype_variances <- function(ecoda_object,
 #' @return A character vector containing the names of the selected highly variable cell types.
 #'         The function ensures that at least two cell types are always returned.
 #'
-#' @importFrom base is.null warning length which.max min
 #' @importFrom dplyr %>% slice pull
 #' @importFrom rlang .data
 #'
@@ -731,7 +715,6 @@ get_highly_variable_celltypes <- function(df_var,
 #'
 #' @return A \code{ggplot} object representing the mean-variance plot.
 #'
-#' @importFrom base paste print
 #' @importFrom ggplot2 ggplot aes geom_point geom_smooth labs theme_classic xlab ylab
 #' @importFrom ggrepel geom_text_repel
 #'
@@ -799,7 +782,6 @@ plot_varmean <- function(ecoda_object,
 #' @return A gene x sample pseudobulk count matrix. The columns correspond to
 #'         the unique sample IDs, and the rows correspond to the genes.
 #' @export calculate_pseudobulk
-#' @importFrom base ncol length any is.na as.factor table names paste droplevels message rowsum t stop
 #' @examples
 #' \dontrun{
 #' # Assuming seurat is a loaded Seurat object
@@ -891,8 +873,6 @@ calculate_pseudobulk <- function(count_matrix,
 #'
 #' @export deseq2_normalize
 #'
-#' @importFrom base all colnames rownames stop paste length warning message t as.data.frame
-#' @importFrom base is.null setdiff min order rowMeans sum seq_len
 #' @importFrom stats formula
 #' @importFrom DESeq2 DESeqDataSetFromMatrix estimateSizeFactors vst
 #' @importFrom SummarizedExperiment assay

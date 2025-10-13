@@ -25,7 +25,7 @@
 #'           \item \code{...}: Additional column specified by \code{label_col} (if provided).
 #'         }
 #'
-#' @importFrom base as.data.frame stop ifelse slot slotNames is.null
+#' @importFrom methods slot slotNames
 #' @importFrom dplyr %>% left_join select
 #' @importFrom tidyr pivot_longer everything
 #' @importFrom tibble rownames_to_column
@@ -132,7 +132,6 @@ create_long_data <- function(ecoda_object,
 #'
 #' @return A \code{ggplot} object representing the stacked bar plot.
 #'
-#' @importFrom base paste stop unique as.factor factor all match.arg is.null
 #' @importFrom dplyr %>% group_by summarise mutate distinct arrange pull
 #' @importFrom ggplot2 ggplot aes geom_col theme_minimal theme element_text labs facet_grid
 #' @importFrom rlang sym
@@ -291,7 +290,6 @@ plot_freq_barplot <- function(ecoda_object,
 #'         significance information (pairwise stars for 2 groups, overall p-value
 #'         for 3+ groups).
 #'
-#' @importFrom base as.data.frame factor is.null unique length paste warning
 #' @importFrom ggplot2 aes geom_jitter labs theme element_text guides position_jitterdodge
 #' @importFrom ggpubr ggboxplot stat_compare_means
 #' @importFrom stringr str_to_title
@@ -463,7 +461,6 @@ plot_clr_boxplot <- function(ecoda_object,
 #' @return A \code{pheatmap} object, which is typically visualized automatically
 #'         when called interactively.
 #'
-#' @importFrom base as.data.frame scale t as.factor lapply
 #' @importFrom dplyr %>%
 #' @importFrom pheatmap pheatmap
 #'
@@ -592,17 +589,11 @@ plot_heatmap <- function(ecoda_object,
 #' @return A \code{ggplot} object (2D, via \code{factoextra}) or a \code{plotly}
 #'         object (3D) visualizing the PCA results.
 #'
-#' @importFrom base as.data.frame seq_len nrow round
 #' @importFrom stats prcomp dist hclust cutree
-#' @importFrom utils as.data.frame
 #' @importFrom vegan anosim
 #' @importFrom factoextra fviz_pca
-#' @importFrom plotly plot_ly add_markers add_paths
+#' @importFrom plotly plot_ly add_markers add_paths group2NA
 #' @importFrom dplyr bind_rows
-#' @importFrom gplots group2NA
-#' @import calc_ari
-#' @import calc_modularity
-#' @import calc_sil
 #'
 #' @export plot_pca
 plot_pca <- function(ecoda_object,
@@ -714,7 +705,6 @@ plot_pca <- function(ecoda_object,
 #'
 #' @importFrom cluster silhouette
 #' @importFrom stats dist
-#' @importFrom base as.data.frame as.numeric factor mean round
 #'
 #' @export calc_sil
 calc_sil <- function(feat_mat,
@@ -751,7 +741,6 @@ calc_sil <- function(feat_mat,
 #'
 #' @return A numeric value representing the adjusted modularity score.
 #'
-#' @importFrom base unique length round max
 #' @importFrom igraph modularity
 #'
 #' @export calc_modularity
@@ -796,7 +785,6 @@ calc_modularity <- function(feat_mat,
 #'         of its \code{k} nearest neighbors.
 #'
 #' @importFrom RANN nn2
-#' @importFrom base as.matrix
 #'
 #' @export compute_KNN
 compute_KNN <- function(feat_mat, knn_k) {
@@ -820,7 +808,6 @@ compute_KNN <- function(feat_mat, knn_k) {
 #' @return An \code{igraph} graph object where edge weights represent shared neighbors.
 #'
 #' @importFrom igraph graph_from_adjacency_matrix
-#' @importFrom base matrix seq_len nrow intersect
 #'
 #' @export compute_snn_graph
 compute_snn_graph <- function(feat_mat,
@@ -877,7 +864,6 @@ compute_snn_graph <- function(feat_mat,
 #' @importFrom stats dist hclust cutree
 #' @importFrom cluster pam
 #' @importFrom mclust adjustedRandIndex
-#' @importFrom base as.numeric as.factor mean unlist list round
 #'
 #' @export calc_ari
 calc_ari <- function(matrix,
