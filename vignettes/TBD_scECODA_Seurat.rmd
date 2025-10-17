@@ -1,37 +1,89 @@
 ---
-title: "scECODA tutorial"
+title: "Create ECODA object from Seurat object"
 author: "Christian Halter"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  BiocStyle::html_document:
+    toc_float: true
+  BiocStyle::pdf_document: default
 ---
 
 
 
-# Load example seurat object
+# Load example dataset
 
 ```{r}
 library(SeuratData)
 # InstallData("pbmc3k")
 data("pbmc3k")
 pbmc3k <- Seurat::UpdateSeuratObject(pbmc3k)
-head(pbmc3k@meta.data)
 ```
 
-
 # Add condition metadata
-The cells of this example dataset are annotated but not assigned to samples or biological conditions.
+
+The cells of this example dataset are annotated but not assigned to samples.
 To proceed, you'll need to artificially assign them by creating a sample and condition column in the metadata.
 
 ```{r pressure, echo=FALSE}
 n_samples <- 40
-n_groups <- 2
 
 pbmc3k$sample_id <- ""
 pbmc3k$sample_id <- rep(x = paste0("sample", seq(n_samples)), length.out = length(pbmc3k$sample_id))
+```
+
+
+```{r}
+library(scECODA)
+
+ecoda_object <- create_ecoda_object(
+  pbmc3k,
+  sample_col = "sample_id",
+  celltype_col = "seurat_annotations",
+  get_pb = TRUE
+)
+
+plot_pca(
+  ecoda_object,
+  title = "PCA - Cell type composition"
+)
+plot_pca(
+  ecoda_object,
+  slot = "pb",
+  title = "PCA - Pseudobulk"
+)
+```
+
+
+# Visualizing and quantifying separation between samples
+
+The main goal of 
+or biological conditions
+
+```{r}
+n_groups <- 2
+
 pbmc3k$condition_id <- ""
 pbmc3k$condition_id <- c(rep("condition1", n_samples/n_groups),
                       rep("condition2", n_samples/n_groups))
 ```
+
+
+
+```{r}
+plot_pca(
+  ecoda_object,
+  label_col = "condition_id",
+  title = "PCA - Cell type composition"
+)
+plot_pca(
+  ecoda_object,
+  slot = "pb",
+  label_col = "condition_id",
+  title = "PCA - Pseudobulk"
+)
+```
+
+
 
 
 ```{r}
@@ -54,26 +106,26 @@ table(pbmc3k_DiffAbu@meta.data$condition, pbmc3k_DiffAbu@meta.data$seurat_annota
 
 
 ```{r}
-ecoda_object <- create_ecoda_object(
-  pbmc3k,
-  sample_col = "sample_id",
-  celltype_col = "seurat_annotations",
-  get_pb = TRUE
-)
-plot_pca(ecoda_object, label_col = "condition_id", title = "PCA cell type composition")
-plot_pca(ecoda_object, slot = "pb", label_col = "condition_id", title = "PCA pseudobulk")
-
 ecoda_object_DiffAbu <- create_ecoda_object(
   pbmc3k_DiffAbu,
   sample_col = "sample_id",
   celltype_col = "seurat_annotations",
   get_pb = TRUE
 )
-plot_pca(ecoda_object_DiffAbu, label_col = "condition_id", title = "PCA cell type composition", n_ct_show = 2)
-plot_pca(ecoda_object_DiffAbu, slot = "pb", label_col = "condition_id", title = "PCA pseudobulk")
+
+plot_pca(
+  ecoda_object_DiffAbu,
+  label_col = "condition_id",
+  title = "PCA cell type composition",
+  n_ct_show = 2
+)
+plot_pca(
+  ecoda_object_DiffAbu,
+  slot = "pb",
+  label_col = "condition_id",
+  title = "PCA pseudobulk"
+)
 ```
-
-
 
 
 

@@ -11,12 +11,9 @@ output:
 
 # Load example dataset
 
-```{r load-library, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE}
 library(scRNAseq)
-library(scECODA)
-```
 
-```{r}
 all.ds <- surveyDatasets()
 ds <- 1
 sce <- fetchDataset(all.ds@listData[["name"]][ds], all.ds@listData[["version"]][ds])
@@ -28,6 +25,7 @@ names(sce@colData)
 # Create ECODA object
 
 ```{r}
+library(scECODA)
 
 ecoda_object <- create_ecoda_object(
   sce,
@@ -39,13 +37,13 @@ ecoda_object <- create_ecoda_object(
 plot_pca(
   ecoda_object,
   label_col = "Condition",
-  title = "PCA - cell type composition"
+  title = "PCA - Cell type composition"
 )
 plot_pca(
   ecoda_object,
   slot = "pb",
   label_col = "Condition",
-  title = "PCA - pseudobulk"
+  title = "PCA - Pseudobulk"
 )
 ```
 

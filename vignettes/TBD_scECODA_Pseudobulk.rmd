@@ -2,7 +2,10 @@
 title: "scECODA tutorial"
 author: "Christian Halter"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  BiocStyle::html_document:
+    toc_float: true
+  BiocStyle::pdf_document: default
 ---
 
 
