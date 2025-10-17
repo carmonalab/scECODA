@@ -3,11 +3,11 @@
 #' Reshapes ECODA data into a long format for plotting and analysis.
 #'
 #' This function takes either the relative abundance (\code{freq}) or CLR-transformed
-#' abundance (\code{clr}) matrix from an \code{\link{ECODA}} object, converts it
+#' abundance (\code{clr}) matrix from an \link[=ECODA-class]{ECODA} object, converts it
 #' from a wide (samples x cell types) to a long (sample, celltype, value) format,
 #' and optionally joins it with a specified column from the sample metadata.
 #'
-#' @param ecoda_object An initialized \code{\link{ECODA}} object.
+#' @param ecoda_object An initialized \link[=ECODA-class]{ECODA} object.
 #' @param data_slot Character string specifying the data matrix to use. Must be
 #'                  either \code{"freq"} (for relative abundance) or \code{"clr"}
 #'                  (for CLR-transformed abundance).
@@ -26,14 +26,13 @@
 #'         }
 #'
 #' @importFrom methods slot slotNames
-#' @importFrom dplyr %>% left_join select
+#' @importFrom dplyr %>% left_join
 #' @importFrom tidyr pivot_longer everything
-#' @importFrom tibble rownames_to_column
 #' @importFrom rlang sym
 #'
 #' @export create_long_data
 #'
-#' @seealso \code{\link{ECODA}}
+#' @seealso \link[=ECODA-class]{ECODA}
 #'
 #' @examples
 #' \dontrun{
@@ -62,8 +61,11 @@ create_long_data <- function(ecoda_object,
 
   # 1. Extract data (either @freq or @clr)
   data_matrix <- slot(ecoda_object, data_slot)
-  data_df <- as.data.frame(data_matrix) %>%
-    rownames_to_column("sample_id")
+  data_df <- as.data.frame(data_matrix)
+  data_df <- data.frame(
+    sample_id = rownames(data_df),
+    data_df
+  )
 
   # 2. Reshape the data from wide to long format
   long_data <- data_df %>%
@@ -86,9 +88,12 @@ create_long_data <- function(ecoda_object,
       stop(paste0("label_col '", label_col, "' not found in ecoda_object@metadata."))
     }
 
-    metadata_df <- as.data.frame(ecoda_object@metadata) %>%
-      rownames_to_column("sample_id") %>%
-      select(sample_id, !!sym(label_col))
+    metadata_df <- as.data.frame(ecoda_object@metadata)
+    metadata_df <- data.frame(
+      sample_id = rownames(metadata_df),
+      metadata_df
+    )
+    metadata_df <- metadata_df[, c("sample_id", label_col)]
 
     # 4. Join the long data with the metadata by sample_id
     plot_data <- long_data %>%
@@ -111,7 +116,7 @@ create_long_data <- function(ecoda_object,
 #' across samples or across aggregated groups. It automatically handles data
 #' preparation and ordering based on the provided parameters.
 #'
-#' @param ecoda_object An \code{\link{ECODA}} object containing cell type relative
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing cell type relative
 #'                     frequencies in the \code{freq} slot.
 #' @param label_col Character string (optional, default: \code{NULL}). The name of a
 #'                  column in \code{ecoda_object@metadata} used to define grouping
@@ -136,10 +141,11 @@ create_long_data <- function(ecoda_object,
 #' @importFrom ggplot2 ggplot aes geom_col theme_minimal theme element_text labs facet_grid
 #' @importFrom rlang sym
 #' @importFrom gtools mixedsort
+#' @importFrom stats reformulate
 #'
 #' @export plot_freq_barplot
 #'
-#' @seealso \code{\link{create_long_data}}, \code{\link{ECODA}}
+#' @seealso \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
 #'
 #' @examples
 #' \dontrun{
@@ -167,7 +173,7 @@ plot_freq_barplot <- function(ecoda_object,
   # Use the helper function to get the long data from @freq
   plot_data <- create_long_data(ecoda_object, data_slot = "freq", label_col = label_col)
 
-  plot_by <- match.arg(plot_by, c("sample", "group"))
+  plot_by <- match.arg(plot_by)
 
   if (plot_by == "group") {
     if (is.null(label_col)) {
@@ -269,7 +275,7 @@ plot_freq_barplot <- function(ecoda_object,
 #'         overall p-value for the comparison across all groups.
 #' }
 #'
-#' @param ecoda_object An \code{\link{ECODA}} object containing the CLR-transformed
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the CLR-transformed
 #'                     abundances in the \code{clr} slot.
 #' @param label_col Character string (optional, default: \code{NULL}). The name of a
 #'                  column in \code{ecoda_object@metadata} used to define groups for
@@ -297,7 +303,7 @@ plot_freq_barplot <- function(ecoda_object,
 #'
 #' @export plot_clr_boxplot
 #'
-#' @seealso \code{\link{create_long_data}}, \code{\link{ECODA}}
+#' @seealso \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
 #'
 #' @examples
 #' \dontrun{
@@ -439,7 +445,7 @@ plot_clr_boxplot <- function(ecoda_object,
 #' a sample annotation sidebar based on a specified metadata column.
 #' It is important to not re-scale in order to avoid amplifying tiny differences.
 #'
-#' @param ecoda_object An \code{\link{ECODA}} object containing the CLR-transformed
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the CLR-transformed
 #'                     abundances in the \code{clr} slot.
 #' @param label_col Character string. The name of the column in \code{ecoda_object@metadata}
 #'                  to use for annotating the samples (columns) of the heatmap.
@@ -466,7 +472,7 @@ plot_clr_boxplot <- function(ecoda_object,
 #'
 #' @export plot_heatmap
 #'
-#' @seealso \code{\link{ECODA}}, \code{\link{pheatmap}}
+#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{pheatmap}}
 #'
 #' @examples
 #' \dontrun{
@@ -540,8 +546,10 @@ plot_heatmap <- function(ecoda_object,
 #' the sample groupings (\code{labels}) align with the underlying data structure
 #' in the feature space.
 #'
-#' @param ecoda_object An \code{\link{ECODA}} object containing the CLR-transformed
-#'                     abundances in the \code{clr} slot.
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object
+#' @param slot A slot in the ECODA object (default: \code{"clr"}): either the
+#'             CLR-transformed abundances in the \code{clr} slot or
+#'             the pseudobulk gene expression in the \code{pb} slot.
 #' @param label_col Character string (optional, default: \code{NULL}). The name of a
 #'                  column in \code{ecoda_object@metadata} used to color and group
 #'                  samples in the plot, and for calculating clustering scores.
@@ -594,9 +602,11 @@ plot_heatmap <- function(ecoda_object,
 #' @importFrom factoextra fviz_pca
 #' @importFrom plotly plot_ly add_markers add_paths group2NA
 #' @importFrom dplyr bind_rows
+#' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal
 #'
 #' @export plot_pca
 plot_pca <- function(ecoda_object,
+                     slot = c("clr", "pb"),
                      label_col = NULL,
                      scale. = FALSE,
                      pca_dims = NULL,
@@ -615,7 +625,8 @@ plot_pca <- function(ecoda_object,
                      invisible = c("var", "quali"),
                      n_ct_show = Inf,
                      repel = TRUE) {
-  feat_mat <- ecoda_object@clr
+  slot <- match.arg(slot)
+  feat_mat <- slot(ecoda_object, slot)
 
   res.pca <- prcomp(feat_mat, scale. = scale., rank. = pca_dims)
 

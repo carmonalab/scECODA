@@ -61,7 +61,7 @@ setClass(
 #' Creates an ECODA object from various data types.
 #'
 #' This is a smart constructor function used to initialize an
-#' \code{\link{ECODA}} object. It handles the processing of single-cell objects
+#' \link[=ECODA-class]{ECODA} object. It handles the processing of single-cell objects
 #' (\code{Seurat} or \code{SingleCellExperiment}) or raw data frames to extract
 #' cell type counts, calculate sample metadata, and optionally generate
 #' DESeq2-normalized pseudobulk data.
@@ -86,16 +86,15 @@ setClass(
 #' @param top_n_hvcs Integer (optional). Overrides \code{variance_explained} if provided,
 #'                   specifying the exact number of top HVCs to select.
 #'
-#' @return A new \code{\link{ECODA}} object populated with \code{counts}, \code{metadata},
+#' @return A new \link[=ECODA-class]{ECODA} object populated with \code{counts}, \code{metadata},
 #'         and optionally \code{pb} and the initial compositional analysis results.
 #'
-#' @importFrom SummarizedExperiment assay colData
 #' @importFrom methods new
 #' @importFrom utils read.csv
 #'
 #' @export create_ecoda_object
 #'
-#' @seealso \code{\link{ECODA}}, \code{\link{calculate_pseudobulk}}, \code{\link{get_celltype_counts}}, \code{\link{get_sample_metadata}}
+#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calculate_pseudobulk}}, \code{\link{get_celltype_counts}}, \code{\link{get_sample_metadata}}
 #'
 #' @examples
 #' \dontrun{
@@ -133,11 +132,17 @@ create_ecoda_object <- function(data = NULL,
         )
       }
     } else if (inherits(data, "SingleCellExperiment")) {
-      cell_data_df <- as.data.frame(data@colData)
-      names(cell_data_df) <- names(data@colData)
+      if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+        stop(
+          "Package \"SummarizedExperiment\" must be installed to use this function.",
+          call. = FALSE
+        )
+      }
+      cell_data_df <- as.data.frame(SummarizedExperiment::colData(data))
+      names(cell_data_df) <- names(SummarizedExperiment::colData(data))
       if (get_pb) {
         pb <- calculate_pseudobulk(
-          count_matrix = assay(data, "counts"),
+          count_matrix = SummarizedExperiment::assay(data, "counts"),
           sample_ids = cell_data_df[[sample_col]]
         )
       }
@@ -157,7 +162,9 @@ create_ecoda_object <- function(data = NULL,
   )
 
   if (get_pb) {
-    ecoda_object@pb <- deseq2_normalize(pb, metadata)
+    pb <- deseq2_normalize(pb)
+    pb <- pb[mixedsort(rownames(pb)), ]
+    ecoda_object@pb <- pb
   }
 
   return(ecoda_object)
@@ -170,7 +177,7 @@ create_ecoda_object <- function(data = NULL,
 #' Creates an ECODA object from pre-calculated cell type counts.
 #'
 #' This is the core constructor function that initializes and performs the initial
-#' compositional analysis steps for an \code{\link{ECODA}} object, assuming the
+#' compositional analysis steps for an \link[=ECODA-class]{ECODA} object, assuming the
 #' cell type count matrix is already available. It handles zero-imputation,
 #' calculates relative frequencies, Centered Log-Ratio (CLR) transformed data,
 #' sample distances, and identifies highly variable cell types (HVCs).
@@ -185,7 +192,7 @@ create_ecoda_object <- function(data = NULL,
 #' @param top_n_hvcs Integer (optional). Overrides \code{variance_explained} if provided,
 #'                   specifying the exact number of top HVCs to select based on variance.
 #'
-#' @return A fully initialized \code{\link{ECODA}} object, populated with counts,
+#' @return A fully initialized \link[=ECODA-class]{ECODA} object, populated with counts,
 #'         frequency data, CLR transformed data, sample distances, and HVCs.
 #'
 #' @importFrom methods new
@@ -195,7 +202,7 @@ create_ecoda_object <- function(data = NULL,
 #'
 #' @export create_ecoda_object_from_counts
 #'
-#' @seealso \code{\link{ECODA}}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_highly_variable_celltypes}}
+#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_highly_variable_celltypes}}
 #'
 #' @examples
 #' \dontrun{
@@ -313,6 +320,8 @@ clr <- function(df) {
 
 #' Get the cell type counts from a long data frame (e.g. seurat object metadata) where each cell is a row.
 #'
+#' @param cell_data_df A data frame where each row represents a single cell, and columns
+#'                     contain cell-level information, including sample ID and cell type annotation.
 #' @param sample_col The column that defines the sample ID for each cell
 #' @param celltype_col The column that defines the cell type annotation for each cell
 #'
@@ -383,6 +392,7 @@ get_celltype_counts <- function(cell_data_df,
 #'         }
 #' @importFrom dplyr group_by summarise across everything n_distinct ungroup select where all_of distinct
 #' @importFrom rlang sym
+#' @export get_sample_metadata
 #' @examples
 #' \dontrun{
 #' # Assuming you have a data frame 'cell_df'
@@ -454,7 +464,7 @@ get_sample_metadata <- function(cell_data_df,
 #' subset of highly variable cell types (HVCs) that collectively explain a
 #' specified proportion of the total variance, or a fixed number of top cell types.
 #'
-#' @param ecoda_object An initialized \code{\link{ECODA}} object containing the
+#' @param ecoda_object An initialized \link[=ECODA-class]{ECODA} object containing the
 #'                     CLR-transformed data in the \code{clr} slot.
 #' @param variance_explained Numeric (default: 0.5). The target cumulative
 #'                           proportion of total variance to be explained by the
@@ -464,7 +474,7 @@ get_sample_metadata <- function(cell_data_df,
 #'                   \code{variance_explained} and selects exactly the top N cell
 #'                   types with the highest variance.
 #'
-#' @return The updated \code{\link{ECODA}} object with the following slots populated:
+#' @return The updated \link[=ECODA-class]{ECODA} object with the following slots populated:
 #'         \itemize{
 #'           \item \code{celltype_variances}: Data frame of cell type variances.
 #'           \item \code{variance_explained}: The exact variance proportion captured by the selected HVCs.
@@ -474,7 +484,7 @@ get_sample_metadata <- function(cell_data_df,
 #'
 #' @export find_highly_variable_celltypes
 #'
-#' @seealso \code{\link{ECODA}}, \code{\link{get_celltype_variances}}, \code{\link{get_highly_variable_celltypes}}
+#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}, \code{\link{get_highly_variable_celltypes}}
 #'
 #' @examples
 #' \dontrun{
@@ -516,15 +526,15 @@ find_highly_variable_celltypes <- function(ecoda_object,
 #' Calculates the variance of cell types across samples.
 #'
 #' This function takes the Centered Log-Ratio (CLR) transformed cell type
-#' abundance data from an \code{\link{ECODA}} object, calculates the mean CLR
+#' abundance data from an \link[=ECODA-class]{ECODA} object, calculates the mean CLR
 #' abundance and variance for each cell type, and optionally generates a
 #' mean-variance plot. It also calculates the cumulative variance explained
 #' by the cell types when ranked by variance.
 #'
-#' @param ecoda_object An initialized \code{\link{ECODA}} object containing
+#' @param ecoda_object An initialized \link[=ECODA-class]{ECODA} object containing
 #'                     CLR-transformed data in the \code{clr} slot.
 #' @param show_plot Logical (default: \code{TRUE}). If \code{TRUE}, a mean-variance
-#'                  plot is generated using the internal \code{varmeanplot} function.
+#'                  plot is generated using the internal \code{plot_varmean} function.
 #' @param label_points Logical (default: \code{TRUE}). If \code{TRUE}, the points
 #'                     on the plot will be labeled with cell type names.
 #' @param plot_title Character string (default: ""). Title for the generated plot.
@@ -548,7 +558,7 @@ find_highly_variable_celltypes <- function(ecoda_object,
 #'
 #' @export get_celltype_variances
 #'
-#' @seealso \code{\link{ECODA}}, \code{\link{varmeanplot}}
+#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{plot_varmean}}
 #'
 #' @examples
 #' \dontrun{
@@ -595,11 +605,11 @@ get_celltype_variances <- function(ecoda_object,
     )
 
   if (show_plot) {
-    p <- varmeanplot(
-      data = df_var,
-      plot_title = plot_title,
-      smooth_method = smooth_method,
-      label_points = label_points
+    p <- plot_varmean(
+      ecoda_object,
+      plot_title,
+      smooth_method,
+      label_points
     )
     print(p)
   }
@@ -634,7 +644,7 @@ get_celltype_variances <- function(ecoda_object,
 #' @return A character vector containing the names of the selected highly variable cell types.
 #'         The function ensures that at least two cell types are always returned.
 #'
-#' @importFrom dplyr %>% slice pull
+#' @importFrom dplyr %>% slice pull slice_head
 #' @importFrom rlang .data
 #'
 #' @export get_highly_variable_celltypes
@@ -701,7 +711,7 @@ get_highly_variable_celltypes <- function(df_var,
 #' the variance (CLR) for each cell type, which is typically used to identify
 #' Highly Variable Cell Types (HVCs).
 #'
-#' @param ecoda_object An \code{\link{ECODA}} object containing pre-calculated
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing pre-calculated
 #'                     cell type variances in the \code{celltype_variances} slot.
 #' @param plot_title Character string (default: ""). The title for the plot.
 #' @param smooth_method Character string (default: "lm"). The smoothing method to
@@ -720,7 +730,7 @@ get_highly_variable_celltypes <- function(df_var,
 #'
 #' @export plot_varmean
 #'
-#' @seealso \code{\link{ECODA}}, \code{\link{get_celltype_variances}}
+#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}
 #'
 #' @examples
 #' \dontrun{
@@ -792,14 +802,14 @@ plot_varmean <- function(ecoda_object,
 #'
 #' # Assuming sce is a loaded SingleCellExperiment object
 #' pb_sce <- calculate_pseudobulk(
-#'   count_matrix = assay(sce, "counts"),
-#'   sample_ids = colData(sce)$sample_id,
+#'   count_matrix = SummarizedExperiment::assay(sce, "counts"),
+#'   sample_ids = SummarizedExperiment::colData(sce)$sample_id,
 #'   min_cells = 5 # Example of filtering samples with < 5 cells
 #' )
 #' }
 calculate_pseudobulk <- function(count_matrix,
                                  sample_ids,
-                                 min_cells = 1) {
+                                 min_cells = 10) {
   # Input validation
   if (ncol(count_matrix) != length(sample_ids)) {
     stop("Length of sample_ids must equal the number of columns in count_matrix")
@@ -825,7 +835,7 @@ calculate_pseudobulk <- function(count_matrix,
 
     # Subset to valid samples
     keep_cells <- sample_ids %in% valid_samples
-    count_matrix <- count_matrix[, keep_cells, drop = FALSE]
+    count_matrix <- as.matrix(count_matrix)[, keep_cells, drop = FALSE]
     sample_ids <- droplevels(sample_ids[keep_cells])
 
     # Report filtered samples
@@ -875,9 +885,7 @@ calculate_pseudobulk <- function(count_matrix,
 #'
 #' @importFrom stats formula
 #' @importFrom DESeq2 DESeqDataSetFromMatrix estimateSizeFactors vst
-#' @importFrom SummarizedExperiment assay
 #' @importFrom BiocGenerics counts
-#' @importFrom MatrixGenerics rowVars
 #'
 #' @examples
 #' \dontrun{
@@ -891,24 +899,33 @@ calculate_pseudobulk <- function(count_matrix,
 #' pb_norm_hvg <- deseq2_normalize(pb, metadata, hvg = my_hvgs)
 #' }
 deseq2_normalize <- function(pb,
-                             metadata,
+                             metadata = NULL, # Made optional
                              hvg = NULL,
                              nvar_genes = 2000) {
-  # Check that all samples in pb are in metadata
-  if (!all(colnames(pb) %in% rownames(metadata))) {
-    stop("Not all sample names in pb are found in metadata rownames")
+  if (is.null(metadata)) {
+    metadata <- data.frame(
+      # The column name is arbitrary, but required for the design formula (~ 1)
+      dummy_group = factor(rep("A", ncol(pb))),
+      # The row names MUST match the sample names in the count matrix (pb)
+      row.names = colnames(pb)
+    )
+    message("No metadata provided. Creating a dummy metadata data frame for blind VST (design ~ 1).")
+  } else {
+    # --- Existing check/reorder for when metadata IS provided ---
+    if (!all(colnames(pb) %in% rownames(metadata))) {
+      stop("Not all sample names in pb are found in metadata rownames")
+    }
+    # Reorder metadata to match pb
+    metadata <- metadata[colnames(pb), , drop = FALSE]
   }
-
-  # Reorder metadata to match pb
-  metadata <- metadata[colnames(pb), , drop = FALSE]
 
   suppressMessages({
     suppressWarnings({
-      # Create DESeq2 dataset
+      # Create DESeq2 dataset (metadata is guaranteed to exist here)
       dds <- DESeqDataSetFromMatrix(
         countData = pb,
         colData = metadata,
-        design = formula(paste("~ 1"))
+        design = formula(paste("~ 1")) # Uses the simplest design for blind VST
       )
 
       # Estimate size factors
@@ -919,7 +936,7 @@ deseq2_normalize <- function(pb,
 
       # Transform counts using variance stabilizing transformation (VST)
       dds <- vst(dds, blind = TRUE, nsub = nsub)
-      pb_norm <- assay(dds) # Genes x Samples format
+      pb_norm <- SummarizedExperiment::assay(dds) # Genes x Samples format
 
       # Select highly variable genes
       if (!is.null(hvg)) {
@@ -940,7 +957,7 @@ deseq2_normalize <- function(pb,
         pb_norm <- pb_norm[hvg_available, , drop = FALSE]
       } else {
         # Auto-select top variable genes
-        rv <- rowVars(pb_norm)
+        rv <- apply(pb_norm, 1, var)
         n_genes_to_select <- min(nvar_genes, length(rv))
         select <- order(rv, decreasing = TRUE)[seq_len(n_genes_to_select)]
         select <- rownames(pb_norm)[select]
@@ -957,3 +974,13 @@ deseq2_normalize <- function(pb,
 
   return(as.data.frame(pb_norm))
 }
+
+
+
+# Stops R CMD check from complaining about "no visible binding for global variable"
+# when using unquoted column names inside ggplot2 or dplyr code.
+utils::globalVariables(c(
+  "sample_id", "celltype", "values", "Variance",
+  "cumulative_variance", "rel_abundance", "mean_rel_abund",
+  "ordered_group", "x_var", "y_var", "Relative_abundance"
+))
