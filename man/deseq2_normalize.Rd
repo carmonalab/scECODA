@@ -4,7 +4,13 @@
 \alias{deseq2_normalize}
 \title{DESeq2 Normalization of Pseudobulk Data}
 \usage{
-deseq2_normalize(pb, metadata = NULL, hvg = NULL, nvar_genes = 2000)
+deseq2_normalize(
+  pb,
+  metadata = NULL,
+  deseq2_design = NULL,
+  hvg = NULL,
+  nvar_genes = 2000
+)
 }
 \arguments{
 \item{pb}{A gene x sample pseudobulk count matrix (Genes as rows, Samples as columns).
@@ -13,6 +19,14 @@ Must contain non-negative integer counts.}
 \item{metadata}{A data.frame with sample-level metadata. Row names must exactly
 match the column names of \code{pb}. The function will reorder
 the metadata to match \code{pb}.}
+
+\item{deseq2_design}{Optional: A \code{formula} object specifying the design
+used by \code{DESeq2} to estimate size factors and variance
+for the VST. This formula should reference columns in the
+\code{metadata} data frame. If \code{NULL} (the default),
+the minimal design \code{~ 1} is used. Note: the design
+will be considered for pseudobulk normalization as the
+function uses vst(blind = FALSE, ...) internally.}
 
 \item{hvg}{Optional character vector of gene names to use as highly variable genes.
 If provided, only these genes will be returned after VST.}
@@ -32,6 +46,10 @@ It estimates size factors and variance for all genes, performs the VST, and then
 subsets the results to include only highly variable genes (HVCs),
 either specified by the user or automatically selected based on variance.
 }
+\details{
+\strong{Note:} If \code{deseq2_design} is not specified, the VST is performed using a
+minimal design formula (\code{~ 1}) for size factor and variance estimation.
+}
 \examples{
 \dontrun{
 # Assuming 'pb' is the pseudobulk matrix and 'metadata' is the sample annotation
@@ -39,8 +57,21 @@ either specified by the user or automatically selected based on variance.
 # 1. Auto-select top 2000 most variable genes after VST
 pb_norm_auto <- deseq2_normalize(pb, metadata)
 
-# 2. Use pre-defined set of highly variable genes
+# 2. Use a specific design formula to account for a 'Group' column in metadata
+my_design <- ~Group
+pb_norm_design <- deseq2_normalize(
+  pb,
+  metadata,
+  deseq2_design = my_design
+)
+
+# 3. Use pre-defined set of highly variable genes with a specific design
 my_hvgs <- c("Gene1", "Gene2", "Gene3")
-pb_norm_hvg <- deseq2_normalize(pb, metadata, hvg = my_hvgs)
+pb_norm_hvg <- deseq2_normalize(
+  pb,
+  metadata,
+  deseq2_design = ~ Condition + Batch,
+  hvg = my_hvgs
+)
 }
 }

@@ -55,9 +55,6 @@ setClass(
 )
 
 
-
-
-
 #' Creates an ECODA object from various data types.
 #'
 #' This is a smart constructor function used to initialize an
@@ -171,9 +168,6 @@ create_ecoda_object <- function(data = NULL,
 }
 
 
-
-
-
 #' Creates an ECODA object from pre-calculated cell type counts.
 #'
 #' This is the core constructor function that initializes and performs the initial
@@ -268,8 +262,6 @@ create_ecoda_object_from_counts <- function(counts = NULL,
 }
 
 
-
-
 #' Calculate relative frequencies (percentages) row-wise.
 #'
 #' This function takes a matrix or data frame of counts and transforms each row
@@ -288,7 +280,6 @@ calc_freq <- function(df) {
     as.data.frame()
   return(df)
 }
-
 
 
 #' Perform the Centered Log-Ratio (CLR) transformation.
@@ -314,8 +305,6 @@ clr <- function(df) {
 
   return(clr_df)
 }
-
-
 
 
 #' Get the cell type counts from a long data frame (e.g. seurat object metadata) where each cell is a row.
@@ -366,7 +355,6 @@ get_celltype_counts <- function(cell_data_df,
 
   return(cellcount_df)
 }
-
 
 
 #' Extracts constant metadata for each sample from a cell-level data frame.
@@ -450,11 +438,6 @@ get_sample_metadata <- function(cell_data_df,
 }
 
 
-
-
-
-
-
 # Find highly variable cell types ---------------------------
 
 #' Identifies and stores Highly Variable Cell Types (HVCs) in an ECODA object.
@@ -520,7 +503,6 @@ find_highly_variable_celltypes <- function(ecoda_object,
 
   return(ecoda_object)
 }
-
 
 
 #' Calculates the variance of cell types across samples.
@@ -618,8 +600,6 @@ get_celltype_variances <- function(ecoda_object,
 }
 
 
-
-
 #' Selects Highly Variable Cell Types (HVCs) based on variance or count threshold.
 #'
 #' This is a utility function that selects the most variable cell types from a
@@ -702,9 +682,6 @@ get_highly_variable_celltypes <- function(df_var,
 }
 
 
-
-
-
 #' Generates a Mean-Variance Plot for CLR-transformed Cell Type Data.
 #'
 #' This function visualizes the relationship between the mean abundance (CLR) and
@@ -766,9 +743,6 @@ plot_varmean <- function(ecoda_object,
 
   return(p)
 }
-
-
-
 
 
 # Get Pseudobulk and normalize ---------------------------
@@ -846,17 +820,10 @@ calculate_pseudobulk <- function(count_matrix,
   }
 
   # Aggregate by summing across samples
-  # Note: rowsum works on rows, so we transpose, aggregate, then transpose back
-  pb <- rowsum(t(count_matrix), group = sample_ids)
-  pb <- t(pb) # Transpose back to genes x samples format
-
-  # Report summary
-  message(paste("Pseudobulk matrix created:", nrow(pb), "genes x", ncol(pb), "samples"))
+  pb <- t(rowsum(t(count_matrix), group = sample_ids))
 
   return(pb)
 }
-
-
 
 
 #' DESeq2 Normalization of Pseudobulk Data
@@ -867,11 +834,21 @@ calculate_pseudobulk <- function(count_matrix,
 #' subsets the results to include only highly variable genes (HVCs),
 #' either specified by the user or automatically selected based on variance.
 #'
+#' **Note:** If `deseq2_design` is not specified, the VST is performed using a
+#' minimal design formula (`~ 1`) for size factor and variance estimation.
+#'
 #' @param pb A gene x sample pseudobulk count matrix (Genes as rows, Samples as columns).
 #'           Must contain non-negative integer counts.
 #' @param metadata A data.frame with sample-level metadata. Row names must exactly
 #'                 match the column names of \code{pb}. The function will reorder
 #'                 the metadata to match \code{pb}.
+#' @param deseq2_design Optional: A \code{formula} object specifying the design
+#'                      used by \code{DESeq2} to estimate size factors and variance
+#'                      for the VST. This formula should reference columns in the
+#'                      \code{metadata} data frame. If \code{NULL} (the default),
+#'                      the minimal design \code{~ 1} is used. Note: the design
+#'                      will be considered for pseudobulk normalization as the
+#'                      function uses vst(blind = FALSE, ...) internally.
 #' @param hvg Optional character vector of gene names to use as highly variable genes.
 #'            If provided, only these genes will be returned after VST.
 #' @param nvar_genes Number of top variable genes to select (default: 2000).
@@ -894,12 +871,26 @@ calculate_pseudobulk <- function(count_matrix,
 #' # 1. Auto-select top 2000 most variable genes after VST
 #' pb_norm_auto <- deseq2_normalize(pb, metadata)
 #'
-#' # 2. Use pre-defined set of highly variable genes
+#' # 2. Use a specific design formula to account for a 'Group' column in metadata
+#' my_design <- ~Group
+#' pb_norm_design <- deseq2_normalize(
+#'   pb,
+#'   metadata,
+#'   deseq2_design = my_design
+#' )
+#'
+#' # 3. Use pre-defined set of highly variable genes with a specific design
 #' my_hvgs <- c("Gene1", "Gene2", "Gene3")
-#' pb_norm_hvg <- deseq2_normalize(pb, metadata, hvg = my_hvgs)
+#' pb_norm_hvg <- deseq2_normalize(
+#'   pb,
+#'   metadata,
+#'   deseq2_design = ~ Condition + Batch,
+#'   hvg = my_hvgs
+#' )
 #' }
 deseq2_normalize <- function(pb,
-                             metadata = NULL, # Made optional
+                             metadata = NULL,
+                             deseq2_design = NULL,
                              hvg = NULL,
                              nvar_genes = 2000) {
   if (is.null(metadata)) {
@@ -909,7 +900,6 @@ deseq2_normalize <- function(pb,
       # The row names MUST match the sample names in the count matrix (pb)
       row.names = colnames(pb)
     )
-    message("No metadata provided. Creating a dummy metadata data frame for blind VST (design ~ 1).")
   } else {
     # --- Existing check/reorder for when metadata IS provided ---
     if (!all(colnames(pb) %in% rownames(metadata))) {
@@ -919,13 +909,17 @@ deseq2_normalize <- function(pb,
     metadata <- metadata[colnames(pb), , drop = FALSE]
   }
 
+  if (is.null(deseq2_design)) {
+    deseq2_design <- formula(paste("~ 1"))
+  }
+
   suppressMessages({
     suppressWarnings({
       # Create DESeq2 dataset (metadata is guaranteed to exist here)
       dds <- DESeqDataSetFromMatrix(
         countData = pb,
         colData = metadata,
-        design = formula(paste("~ 1")) # Uses the simplest design for blind VST
+        design = deseq2_design
       )
 
       # Estimate size factors
@@ -935,7 +929,7 @@ deseq2_normalize <- function(pb,
       nsub <- min(1000, sum(rowMeans(counts(dds, normalized = TRUE)) > 10))
 
       # Transform counts using variance stabilizing transformation (VST)
-      dds <- vst(dds, blind = TRUE, nsub = nsub)
+      dds <- vst(dds, blind = FALSE, nsub = nsub)
       pb_norm <- SummarizedExperiment::assay(dds) # Genes x Samples format
 
       # Select highly variable genes
@@ -974,7 +968,6 @@ deseq2_normalize <- function(pb,
 
   return(as.data.frame(pb_norm))
 }
-
 
 
 # Stops R CMD check from complaining about "no visible binding for global variable"
