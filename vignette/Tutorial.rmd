@@ -6,30 +6,6 @@ output: html_document
 ---
 
 
-```{r}
-TODO:
-Check why pb does not have the same sorting!
--> SORT!!!
-```
-
-
-
-
-```{r}
-test <- data(gong_sharma_dataset)
-test
-test <- data.table::fread("/Users/christianhalter/Desktop/scECODA/data/sound_life_AIFI_L3_frequencies.csv")
-test <- as.data.frame(test)
-
-save(test, file = file.path(getwd(), "data", "gong_sharma_dataset.rda"))
-
-
-```
-
-
-
-
-
 # Load example datasets
 
 ```{r}
