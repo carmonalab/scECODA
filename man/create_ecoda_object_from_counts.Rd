@@ -26,12 +26,12 @@ cell types (HVCs). Used by \code{find_highly_variable_celltypes}.}
 specifying the exact number of top HVCs to select based on variance.}
 }
 \value{
-A fully initialized \code{\link{ECODA}} object, populated with counts,
+A fully initialized \link[=ECODA-class]{ECODA} object, populated with counts,
 frequency data, CLR transformed data, sample distances, and HVCs.
 }
 \description{
 This is the core constructor function that initializes and performs the initial
-compositional analysis steps for an \code{\link{ECODA}} object, assuming the
+compositional analysis steps for an \link[=ECODA-class]{ECODA} object, assuming the
 cell type count matrix is already available. It handles zero-imputation,
 calculates relative frequencies, Centered Log-Ratio (CLR) transformed data,
 sample distances, and identifies highly variable cell types (HVCs).
@@ -52,5 +52,5 @@ ecoda_obj <- create_ecoda_object_from_counts(
 }
 }
 \seealso{
-\code{\link{ECODA}}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_highly_variable_celltypes}}
+\link[=ECODA-class]{ECODA}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_highly_variable_celltypes}}
 }

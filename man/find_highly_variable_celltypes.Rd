@@ -11,7 +11,7 @@ find_highly_variable_celltypes(
 )
 }
 \arguments{
-\item{ecoda_object}{An initialized \code{\link{ECODA}} object containing the
+\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object containing the
 CLR-transformed data in the \code{clr} slot.}
 
 \item{variance_explained}{Numeric (default: 0.5). The target cumulative
@@ -24,7 +24,7 @@ once this threshold is met.}
 types with the highest variance.}
 }
 \value{
-The updated \code{\link{ECODA}} object with the following slots populated:
+The updated \link[=ECODA-class]{ECODA} object with the following slots populated:
 \itemize{
 \item \code{celltype_variances}: Data frame of cell type variances.
 \item \code{variance_explained}: The exact variance proportion captured by the selected HVCs.
@@ -50,5 +50,5 @@ ecoda_obj <- find_highly_variable_celltypes(ecoda_obj, top_n_hvcs = 5)
 }
 }
 \seealso{
-\code{\link{ECODA}}, \code{\link{get_celltype_variances}}, \code{\link{get_highly_variable_celltypes}}
+\link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}, \code{\link{get_highly_variable_celltypes}}
 }

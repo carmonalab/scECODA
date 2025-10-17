@@ -7,7 +7,7 @@
 create_long_data(ecoda_object, data_slot, label_col = NULL)
 }
 \arguments{
-\item{ecoda_object}{An initialized \code{\link{ECODA}} object.}
+\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object.}
 
 \item{data_slot}{Character string specifying the data matrix to use. Must be
 either \code{"freq"} (for relative abundance) or \code{"clr"}
@@ -30,7 +30,7 @@ depending on the chosen \code{data_slot}.
 }
 \description{
 This function takes either the relative abundance (\code{freq}) or CLR-transformed
-abundance (\code{clr}) matrix from an \code{\link{ECODA}} object, converts it
+abundance (\code{clr}) matrix from an \link[=ECODA-class]{ECODA} object, converts it
 from a wide (samples x cell types) to a long (sample, celltype, value) format,
 and optionally joins it with a specified column from the sample metadata.
 }
@@ -50,5 +50,5 @@ long_freq_labeled <- create_long_data(
 }
 }
 \seealso{
-\code{\link{ECODA}}
+\link[=ECODA-class]{ECODA}
 }

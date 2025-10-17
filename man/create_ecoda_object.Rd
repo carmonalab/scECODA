@@ -40,12 +40,12 @@ highly variable cell types (HVCs) to select.}
 specifying the exact number of top HVCs to select.}
 }
 \value{
-A new \code{\link{ECODA}} object populated with \code{counts}, \code{metadata},
+A new \link[=ECODA-class]{ECODA} object populated with \code{counts}, \code{metadata},
 and optionally \code{pb} and the initial compositional analysis results.
 }
 \description{
 This is a smart constructor function used to initialize an
-\code{\link{ECODA}} object. It handles the processing of single-cell objects
+\link[=ECODA-class]{ECODA} object. It handles the processing of single-cell objects
 (\code{Seurat} or \code{SingleCellExperiment}) or raw data frames to extract
 cell type counts, calculate sample metadata, and optionally generate
 DESeq2-normalized pseudobulk data.
@@ -66,5 +66,5 @@ ecoda_obj <- create_ecoda_object(
 }
 }
 \seealso{
-\code{\link{ECODA}}, \code{\link{calculate_pseudobulk}}, \code{\link{get_celltype_counts}}, \code{\link{get_sample_metadata}}
+\link[=ECODA-class]{ECODA}, \code{\link{calculate_pseudobulk}}, \code{\link{get_celltype_counts}}, \code{\link{get_sample_metadata}}
 }

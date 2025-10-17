@@ -4,7 +4,7 @@
 \alias{calculate_pseudobulk}
 \title{Calculate Pseudobulk from Count Matrix}
 \usage{
-calculate_pseudobulk(count_matrix, sample_ids, min_cells = 1)
+calculate_pseudobulk(count_matrix, sample_ids, min_cells = 10)
 }
 \arguments{
 \item{count_matrix}{A gene x cell count matrix (can be a dense matrix or sparse Matrix).
@@ -38,8 +38,8 @@ pb_seurat <- calculate_pseudobulk(
 
 # Assuming sce is a loaded SingleCellExperiment object
 pb_sce <- calculate_pseudobulk(
-  count_matrix = assay(sce, "counts"),
-  sample_ids = colData(sce)$sample_id,
+  count_matrix = SummarizedExperiment::assay(sce, "counts"),
+  sample_ids = SummarizedExperiment::colData(sce)$sample_id,
   min_cells = 5 # Example of filtering samples with < 5 cells
 )
 }

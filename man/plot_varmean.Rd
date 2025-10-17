@@ -13,7 +13,7 @@ plot_varmean(
 )
 }
 \arguments{
-\item{ecoda_object}{An \code{\link{ECODA}} object containing pre-calculated
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing pre-calculated
 cell type variances in the \code{celltype_variances} slot.}
 
 \item{plot_title}{Character string (default: ""). The title for the plot.}
@@ -52,5 +52,5 @@ plot_varmean(ecoda_obj, smooth_method = "loess")
 }
 }
 \seealso{
-\code{\link{ECODA}}, \code{\link{get_celltype_variances}}
+\link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}
 }

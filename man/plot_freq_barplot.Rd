@@ -14,7 +14,7 @@ plot_freq_barplot(
 )
 }
 \arguments{
-\item{ecoda_object}{An \code{\link{ECODA}} object containing cell type relative
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing cell type relative
 frequencies in the \code{freq} slot.}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name of a
@@ -65,5 +65,5 @@ p4 <- plot_freq_barplot(ecoda_obj, custom_sample_order = custom_order)
 }
 }
 \seealso{
-\code{\link{create_long_data}}, \code{\link{ECODA}}
+\code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
 }

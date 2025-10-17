@@ -4,7 +4,7 @@
 \alias{deseq2_normalize}
 \title{DESeq2 Normalization of Pseudobulk Data}
 \usage{
-deseq2_normalize(pb, metadata, hvg = NULL, nvar_genes = 2000)
+deseq2_normalize(pb, metadata = NULL, hvg = NULL, nvar_genes = 2000)
 }
 \arguments{
 \item{pb}{A gene x sample pseudobulk count matrix (Genes as rows, Samples as columns).

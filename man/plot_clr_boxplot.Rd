@@ -14,7 +14,7 @@ plot_clr_boxplot(
 )
 }
 \arguments{
-\item{ecoda_object}{An \code{\link{ECODA}} object containing the CLR-transformed
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the CLR-transformed
 abundances in the \code{clr} slot.}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name of a
@@ -83,5 +83,5 @@ p3 <- plot_clr_boxplot(
 }
 }
 \seealso{
-\code{\link{create_long_data}}, \code{\link{ECODA}}
+\code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
 }

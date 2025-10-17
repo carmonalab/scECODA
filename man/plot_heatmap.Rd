@@ -16,7 +16,7 @@ plot_heatmap(
 )
 }
 \arguments{
-\item{ecoda_object}{An \code{\link{ECODA}} object containing the CLR-transformed
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the CLR-transformed
 abundances in the \code{clr} slot.}
 
 \item{label_col}{Character string. The name of the column in \code{ecoda_object@metadata}
@@ -74,5 +74,5 @@ p2 <- plot_heatmap(
 }
 }
 \seealso{
-\code{\link{ECODA}}, \code{\link{pheatmap}}
+\link[=ECODA-class]{ECODA}, \code{\link{pheatmap}}
 }

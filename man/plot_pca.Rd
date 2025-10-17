@@ -6,6 +6,7 @@
 \usage{
 plot_pca(
   ecoda_object,
+  slot = c("clr", "pb"),
   label_col = NULL,
   scale. = FALSE,
   pca_dims = NULL,
@@ -27,8 +28,11 @@ plot_pca(
 )
 }
 \arguments{
-\item{ecoda_object}{An \code{\link{ECODA}} object containing the CLR-transformed
-abundances in the \code{clr} slot.}
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object}
+
+\item{slot}{A slot in the ECODA object (default: \code{"clr"}): either the
+CLR-transformed abundances in the \code{clr} slot or
+the pseudobulk gene expression in the \code{pb} slot.}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name of a
 column in \code{ecoda_object@metadata} used to color and group

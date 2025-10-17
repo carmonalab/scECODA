@@ -7,6 +7,9 @@
 get_celltype_counts(cell_data_df, sample_col, celltype_col)
 }
 \arguments{
+\item{cell_data_df}{A data frame where each row represents a single cell, and columns
+contain cell-level information, including sample ID and cell type annotation.}
+
 \item{sample_col}{The column that defines the sample ID for each cell}
 
 \item{celltype_col}{The column that defines the cell type annotation for each cell}

@@ -14,11 +14,11 @@ get_celltype_variances(
 )
 }
 \arguments{
-\item{ecoda_object}{An initialized \code{\link{ECODA}} object containing
+\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object containing
 CLR-transformed data in the \code{clr} slot.}
 
 \item{show_plot}{Logical (default: \code{TRUE}). If \code{TRUE}, a mean-variance
-plot is generated using the internal \code{varmeanplot} function.}
+plot is generated using the internal \code{plot_varmean} function.}
 
 \item{label_points}{Logical (default: \code{TRUE}). If \code{TRUE}, the points
 on the plot will be labeled with cell type names.}
@@ -43,7 +43,7 @@ A data frame (samples as rows, cell types as columns) containing:
 }
 \description{
 This function takes the Centered Log-Ratio (CLR) transformed cell type
-abundance data from an \code{\link{ECODA}} object, calculates the mean CLR
+abundance data from an \link[=ECODA-class]{ECODA} object, calculates the mean CLR
 abundance and variance for each cell type, and optionally generates a
 mean-variance plot. It also calculates the cumulative variance explained
 by the cell types when ranked by variance.
@@ -60,5 +60,5 @@ df_var_asc <- get_celltype_variances(ecoda_obj, show_plot = FALSE, descending = 
 }
 }
 \seealso{
-\code{\link{ECODA}}, \code{\link{varmeanplot}}
+\link[=ECODA-class]{ECODA}, \code{\link{plot_varmean}}
 }
