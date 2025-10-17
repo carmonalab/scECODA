@@ -5,11 +5,29 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-# JUST FOR DEVELOPMENT (DELETE)
-Load all functions
+
 ```{r}
-devtools::load_all()
+TODO:
+Check why pb does not have the same sorting!
+-> SORT!!!
 ```
+
+
+
+
+```{r}
+test <- data(gong_sharma_dataset)
+test
+test <- data.table::fread("/Users/christianhalter/Desktop/scECODA/data/sound_life_AIFI_L3_frequencies.csv")
+test <- as.data.frame(test)
+
+save(test, file = file.path(getwd(), "data", "gong_sharma_dataset.rda"))
+
+
+```
+
+
+
 
 
 # Load example datasets
@@ -19,7 +37,7 @@ data(example_data)
 ```
 
 
-# Create ecoda_object from counts
+## Create ecoda_object from counts
 
 First, we load the cell counts and metadata from the Zhang et al. breast cancer dataset.
 Samples were collected from blood and tumor. Blood samples are enriched in monocytes while tumor samples show increased levels of macrophages, which are typically only present in peripheral tissue but not in blood.
@@ -160,8 +178,7 @@ plot_heatmap(ecoda_object, label_col = "Tissue")
 
 ```{r}
 library(SeuratData)
-
-InstallData("pbmc3k")
+# InstallData("pbmc3k")
 data("pbmc3k")
 pbmc3k <- Seurat::UpdateSeuratObject(pbmc3k)
 head(pbmc3k@meta.data)
@@ -181,50 +198,54 @@ pbmc3k$sample_id <- rep(x = paste0("sample", seq(n_samples)), length.out = lengt
 pbmc3k$condition_id <- ""
 pbmc3k$condition_id <- c(rep("condition1", n_samples/n_groups),
                       rep("condition2", n_samples/n_groups))
-
-
-# n_samples <- 40 # Total number of unique samples
-# n_groups <- 3 # Total number of conditions/groups to distribute samples across
-# 
-# 
-# # 1. Create Sample IDs (retains original structure)
-# # This assigns sample1...sample40 repeatedly to every cell.
-# pbmc3k$sample_id <- rep(
-#   x = paste0("sample", seq_len(n_samples)),
-#   length.out = length(pbmc3k$sample_id)
-# )
-# 
-# # 2. Dynamically Assign Conditions to Samples
-# # This logic ensures the n_samples are split as evenly as possible among n_groups.
-# 
-# # Define the condition names (e.g., "condition1", "condition2", ...)
-# condition_names <- paste0("condition", seq_len(n_groups))
-# 
-# # Calculate how many samples get assigned to each group (uses ceiling for even distribution)
-# reps_per_group <- ceiling(n_samples / n_groups)
-# 
-# # Create a condition assignment vector that is exactly n_samples long
-# sample_conditions_vector <- rep(
-#   condition_names,
-#   each = reps_per_group,
-#   length.out = n_samples
-# )
-# 
-# # Create a map to link sample ID strings to their condition strings
-# sample_ids_vector <- paste0("sample", seq_len(n_samples))
-# sample_condition_map <- data.frame(
-#   sample_id = sample_ids_vector,
-#   condition_id_sample = sample_conditions_vector
-# )
-# 
-# # 3. Apply the Condition Map to the Cell-Level Data
-# # Use 'match' to efficiently look up the condition for every cell based on its sample ID.
-# match_indices <- match(pbmc3k$sample_id, sample_condition_map$sample_id)
-# pbmc3k$condition_id <- sample_condition_map$condition_id_sample[match_indices]
 ```
 
 
-# Create ecoda object
+```{r}
+# Multiply CD8 T cells and NK cells within "condition2" by 5:
+pbmc3k_DiffAbu <- seurat_multiply_cells_in_condition(
+  seurat_object = pbmc3k,
+  condition_column = "condition_id",
+  target_condition = "condition2",
+  celltype_column = "seurat_annotations",
+  target_celltypes = c("CD8 T", "NK"),
+  multiplier = 5
+)
+
+# Verification (Optional):
+# Check the cell counts before:
+table(pbmc3k@meta.data$condition, pbmc3k@meta.data$seurat_annotation)
+# Check the cell counts after:
+table(pbmc3k_DiffAbu@meta.data$condition, pbmc3k_DiffAbu@meta.data$seurat_annotations)
+```
+
+
+```{r}
+ecoda_object <- create_ecoda_object(
+  pbmc3k,
+  sample_col = "sample_id",
+  celltype_col = "seurat_annotations",
+  get_pb = TRUE
+)
+plot_pca(ecoda_object, label_col = "condition_id", title = "PCA cell type composition")
+plot_pca(ecoda_object, slot = "pb", label_col = "condition_id", title = "PCA pseudobulk")
+
+ecoda_object_DiffAbu <- create_ecoda_object(
+  pbmc3k_DiffAbu,
+  sample_col = "sample_id",
+  celltype_col = "seurat_annotations",
+  get_pb = TRUE
+)
+plot_pca(ecoda_object_DiffAbu, label_col = "condition_id", title = "PCA cell type composition", n_ct_show = 2)
+plot_pca(ecoda_object_DiffAbu, slot = "pb", label_col = "condition_id", title = "PCA pseudobulk")
+```
+
+
+
+
+
+
+# Create ecoda object from seurat object
 You can create an ECODA object from a Seurat or SingleCellExperiment object.
 This will automatically calculate:
 * Cell counts per sample
@@ -242,7 +263,7 @@ ecoda_object <- create_ecoda_object(
   get_pb = TRUE
 )
 
-plot_pca(ecoda_object@clr, labels = ecoda_object@metadata$condition_id, title = "PCA cell type composition")
+plot_pca(ecoda_object, label_col = "condition_id", title = "PCA cell type composition")
 ```
 
 As you would expect, the principal component analysis (PCA) shows that the samples of our two conditions do not separate based on cell type composition, the cells were randomly assigned to samples and conditions.
@@ -275,7 +296,6 @@ plot_pca(
   plotly_3d = TRUE
 )
 ```
-
 
 It can be seen that CD8 T and NK cells are significantly higher in the condition2. Interestingly, it can also be seen that all the other cell types seem to be lower abundant, even though their counts were not changed. However, their relative abundance decreased. Remember that parts of a composition are not independent.
 
@@ -325,7 +345,7 @@ plot_varmean(ecoda_object)
 * Variance of each cell type (in CLR)
 * Highly variable cell types (sorted descending by CLR)
 
-
+# Create ECODA object from SingleCellExperiment object
 
 ```{r}
 library(scRNAseq)
@@ -334,19 +354,16 @@ ds <- 1
 sce <- fetchDataset(all.ds@listData[["name"]][ds], all.ds@listData[["version"]][ds])
 
 ecoda_object <- create_ecoda_object(
-  test,
+  sce,
   sample_col = "sample",
   celltype_col = "cluster",
-  get_pb = F
+  get_pb = TRUE
 )
 
-plot_pca(ecoda_object@clr, labels = ecoda_object@metadata$condition_id, title = "PCA cell type composition")
-```
-
-
-
-```{r}
-readRDS("data/example_data.rds")
+plot_pca(ecoda_object, label_col = "Condition", title = "PCA cell type composition")
+plot_pca(ecoda_object, slot = "pb", label_col = "Condition", title = "PCA cell type composition")
+plot_pca(ecoda_object, label_col = "DevelopmentalStage", title = "PCA cell type composition")
+plot_pca(ecoda_object, slot = "pb", label_col = "DevelopmentalStage", title = "PCA cell type composition")
 ```
 
 
@@ -394,6 +411,13 @@ pheatmap(
   # cutree_rows = 6,
   # cutree_cols = 6
 )
+
+```
+
+
+# Load full Zhang seurat object
+
+```{r}
 
 ```
 
