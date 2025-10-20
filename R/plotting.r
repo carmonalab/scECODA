@@ -567,6 +567,11 @@ plot_heatmap <- function(ecoda_object,
 #' @param title Character string (optional, default: \code{NULL}). The main title
 #'              for the plot. If clustering scores are calculated, they are appended
 #'              to this title.
+#' @param legend_title Character string (default: \code{"Group"}). The title for the color
+#'                     legend in the plot when a grouping column (\code{label_col}) is provided.
+#' @param show_label_samples Logical (default: \code{FALSE}). If \code{TRUE}, sample names are
+#'                           displayed next to the points in the plot. This automatically adds
+#'                           \code{"text"} to the \code{geom} parameter if it is not already present.
 #' @param score_digits Integer (default: \code{3}). The number of decimal places to
 #'                     round the clustering and ANOSIM scores appended to the plot title.
 #' @param cluster_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates
@@ -577,6 +582,10 @@ plot_heatmap <- function(ecoda_object,
 #'                  average Silhouette width using \code{\link{calc_sil}}.
 #' @param anosim_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates
 #'                     the ANOSIM statistic (R) using \code{vegan::anosim}.
+#' @param anosim_permutations Integer (default: \code{99}). The number of permutations
+#'                      to use when calculating the ANOSIM statistic.
+#' @param anosim_parallel Integer (default: \code{detectCores()}). The number of parallel
+#'                      processes/cores to use for the ANOSIM calculation.
 #' @param pointsize Numeric (default: \code{3}). Size of the points in the plot.
 #' @param labelsize Numeric (default: \code{4}). Size of the variable labels in the plot.
 #' @param coord_equal Logical (default: \code{TRUE}). If \code{TRUE}, forces the
@@ -588,6 +597,15 @@ plot_heatmap <- function(ecoda_object,
 #' @param invisible Character vector (default: \code{c("var", "quali")}). Elements to
 #'                    hide in the 2D plot. Can include "var" (variables/cell types),
 #'                    "ind" (samples), or "quali" (group centroids).
+#' @param geom Character string or vector (default: \code{"point"}). The geometry to be used
+#'             for the plot. Allowed values are combinations of:
+#'             \itemize{
+#'               \item \code{"point"} to show points for individuals (samples)
+#'               \item \code{"text"} to show labels for individuals (samples)
+#'               \item \code{"arrow"} to show vectors for variables (features)
+#'             }
+#'             The default \code{"point"} plots points for both individuals and variables.
+#'             Use \code{c("point", "text")} to show both points and labels for samples.
 #' @param n_ct_show Integer (default: \code{Inf}). Number of cell types (variables)
 #'                  to show based on their contribution to the selected axes. Set to
 #'                  \code{Inf} to show all.
@@ -603,6 +621,7 @@ plot_heatmap <- function(ecoda_object,
 #' @importFrom plotly plot_ly add_markers add_paths group2NA
 #' @importFrom dplyr bind_rows
 #' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal
+#' @importFrom parallel detectCores
 #'
 #' @export plot_pca
 plot_pca <- function(ecoda_object,
@@ -612,17 +631,22 @@ plot_pca <- function(ecoda_object,
                      pca_dims = NULL,
                      knn_k = NULL,
                      title = NULL,
+                     legend_title = "Group",
+                     show_label_samples = FALSE,
                      score_digits = 3,
                      cluster_score = TRUE,
                      mod_score = TRUE,
                      sil_score = FALSE,
                      anosim_score = TRUE,
+                     anosim_permutations = 99,
+                     anosim_parallel = detectCores(),
                      pointsize = 3,
                      labelsize = 4,
                      coord_equal = TRUE,
                      axes = c(1, 2),
                      plotly_3d = FALSE,
                      invisible = c("var", "quali"),
+                     geom = "point",
                      n_ct_show = Inf,
                      repel = TRUE) {
   slot <- match.arg(slot)
@@ -635,7 +659,16 @@ plot_pca <- function(ecoda_object,
     labels <- ecoda_object@metadata[[label_col]]
 
     if (anosim_score) {
-      anosim_score <- round(anosim(x = feat_mat, grouping = labels, distance = "euclidean")[["statistic"]], score_digits)
+      anosim_score <- round(
+        anosim(
+          x = feat_mat,
+          grouping = labels,
+          distance = "euclidean",
+          permutations = anosim_permutations,
+          parallel = anosim_parallel
+        )[["statistic"]],
+        score_digits
+      )
       title <- paste0(title, "\nANOSIM score: ", anosim_score)
     }
     if (cluster_score) {
@@ -672,21 +705,31 @@ plot_pca <- function(ecoda_object,
       invisible <- "quali"
     }
 
-    p <- fviz_pca(res.pca,
+    if (show_label_samples) {
+      if (!"text" %in% geom) {
+        geom <- c(geom, "text")
+      }
+    }
+
+    p <- fviz_pca(
+      res.pca,
       axes = axes,
       habillage = labels,
-      label = "var",
       pointsize = pointsize,
       labelsize = labelsize,
       invisible = invisible,
       select.var = list(contrib = n_ct_show),
       repel = repel,
-      geom = "point"
+      geom = geom
     ) +
-      ggtitle(title)
+      ggtitle(title) +
+      scale_color_discrete(name = legend_title)
 
     if (!is.null(label_col)) {
-      p <- p + scale_shape_manual(values = rep(19, length(unique(labels))))
+      p <- p + scale_shape_manual(
+        values = rep(19, length(unique(labels))),
+        name = legend_title
+      )
     }
 
     if (coord_equal) {
@@ -696,8 +739,6 @@ plot_pca <- function(ecoda_object,
 
   return(p)
 }
-
-
 
 
 #' Calculate Average Silhouette Width

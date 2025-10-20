@@ -78,7 +78,7 @@ setClass(
 #' @param get_pb Logical, if \code{TRUE} (default: \code{FALSE}), the function will
 #'               calculate and store DESeq2-normalized pseudobulk data in the \code{pb} slot.
 #' @param variance_explained Numeric (default: 0.5). Used in subsequent steps by
-#'                         \code{create_ecoda_object_from_counts} to determine how many
+#'                         \code{create_ecoda_object_helper} to determine how many
 #'                         highly variable cell types (HVCs) to select.
 #' @param top_n_hvcs Integer (optional). Overrides \code{variance_explained} if provided,
 #'                   specifying the exact number of top HVCs to select.
@@ -151,7 +151,7 @@ create_ecoda_object <- function(data = NULL,
   counts <- get_celltype_counts(cell_data_df, sample_col, celltype_col)
   metadata <- get_sample_metadata(cell_data_df, sample_col)
 
-  ecoda_object <- create_ecoda_object_from_counts(
+  ecoda_object <- create_ecoda_object_helper(
     counts,
     metadata,
     variance_explained,
@@ -178,6 +178,10 @@ create_ecoda_object <- function(data = NULL,
 #'
 #' @param counts A data frame or matrix of cell type counts where **rows are samples**
 #'               and **columns are cell types**. Must contain non-negative integers.
+#' @param freq A data frame or matrix of **relative cell type frequencies** (proportions)
+#'             where **rows are samples** and **columns are cell types**. Values must be
+#'             between 0 and 100 (or close to 1 across rows). If provided, this matrix
+#'             is used directly for CLR transformation.
 #' @param metadata An optional data frame containing sample-level metadata. Row names
 #'                 must match the row names of the \code{counts} matrix.
 #' @param variance_explained Numeric (default: 0.5). The proportion of total variance
@@ -194,7 +198,7 @@ create_ecoda_object <- function(data = NULL,
 #' @importFrom dplyr %>%
 #' @importFrom stats dist
 #'
-#' @export create_ecoda_object_from_counts
+#' @export create_ecoda_object_helper
 #'
 #' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_highly_variable_celltypes}}
 #'
@@ -204,7 +208,7 @@ create_ecoda_object <- function(data = NULL,
 #' counts_df <- data.frame(row.names = c("S1", "S2"), A = c(10, 5), B = c(0, 15))
 #' meta_df <- data.frame(row.names = c("S1", "S2"), Group = c("Treated", "Control"))
 #'
-#' ecoda_obj <- create_ecoda_object_from_counts(
+#' ecoda_obj <- create_ecoda_object_helper(
 #'   counts = counts_df,
 #'   metadata = meta_df,
 #'   top_n_hvcs = 2
@@ -212,25 +216,20 @@ create_ecoda_object <- function(data = NULL,
 #' # ecoda_obj@counts will contain the original counts
 #' # ecoda_obj@clr will contain the CLR transformed data
 #' }
-create_ecoda_object_from_counts <- function(counts = NULL,
-                                            metadata = NULL,
-                                            variance_explained = 0.5,
-                                            top_n_hvcs = NULL) {
+create_ecoda_object_helper <- function(counts = NULL,
+                                       freq = NULL,
+                                       metadata = NULL,
+                                       variance_explained = 0.5,
+                                       top_n_hvcs = NULL) {
   # Initialize the object with default values
   ecoda_object <- new("ECODA")
 
-  if (!is.null(counts)) {
-    if (!is.null(metadata)) {
-      # Sort by rownames
-      counts <- counts[mixedsort(rownames(counts)), ]
-      metadata <- metadata[mixedsort(rownames(metadata)), , drop = FALSE]
+  if (!is.null(counts) && !is.null(freq)) {
+    stop("Please provide only counts or freq.")
+  }
 
-      # Ensure correct dimensions
-      if (!all(rownames(counts) == rownames(metadata))) {
-        stop("Rownames of cell counts do not match metadata.")
-      }
-      ecoda_object@metadata <- metadata
-    }
+  if (!is.null(counts)) {
+    counts <- counts[mixedsort(rownames(counts)), ]
 
     counts_imp <- counts
     if (any(counts == 0)) {
@@ -239,24 +238,72 @@ create_ecoda_object_from_counts <- function(counts = NULL,
     freq <- calc_freq(counts)
     freq_imp <- calc_freq(counts_imp)
     clr_df <- clr(counts_imp)
-    sdist <- clr_df %>%
-      dist() %>%
-      as.matrix() %>%
-      as.data.frame()
 
     ecoda_object@counts <- counts
     ecoda_object@counts_imp <- counts_imp
     ecoda_object@freq <- freq
     ecoda_object@freq_imp <- freq_imp
-    ecoda_object@clr <- clr_df
-    ecoda_object@sample_distances <- sdist
-
-    ecoda_object <- find_highly_variable_celltypes(
-      ecoda_object,
-      variance_explained,
-      top_n_hvcs
-    )
   }
+
+  if (!is.null(freq)) {
+    freq <- freq[mixedsort(rownames(freq)), ]
+
+    row_sums <- rowSums(freq)
+
+    # Check if all row sums are close to 100 (using a tolerance for floating point numbers)
+    # If they are intended to be percentages
+    if (!all(abs(row_sums - 100) < 1e-6)) {
+      # Check if they are close to 1 and should be scaled to 100
+      if (all(abs(row_sums - 1) < 1e-6)) {
+        warning("Frequencies sum close to 1. Rescaling all rows to sum to 100.")
+        # Scale by 100
+        freq <- freq * 100
+      } else {
+        # If they sum to neither 1 nor 100, warn and scale them to 100
+        warning(paste(
+          "Frequencies do not sum to 100 (or 1).",
+          "Each row will be scaled so the new row sum is 100."
+        ))
+        # Re-scale each row so it sums to 100: (freq / row_sum) * 100
+        freq <- (freq / row_sums) * 100
+      }
+    }
+
+    freq_imp <- freq
+    if (any(freq == 0)) {
+      warning("freq contains zeros. Zeros were imputed with the smallest value in freq.")
+      freq_imp <- freq_imp + min(freq_imp[freq_imp > 0])
+    }
+    clr_df <- clr(freq_imp)
+
+    ecoda_object@freq <- freq
+    ecoda_object@freq_imp <- freq_imp
+  }
+
+  if (!is.null(metadata)) {
+    # Sort by rownames
+    metadata <- metadata[mixedsort(rownames(metadata)), , drop = FALSE]
+
+    # Ensure correct dimensions
+    if (!all(rownames(counts) == rownames(metadata))) {
+      stop("Rownames of cell counts do not match metadata.")
+    }
+    ecoda_object@metadata <- metadata
+  }
+
+  sdist <- clr_df %>%
+    dist() %>%
+    as.matrix() %>%
+    as.data.frame()
+
+  ecoda_object@clr <- clr_df
+  ecoda_object@sample_distances <- sdist
+
+  ecoda_object <- find_highly_variable_celltypes(
+    ecoda_object,
+    variance_explained,
+    top_n_hvcs
+  )
 
   return(ecoda_object)
 }
