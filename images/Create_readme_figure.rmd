@@ -1,0 +1,44 @@
+---
+title: "scECODA tutorial"
+author: "Christian Halter"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc_float: true
+  BiocStyle::pdf_document: default
+---
+
+# Introduction
+
+
+```{r}
+library(scECODA)
+
+# Load example datasets
+data(example_data)
+```
+
+
+It is also possible to create an ECODA object from counts or frequency. Optionally, metadata can be added.
+It is important to make sure that the counts/frequency and the metadata data frames have the same row names.
+
+```{r fig.height=12, fig.width=12}
+ds <- example_data$GongSharma_full
+counts <- ds$cell_counts_highresolution
+metadata <- ds$metadata
+metadata$age_cmv <- paste0(metadata$age_group, " CMV-", metadata$subject.cmv)
+
+ecoda_object <- create_ecoda_object_helper(
+  counts = counts,
+  metadata = metadata
+)
+
+p <- plot_pca(
+  ecoda_object, label_col = "age_cmv",
+  title = "PCA - Population-scale sample separation\nBased on Cell type composition",
+  n_ct_show = 9
+)
+print(p)
+
+ggsave(file.path(getwd(), "images", "GongSharma.png"), plot = p, width = 12, height = 12)
+```
