@@ -53,3 +53,14 @@ plot_pca(
 ```{r}
 sessionInfo()
 ```
+
+
+```{r}
+plot_pca(
+  ecoda_object,
+  slot = "pb",
+  label_col = "Condition",
+  title = "PCA - Pseudobulk", geom = c("point", "text")
+)
+```
+

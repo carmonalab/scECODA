@@ -2,27 +2,123 @@
 title: "scECODA tutorial"
 author: "Christian Halter"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  BiocStyle::html_document:
+    toc_float: true
+  BiocStyle::pdf_document: default
 ---
 
+# Introduction
 
-# Load example datasets
+The scECODA package provides functions for *s*ingle-*c*ell *E*xploratory *CO*mpositional *D*ata *A*nalysis at the population-scale.
+It enables users to explore their dataset by visualizing the sample structure and how groups of samples relate to each other
+by providing numerous convenient plotting functions.
+Additionally, it provides metrics to quantify how strongly groups of samples separate and
+which cell types are driving this separation (differential abundance analysis).
+
 
 ```{r}
+library(scECODA)
+```
+
+
+# Create ECODA objects
+
+## From Seurat object
+
+```{r}
+# Loading an example Seurat dataset
+library(SeuratData)
+# InstallData("pbmc3k")
+data("pbmc3k")
+seurat_object <- Seurat::UpdateSeuratObject(pbmc3k)
+```
+
+```{r}
+# Create ECODA object
+ecoda_object <- create_ecoda_object(
+  seurat_object,
+  sample_col = "sample_id",
+  celltype_col = "seurat_annotations",
+  get_pb = TRUE
+)
+
+plot_pca(
+  ecoda_object,
+  title = "PCA - Cell type composition"
+)
+plot_pca(
+  ecoda_object,
+  slot = "pb",
+  title = "PCA - Pseudobulk"
+)
+```
+
+
+## From SingleCellExperiment object
+
+```{r message=FALSE, warning=FALSE}
+# Loading an example SingleCellExperiment dataset
+library(scRNAseq)
+
+all.ds <- surveyDatasets()
+ds <- 1
+sce_object <- fetchDataset(all.ds@listData[["name"]][ds], all.ds@listData[["version"]][ds])
+
+names(sce_object@colData)
+```
+
+
+```{r}
+library(scECODA)
+
+# Create ECODA object
+ecoda_object <- create_ecoda_object(
+  sce_object,
+  sample_col = "sample",
+  celltype_col = "cluster",
+  get_pb = TRUE
+)
+
+plot_pca(
+  ecoda_object,
+  label_col = "Condition",
+  title = "PCA - Cell type composition"
+)
+plot_pca(
+  ecoda_object,
+  slot = "pb",
+  label_col = "Condition",
+  title = "PCA - Pseudobulk"
+)
+```
+
+
+## From counts or frequency data frame
+
+```{r}
+# Load example datasets
 data(example_data)
 ```
 
 
-## Create ecoda_object from counts
-
-First, we load the cell counts and metadata from the Zhang et al. breast cancer dataset.
-Samples were collected from blood and tumor. Blood samples are enriched in monocytes while tumor samples show increased levels of macrophages, which are typically only present in peripheral tissue but not in blood.
+It is also possible to create an ECODA object from counts or frequency. Optionally, metadata can be added.
+It is important to make sure that the counts/frequency and the metadata data frames have the same row names.
 
 ```{r}
 Zhang <- example_data$Zhang
-ecoda_object <- create_ecoda_object_from_counts(
-  counts = Zhang$cell_counts_lowresolution,
-  metadata = Zhang$metadata
+counts <- Zhang$cell_counts_lowresolution
+freq <- calc_freq(counts)
+metadata <- Zhang$metadata
+
+ecoda_object <- create_ecoda_object_helper(
+  counts = counts,
+  metadata = metadata
+)
+
+ecoda_object <- create_ecoda_object_helper(
+  freq = freq,
+  metadata = metadata
 )
 
 plot_pca(
@@ -35,12 +131,41 @@ plot_pca(
 
 
 
+# Visualization and quantification
+
+## PCA 
 
 The quantification of sample separation can be quantified with different metrics, for example:
 * Analysis of similarities (ANOSIM)
 * Adjusted rand index (ARI)
 * Modularity score
+
+In the example of the pbmc3k dataset there is no separation as it's only
+
+```{r}
+# Create ECODA object
+ecoda_object <- create_ecoda_object(
+  seurat_object,
+  sample_col = "sample_id",
+  celltype_col = "seurat_annotations",
+  get_pb = TRUE
+)
+
+plot_pca(
+  ecoda_object,
+  title = "PCA - Cell type composition"
+)
+plot_pca(
+  ecoda_object,
+  slot = "pb",
+  title = "PCA - Pseudobulk"
+)
+```
+
+
 All separation metrics show low scores around zero, indicating indeed a random distribution of our samples between conditions.
+
+
 
 All separation metrics increased and are now close to their maximum value of 1, indicating almost perfect separation of the two groups of samples.
 

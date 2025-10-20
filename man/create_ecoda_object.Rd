@@ -33,7 +33,7 @@ data frame) that defines the cell type annotation for each cell.
 calculate and store DESeq2-normalized pseudobulk data in the \code{pb} slot.}
 
 \item{variance_explained}{Numeric (default: 0.5). Used in subsequent steps by
-\code{create_ecoda_object_from_counts} to determine how many
+\code{create_ecoda_object_helper} to determine how many
 highly variable cell types (HVCs) to select.}
 
 \item{top_n_hvcs}{Integer (optional). Overrides \code{variance_explained} if provided,

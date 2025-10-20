@@ -12,17 +12,22 @@ plot_pca(
   pca_dims = NULL,
   knn_k = NULL,
   title = NULL,
+  legend_title = "Group",
+  label_samples = FALSE,
   score_digits = 3,
   cluster_score = TRUE,
   mod_score = TRUE,
   sil_score = FALSE,
   anosim_score = TRUE,
+  anosim_permutations = 99,
+  anosim_parallel = detectCores(),
   pointsize = 3,
   labelsize = 4,
   coord_equal = TRUE,
   axes = c(1, 2),
   plotly_3d = FALSE,
   invisible = c("var", "quali"),
+  geom = "point",
   n_ct_show = Inf,
   repel = TRUE
 )
@@ -56,6 +61,13 @@ graph construction, required for Modularity score calculation. If
 for the plot. If clustering scores are calculated, they are appended
 to this title.}
 
+\item{legend_title}{Character string (default: \code{"Group"}). The title for the color
+legend in the plot when a grouping column (\code{label_col}) is provided.}
+
+\item{label_samples}{Logical (default: \code{FALSE}). If \code{TRUE}, sample names are
+displayed next to the points in the plot. This automatically adds
+\code{"text"} to the \code{geom} parameter if it is not already present.}
+
 \item{score_digits}{Integer (default: \code{3}). The number of decimal places to
 round the clustering and ANOSIM scores appended to the plot title.}
 
@@ -70,6 +82,12 @@ average Silhouette width using \code{\link{calc_sil}}.}
 
 \item{anosim_score}{Logical (default: \code{TRUE}). If \code{TRUE}, calculates
 the ANOSIM statistic (R) using \code{vegan::anosim}.}
+
+\item{anosim_permutations}{Integer (default: \code{99}). The number of permutations
+to use when calculating the ANOSIM statistic.}
+
+\item{anosim_parallel}{Integer (default: \code{detectCores()}). The number of parallel
+processes/cores to use for the ANOSIM calculation.}
 
 \item{pointsize}{Numeric (default: \code{3}). Size of the points in the plot.}
 
@@ -87,6 +105,16 @@ interactive 3D scatter plot using \code{plotly} (requires \code{pca_dims >= 3}).
 \item{invisible}{Character vector (default: \code{c("var", "quali")}). Elements to
 hide in the 2D plot. Can include "var" (variables/cell types),
 "ind" (samples), or "quali" (group centroids).}
+
+\item{geom}{Character string or vector (default: \code{"point"}). The geometry to be used
+for the plot. Allowed values are combinations of:
+\itemize{
+\item \code{"point"} to show points for individuals (samples)
+\item \code{"text"} to show labels for individuals (samples)
+\item \code{"arrow"} to show vectors for variables (features)
+}
+The default \code{"point"} plots points for both individuals and variables.
+Use \code{c("point", "text")} to show both points and labels for samples.}
 
 \item{n_ct_show}{Integer (default: \code{Inf}). Number of cell types (variables)
 to show based on their contribution to the selected axes. Set to
