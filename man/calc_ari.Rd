@@ -4,10 +4,10 @@
 \alias{calc_ari}
 \title{Calculate Adjusted Rand Index (ARI)}
 \usage{
-calc_ari(matrix, labels, nclusts = NULL, digits = 3, return_mean = TRUE)
+calc_ari(feat_mat, labels, nclusts = NULL, digits = 3, return_mean = TRUE)
 }
 \arguments{
-\item{matrix}{Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).}
+\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).}
 
 \item{labels}{Vector of factors or character strings. The true or known cluster
 assignments for each row in the matrix.}

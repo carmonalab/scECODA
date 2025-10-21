@@ -26,7 +26,7 @@ must match the row names of the \code{counts} matrix.}
 
 \item{variance_explained}{Numeric (default: 0.5). The proportion of total variance
 that should be captured by the selected highly variable
-cell types (HVCs). Used by \code{find_highly_variable_celltypes}.}
+cell types (HVCs). Used by \code{find_hvcs}.}
 
 \item{top_n_hvcs}{Integer (optional). Overrides \code{variance_explained} if provided,
 specifying the exact number of top HVCs to select based on variance.}
@@ -58,5 +58,5 @@ ecoda_obj <- create_ecoda_object_helper(
 }
 }
 \seealso{
-\link[=ECODA-class]{ECODA}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_highly_variable_celltypes}}
+\link[=ECODA-class]{ECODA}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_hvcs}}
 }

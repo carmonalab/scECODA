@@ -1,3 +1,482 @@
+# PCA ---------------------------
+
+#' @title Plot Principal Component Analysis and Calculate Clustering Scores
+#'
+#' @description
+#' Performs Principal Component Analysis (PCA) on a selected data matrix from the
+#' \code{ECODA} object (default: CLR-transformed abundances, \code{clr}) and
+#' visualizes the results in 2D or 3D. It can also calculate and display several
+#' metrics to evaluate the separation of groups defined by \code{label_col}.
+#'
+#' @details
+#' The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess how well
+#' the sample groupings (\code{labels}) align with the underlying data structure
+#' in the feature space defined by the PCA.
+#'
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
+#' @param slot Character string (default: \code{"clr"}). The name of the data matrix
+#'             slot in the \code{ECODA} object to use for PCA. Must be one of:
+#'             \code{"clr"} (CLR-transformed abundances, default), \code{"pb"}
+#'             (pseudobulk gene expression), \code{"counts"} (raw counts),
+#'             \code{"counts_imp"} (imputed counts), \code{"freq"} (relative
+#'             frequencies), \code{"freq_imp"} (imputed frequencies), or
+#'             \code{"asin_sqrt"} (arcsin-square root transformed data).
+#' @param use_only_hvcs Logical (default: \code{FALSE}). If \code{TRUE}, the heatmap
+#'                      will be restricted to only the cell types listed in the
+#'                      \code{ecoda_object@highly_variable_celltypes} slot (HVCs).
+#' @param label_col Character string (optional, default: \code{NULL}). The name of a
+#'                  column in \code{ecoda_object@metadata} used to color and group
+#'                  samples in the plot, and for calculating clustering scores.
+#' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
+#'               variables should be scaled to have unit variance before the PCA.
+#' @param pca_dims Integer (optional, default: \code{NULL}). The number of principal
+#'                 components (dimensions) to retain for the PCA calculation and
+#'                 downstream clustering score calculations. If \code{NULL}, all
+#'                 dimensions are retained.
+#' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
+#'              neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN)
+#'              graph construction, required for Modularity score calculation. If
+#'              \code{NULL}, it defaults to \code{max(3, round(sqrt(N)))}, where
+#'              \code{N} is the number of samples.
+#' @param title Character string (optional, default: \code{NULL}). The main title
+#'              for the plot. If clustering scores are calculated, they are appended
+#'              to this title.
+#' @param legend_title Character string (default: \code{"Group"}). The title for the color
+#'                     legend in the plot when a grouping column (\code{label_col}) is provided.
+#' @param show_label_samples Logical (default: \code{FALSE}). If \code{TRUE}, sample names are
+#'                           displayed next to the points in the plot. This automatically adds
+#'                           \code{"text"} to the \code{geom} parameter if it is not already present.
+#' @param score_digits Integer (default: \code{3}). The number of decimal places to
+#'                     round the clustering and ANOSIM scores appended to the plot title.
+#' @param cluster_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates
+#'                      the Adjusted Rand Index (ARI) using \code{\link{calc_ari}}.
+#' @param mod_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates the
+#'                  adjusted Modularity score using \code{\link{calc_modularity}}.
+#' @param sil_score Logical (default: \code{FALSE}). If \code{TRUE}, calculates the
+#'                  average Silhouette width using \code{\link{calc_sil}}.
+#' @param anosim_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates
+#'                     the ANOSIM statistic (R) using \code{vegan::anosim}.
+#' @param anosim_distance Character string (default: \code{"euclidian"}). The distance
+#'                        method used for the ANOSIM calculation (e.g., "euclidean",
+#'                        "manhattan").
+#' @param anosim_permutations Integer (default: \code{99}). The number of permutations
+#'                            to use when calculating the ANOSIM statistic.
+#' @param anosim_parallel Integer (default: \code{detectCores()}). The number of parallel
+#'                        processes/cores to use for the ANOSIM calculation.
+#' @param pointsize Numeric (default: \code{3}). Size of the points in the plot.
+#' @param labelsize Numeric (default: \code{4}). Size of the variable labels in the plot.
+#' @param coord_equal Logical (default: \code{TRUE}). If \code{TRUE}, forces the
+#'                    aspect ratio of the plot to be equal.
+#' @param axes Numeric vector (default: \code{c(1, 2)}). The principal components
+#'             to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).
+#' @param plotly_3d Logical (default: \code{FALSE}). If \code{TRUE}, generates an
+#'                  interactive 3D scatter plot using \code{plotly} (requires \code{pca_dims >= 3}).
+#' @param invisible Character vector (default: \code{c("var", "quali")}). Elements to
+#'                  hide in the 2D plot. Can include "var" (variables/cell types),
+#'                  "ind" (samples), or "quali" (group centroids).
+#' @param geom Character string or vector (default: \code{"point"}). The geometry to be used
+#'             for the plot. Allowed values are combinations of:
+#'             \itemize{
+#'               \item \code{"point"} to show points for individuals (samples)
+#'               \item \code{"text"} to show labels for individuals (samples)
+#'               \item \code{"arrow"} to show vectors for variables (features)
+#'             }
+#'             The default \code{"point"} plots points for both individuals and variables.
+#'             Use \code{c("point", "text")} to show both points and labels for samples.
+#' @param n_ct_show Integer (default: \code{Inf}). Number of cell types (variables)
+#'                  to show based on their contribution to the selected axes. Set to
+#'                  \code{Inf} to show all.
+#' @param repel Logical (default: \code{TRUE}). Whether to use \code{ggrepel} to
+#'              prevent label overlap for variable names.
+#'
+#' @return A \code{ggplot} object (2D, via \code{factoextra}) or a \code{plotly}
+#'         object (3D) visualizing the PCA results.
+#'
+#' @importFrom stats prcomp dist hclust cutree
+#' @importFrom factoextra fviz_pca
+#' @importFrom plotly plot_ly add_markers add_paths group2NA
+#' @importFrom dplyr bind_rows
+#' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal scale_color_discrete
+#' @importFrom parallel detectCores
+#'
+#' @export plot_pca
+plot_pca <- function(ecoda_object,
+                     slot = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
+                     use_only_hvcs = FALSE,
+                     label_col = NULL,
+                     scale. = FALSE,
+                     pca_dims = NULL,
+                     knn_k = NULL,
+                     title = NULL,
+                     legend_title = "Group",
+                     show_label_samples = FALSE,
+                     score_digits = 3,
+                     cluster_score = TRUE,
+                     mod_score = TRUE,
+                     sil_score = FALSE,
+                     anosim_score = TRUE,
+                     anosim_distance = "euclidian",
+                     anosim_permutations = 99,
+                     anosim_parallel = detectCores(),
+                     pointsize = 3,
+                     labelsize = 4,
+                     coord_equal = TRUE,
+                     axes = c(1, 2),
+                     plotly_3d = FALSE,
+                     invisible = c("var", "quali"),
+                     geom = "point",
+                     n_ct_show = Inf,
+                     repel = TRUE) {
+  slot <- match.arg(slot)
+  feat_mat <- slot(ecoda_object, slot)
+
+  if (use_only_hvcs) {
+    feat_mat <- feat_mat[, ecoda_object@hvcs]
+  }
+
+  res.pca <- prcomp(feat_mat, scale. = scale., rank. = pca_dims)
+
+
+  if (!is.null(label_col)) {
+    labels <- ecoda_object@metadata[[label_col]]
+
+    if (anosim_score) {
+      anosim_score <- calc_anosim(
+        feat_mat,
+        labels,
+        distance = anosim_distance,
+        permutations = anosim_permutations,
+        parallel = anosim_parallel,
+        digits = score_digits
+      )
+      title <- paste0(title, "\nANOSIM score: ", anosim_score)
+    }
+    if (cluster_score) {
+      cluster_score <- calc_ari(feat_mat, labels, digits = score_digits)
+      title <- paste0(title, "\nARI: ", cluster_score)
+    }
+    if (mod_score) {
+      mod_score <- calc_modularity(feat_mat, labels, knn_k, digits = score_digits)
+      title <- paste0(title, "\nModularity score: ", mod_score)
+    }
+    if (sil_score) {
+      sil_score <- calc_sil(feat_mat, labels, digits = score_digits)
+      title <- paste0(title, "\nSilhouette score: ", sil_score)
+    }
+  } else {
+    labels <- "none"
+  }
+
+  if (plotly_3d) {
+    df <- as.data.frame(res.pca$x)
+    df$id <- seq_len(nrow(df))
+    df$vs <- factor(labels)
+    ms <- replicate(2, df, simplify = F)
+    ms[[2]]$PC3 <- min(df$PC3)
+    m <- ms %>%
+      bind_rows() %>%
+      group2NA("id", "vs")
+    # Plotting with plotly
+    p <- plot_ly(color = ~vs) %>%
+      add_markers(data = df, x = ~PC1, y = ~PC2, z = ~PC3) %>%
+      add_paths(data = m, x = ~PC1, y = ~PC2, z = ~PC3, opacity = 0.2)
+  } else {
+    if (!is.infinite(n_ct_show) & all(invisible %in% c("var", "quali"))) {
+      invisible <- "quali"
+    }
+
+    if (show_label_samples) {
+      if (!"text" %in% geom) {
+        geom <- c(geom, "text")
+      }
+    }
+
+    p <- fviz_pca(
+      res.pca,
+      axes = axes,
+      habillage = labels,
+      pointsize = pointsize,
+      labelsize = labelsize,
+      invisible = invisible,
+      select.var = list(contrib = n_ct_show),
+      repel = repel,
+      geom = geom
+    ) +
+      ggtitle(title) +
+      scale_color_discrete(name = legend_title)
+
+    if (!is.null(label_col)) {
+      p <- p + scale_shape_manual(
+        values = rep(19, length(unique(labels))),
+        name = legend_title
+      )
+    }
+
+    if (coord_equal) {
+      p <- p + coord_equal()
+    }
+  }
+
+  return(p)
+}
+
+
+#' Analysis of Similarities (ANOSIM) R score
+#'
+#' @description
+#' Calculates the ANOSIM R-statistic to test whether there is significant separation
+#' between two or more groups (defined by \code{labels}) based on the multivariate
+#' distances among samples in the feature space (\code{feat_mat}).
+#'
+#' @details
+#' ANOSIM compares the mean of rank dissimilarities between groups to the mean of
+#' rank dissimilarities within groups. The R-statistic ranges from \$-1\$ to \$1\$:
+#' \itemize{
+#'   \item An R value close to **\$1\$** indicates clear separation of groups.
+#'   \item An R value close to **\$0\$** indicates that the separation is no greater than
+#'         expected by chance (i.e., poor separation).
+#'   \item An R value close to **\$-1\$** indicates that within-group dissimilarities are
+#'         greater than between-group dissimilarities (a very rare result).
+#' }
+#'
+#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR abundances,
+#'                 with samples as rows and features as columns).
+#' @param labels Vector of factors or character strings. The grouping variable (the
+#'               known cluster assignments) for each row in the matrix.
+#' @param distance Character string (default: \code{"euclidean"}). The distance method
+#'                 to use for calculating dissimilarities. Passed to the \code{distance}
+#'                 argument of \code{vegan::anosim}.
+#' @param permutations Integer (default: \code{999}). The number of permutations
+#'                     to use when calculating the ANOSIM R-statistic and p-value.
+#' @param parallel Integer (optional, default: \code{detectCores()}). The number of parallel
+#'                 processes/cores to use for the permutation testing.
+#' @param digits Integer (default: \code{3}). The number of decimal places to round the R-statistic.
+#'
+#' @return A numeric value representing the **ANOSIM R-statistic**.
+#'
+#' @importFrom vegan anosim
+#'
+#' @export calc_anosim
+calc_anosim <- function(feat_mat,
+                        labels,
+                        distance = "euclidean",
+                        permutations = 99,
+                        parallel = 1,
+                        digits = 3) {
+  score <- anosim(
+    x = feat_mat,
+    grouping = labels,
+    distance = distance,
+    permutations = permutations,
+    parallel = parallel
+  )[["statistic"]]
+
+  return(round(score, digits))
+}
+
+
+#' Calculate Adjusted Rand Index (ARI)
+#'
+#' Calculates the Adjusted Rand Index (ARI) to measure the agreement between the
+#' known cluster assignments (\code{labels}) and the cluster assignments derived
+#' from two unsupervised clustering methods: Hierarchical Clustering (\code{hclust})
+#' and Partitioning Around Medoids (\code{pam}).
+#'
+#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
+#' @param labels Vector of factors or character strings. The true or known cluster
+#'               assignments for each row in the matrix.
+#' @param nclusts Integer (optional, default: \code{NULL}). The target number of clusters
+#'                (\code{k}) to use for \code{hclust} and \code{pam}. If \code{NULL},
+#'                it defaults to the number of unique levels in \code{labels}.
+#' @param digits Integer (default: \code{3}). The number of decimal places to round the result.
+#' @param return_mean Logical (default: \code{TRUE}). If \code{TRUE}, returns the
+#'                    mean of the ARI scores from \code{hclust} and \code{pam}.
+#'                    If \code{FALSE}, returns a named list with both individual scores.
+#'
+#' @return A numeric value (mean ARI) or a list of two ARI scores. ARI ranges from
+#'         -1 (disagreement) to +1 (perfect agreement).
+#'
+#' @importFrom stats dist hclust cutree
+#' @importFrom cluster pam
+#' @importFrom mclust adjustedRandIndex
+#'
+#' @export calc_ari
+calc_ari <- function(feat_mat,
+                     labels,
+                     nclusts = NULL,
+                     digits = 3,
+                     return_mean = TRUE) {
+  results <- list()
+  dist_mat <- dist(feat_mat)
+
+  if (is.null(nclusts)) {
+    nclusts <- length(unique(labels))
+  }
+
+  # Perform hierarchical clustering
+  hc <- hclust(dist_mat, method = "ward.D2")
+  clust_labels <- cutree(hc, k = nclusts)
+  results[["hclust_accuracy"]] <- adjustedRandIndex(as.numeric(as.factor(labels)), clust_labels)
+
+  # Perform PAM clustering
+  clust_labels <- pam(feat_mat, k = nclusts)$cluster
+  results[["pamclust_accuracy"]] <- adjustedRandIndex(as.numeric(as.factor(labels)), clust_labels)
+
+  if (return_mean) {
+    return(round(mean(unlist(results)), digits))
+  } else {
+    results[["hclust_accuracy"]] <- round(results[["hclust_accuracy"]], digits)
+    results[["pamclust_accuracy"]] <- round(results[["pamclust_accuracy"]], digits)
+    return(results)
+  }
+}
+
+
+#' Calculate Adjusted Modularity Score
+#'
+#' Calculates the Modularity score for a given clustering (\code{labels}) based on
+#' a Shared Nearest Neighbor (SNN) graph constructed from the feature matrix
+#' (\code{feat_mat}). The score is adjusted by the theoretical maximum modularity
+#' for the number of groups to always be between
+#' -0.5 (poor clustering) and +1 (excellent clustering)).
+#'
+#' @param feat_mat Numeric matrix or data frame. The feature matrix used to compute
+#'                 the SNN graph (e.g., CLR abundances).
+#' @param labels Vector of factors or character strings. The cluster assignments for
+#'               each row in \code{feat_mat}.
+#' @param digits Integer (default: \code{3}). The number of decimal places to round the final adjusted score.
+#' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
+#'              neighbors (\code{k}) used for SNN graph construction. If \code{NULL},
+#'              it defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is
+#'              the number of samples.
+#'
+#' @return A numeric value representing the adjusted modularity score.
+#'
+#' @importFrom igraph modularity
+#'
+#' @export calc_modularity
+calc_modularity <- function(feat_mat,
+                            labels,
+                            digits = 3,
+                            knn_k = NULL) {
+  ngroups <- length(unique(labels))
+
+  if (is.null(knn_k)) {
+    knn_k <- max(3, round(sqrt(nrow(feat_mat))))
+  }
+
+  # Create a graph object
+  g <- compute_snn_graph(feat_mat = feat_mat, knn_k = knn_k)
+
+  # Compute modularity
+  modularity_score <- modularity(g, membership = as.numeric(factor(labels)))
+
+  # NOTE:
+  # Maximum modularity depends on the number of groups: max(mod) = 1 - 1 / (number of groups)
+  # see Brandes, Ulrik, et al. On finding graph clusterings with maximum modularity.
+
+  # Adjust modularity score for number of groups
+  maximum_modularity_score <- 1 - (1 / ngroups)
+  adjusted_modularity_score <- modularity_score / maximum_modularity_score
+
+  return(round(adjusted_modularity_score, digits))
+}
+
+
+
+#' Compute K-Nearest Neighbors (KNN)
+#'
+#' Calculates the indices of the K-nearest neighbors for each sample (row) in a
+#' feature matrix using the \code{RANN} package.
+#'
+#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
+#' @param knn_k Integer. The number of neighbors (\code{k}) to return.
+#'
+#' @return A matrix where each row corresponds to a sample and contains the indices
+#'         of its \code{k} nearest neighbors.
+#'
+#' @importFrom RANN nn2
+compute_KNN <- function(feat_mat, knn_k) {
+  # Compute KNN
+  knn <- nn2(as.matrix(feat_mat), k = knn_k + 1)$nn.idx
+  knn <- knn[, -1] # Remove self-neighbor
+  return(knn)
+}
+
+
+
+#' Compute Shared Nearest Neighbor (SNN) Graph
+#'
+#' Constructs a graph where nodes are samples and edges are weighted by the number
+#' of shared nearest neighbors (SNN) between them. This graph is used for community
+#' detection or, in this context, modularity calculation.
+#'
+#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
+#' @param knn_k Integer. The number of nearest neighbors (\code{k}) used for SNN calculation.
+#'
+#' @return An \code{igraph} graph object where edge weights represent shared neighbors.
+#'
+#' @importFrom igraph graph_from_adjacency_matrix
+compute_snn_graph <- function(feat_mat,
+                              knn_k) {
+  knn <- compute_KNN(feat_mat = feat_mat, knn_k = knn_k)
+
+  # Initialize adjacency matrix
+  n <- nrow(as.matrix(feat_mat))
+  adj_matrix <- matrix(0, n, n)
+
+  # Count shared neighbors
+  for (i in seq_len(n)) {
+    for (j in knn[i, ]) {
+      shared_neighbors <- length(intersect(knn[i, ], knn[j, ]))
+      adj_matrix[i, j] <- shared_neighbors
+      adj_matrix[j, i] <- shared_neighbors # Ensure symmetry
+    }
+  }
+
+  # Create graph object
+  g <- graph_from_adjacency_matrix(adj_matrix,
+    mode = "undirected",
+    weighted = TRUE,
+    diag = FALSE
+  )
+
+  return(g)
+}
+
+
+#' Calculate Average Silhouette Width
+#'
+#' Calculates the average silhouette width for a given feature matrix, using pre-defined
+#' cluster assignments (\code{labels}). This metric assesses the quality of the clustering.
+#'
+#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR-transformed
+#'                 abundances or PCA scores) on which the distance calculation is based.
+#' @param labels Vector of factors or character strings. The cluster assignments for
+#'               each row in \code{feat_mat} (i.e., the grouping variable).
+#' @param digits Integer (default: \code{3}). The number of decimal places to round the final score.
+#'
+#' @return A numeric value representing the mean silhouette width, typically ranging
+#'         from -1 (poor clustering) to +1 (excellent clustering).
+#'
+#' @importFrom cluster silhouette
+#' @importFrom stats dist
+#'
+#' @export calc_sil
+calc_sil <- function(feat_mat,
+                     labels,
+                     digits = 3) {
+  sils <- silhouette(
+    x = as.numeric(factor(labels)),
+    dist = dist(feat_mat)
+  ) %>%
+    as.data.frame()
+  score <- mean(sils[["sil_width"]])
+  return(round(score, digits))
+}
+
+
+
 # Box and bar plots ---------------------------
 
 #' Reshapes ECODA data into a long format for plotting and analysis.
@@ -29,8 +508,6 @@
 #' @importFrom dplyr %>% left_join
 #' @importFrom tidyr pivot_longer everything
 #' @importFrom rlang sym
-#'
-#' @export create_long_data
 #'
 #' @seealso \link[=ECODA-class]{ECODA}
 #'
@@ -143,7 +620,7 @@ create_long_data <- function(ecoda_object,
 #' @importFrom gtools mixedsort
 #' @importFrom stats reformulate
 #'
-#' @export plot_freq_barplot
+#' @export plot_barplot
 #'
 #' @seealso \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
 #'
@@ -152,24 +629,24 @@ create_long_data <- function(ecoda_object,
 #' # Assuming 'ecoda_obj' is a created ECODA object with metadata
 #'
 #' # 1. Plot frequency for every sample, ordered by sample ID:
-#' p1 <- plot_freq_barplot(ecoda_obj)
+#' p1 <- plot_barplot(ecoda_obj)
 #'
 #' # 2. Plot frequency for every sample, faceted and ordered by 'Treatment' column:
-#' p2 <- plot_freq_barplot(ecoda_obj, label_col = "Treatment", plot_by = "sample")
+#' p2 <- plot_barplot(ecoda_obj, label_col = "Treatment", plot_by = "sample")
 #'
 #' # 3. Plot average frequency aggregated by 'Treatment' group:
-#' p3 <- plot_freq_barplot(ecoda_obj, label_col = "Treatment", plot_by = "group")
+#' p3 <- plot_barplot(ecoda_obj, label_col = "Treatment", plot_by = "group")
 #'
 #' # 4. Plot with a custom order:
 #' custom_order <- c("S2", "S1", "S4", "S3")
-#' p4 <- plot_freq_barplot(ecoda_obj, custom_sample_order = custom_order)
+#' p4 <- plot_barplot(ecoda_obj, custom_sample_order = custom_order)
 #' }
-plot_freq_barplot <- function(ecoda_object,
-                              label_col = NULL,
-                              plot_by = c("sample", "group"),
-                              custom_sample_order = NULL,
-                              title = "",
-                              facet_by_label_col = TRUE) {
+plot_barplot <- function(ecoda_object,
+                         label_col = NULL,
+                         plot_by = c("sample", "group"),
+                         custom_sample_order = NULL,
+                         title = "",
+                         facet_by_label_col = TRUE) {
   # Use the helper function to get the long data from @freq
   plot_data <- create_long_data(ecoda_object, data_slot = "freq", label_col = label_col)
 
@@ -255,9 +732,6 @@ plot_freq_barplot <- function(ecoda_object,
 }
 
 
-
-
-
 #' Generates Boxplots for CLR-transformed Cell Type Abundances with Optional Group Comparison.
 #'
 #' This function visualizes the distribution of CLR-transformed abundance for each
@@ -287,9 +761,9 @@ plot_freq_barplot <- function(ecoda_object,
 #' @param paired Logical (default: \code{FALSE}). If \code{TRUE}, performs a paired
 #'               statistical test (e.g., paired t-test or paired Wilcoxon test). Only
 #'               applicable for 2-group comparisons.
-#' @param signif_label Character string (default: \code{"signif_label"}). Controls
+#' @param signif_label Character string (default: \code{"p.signif"}). Controls
 #'                     how p-values are displayed for 2-group comparisons (e.g.,
-#'                     "signif_label" for stars, "p.format" for numeric p-value).
+#'                     "p.signif" for stars, "p.format" for numeric p-value).
 #'
 #' @return A \code{ggplot} object (enhanced by \code{ggpubr}) representing the
 #'         CLR abundance boxplot, including jittered data points and dynamic
@@ -301,7 +775,7 @@ plot_freq_barplot <- function(ecoda_object,
 #' @importFrom stringr str_to_title
 #' @importFrom rlang sym
 #'
-#' @export plot_clr_boxplot
+#' @export plot_boxplot
 #'
 #' @seealso \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
 #'
@@ -310,10 +784,10 @@ plot_freq_barplot <- function(ecoda_object,
 #' # Assuming 'ecoda_obj' is a created ECODA object with metadata
 #'
 #' # 1. Boxplots for CLR abundance without grouping (no stats calculated):
-#' p1 <- plot_clr_boxplot(ecoda_obj)
+#' p1 <- plot_boxplot(ecoda_obj)
 #'
 #' # 2. Boxplots grouped by 'Treatment' (2 groups) and applying Wilcoxon test:
-#' p2 <- plot_clr_boxplot(
+#' p2 <- plot_boxplot(
 #'   ecoda_obj,
 #'   label_col = "Treatment",
 #'   stat_method = "wilcox.test",
@@ -321,19 +795,20 @@ plot_freq_barplot <- function(ecoda_object,
 #' )
 #'
 #' # 3. Boxplots grouped by 'Dose' (3+ groups) - automatically uses Kruskal-Wallis:
-#' p3 <- plot_clr_boxplot(
+#' p3 <- plot_boxplot(
 #'   ecoda_obj,
 #'   label_col = "Dose",
 #'   stat_method = "wilcox.test", # will be overridden by kruskal.test
 #'   title = "CLR Abundance by Dose Group (Kruskal-Wallis)"
 #' )
 #' }
-plot_clr_boxplot <- function(ecoda_object,
-                             label_col = NULL,
-                             title = "",
-                             stat_method = "wilcox.test",
-                             paired = FALSE,
-                             signif_label = "signif_label") {
+plot_boxplot <- function(ecoda_object,
+                         label_col = NULL,
+                         title = "",
+                         stat_method = "wilcox.test",
+                         paired = FALSE,
+                         signif_label = c("p.signif", "p.format")) {
+  signif_label <- match.arg(signif_label)
   plot_data <- create_long_data(ecoda_object, data_slot = "clr", label_col = label_col)
 
   # Ensure celltype is a factor for plotting
@@ -435,18 +910,24 @@ plot_clr_boxplot <- function(ecoda_object,
 }
 
 
-
 # Heatmap ---------------------------
 
-#' Generates a Heatmap of CLR-transformed Cell Type Abundances.
+#' Generates a Heatmap of Cell Abundance Data from an ECODA Slot.
 #'
-#' This function visualizes the CLR-transformed abundance matrix after mean-centering,
-#' allowing for clustering of both cell types and samples, and includes
-#' a sample annotation sidebar based on a specified metadata column.
-#' It is important to not re-scale in order to avoid amplifying tiny differences.
+#' This function visualizes a data matrix from a specified slot (e.g., CLR-transformed,
+#' frequency, or pseudobulk data) after mean-centering. It supports optional
+#' filtering to only Highly Variable Cell Types (HVCs) and includes a sample
+#' annotation sidebar based on a specified metadata column.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the CLR-transformed
-#'                     abundances in the \code{clr} slot.
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the data matrices
+#'                     and metadata.
+#' @param slot Character string (default: \code{"clr"}). The name of the data slot
+#'             in \code{ecoda_object} to use for the heatmap. Options include:
+#'             \code{"clr"}, \code{"counts"}, \code{"counts_imp"}, \code{"freq"},
+#'             \code{"freq_imp"}, \code{"asin_sqrt"}, or \code{"pb"}.
+#' @param use_only_hvcs Logical (default: \code{FALSE}). If \code{TRUE}, the heatmap
+#'                      will be restricted to only the cell types present in the
+#'                      \code{ecoda_object@hvcs} slot (Highly Variable Cell Types).
 #' @param label_col Character string. The name of the column in \code{ecoda_object@metadata}
 #'                  to use for annotating the samples (columns) of the heatmap.
 #' @param cluster_rows Logical (default: \code{TRUE}). Whether to apply hierarchical
@@ -454,12 +935,14 @@ plot_clr_boxplot <- function(ecoda_object,
 #' @param cluster_cols Logical (default: \code{TRUE}). Whether to apply hierarchical
 #'                     clustering to the samples (columns).
 #' @param scale Character string (default: \code{"none"}). Method for scaling the
-#'              CLR abundance values within the heatmap. Options include "none",
-#'              "row", or "column". Note: The data is mean-centered before passing
-#'              to \code{pheatmap}, but further scaling is controlled here.
+#'              abundance values within the heatmap using \code{pheatmap}. Options
+#'              include \code{"none"}, \code{"row"}, or \code{"column"}. Note: The data
+#'              is internally **mean-centered** (\code{scale(center=TRUE, scale=FALSE)})
+#'              across samples before being passed to \code{pheatmap}, regardless of this argument.
 #' @param clustering_method Character string (default: \code{"ward.D2"}). The clustering
-#'                          method to use for hierarchical clustering. Options are
-#'                          passed directly to \code{hclust} (e.g., "complete", "average", "ward.D2").
+#'                        method to use for hierarchical clustering. Options are
+#'                        passed directly to \code{hclust} (e.g., \code{"complete"},
+#'                        \code{"average"}, \code{"ward.D2"}).
 #' @param angle_col Character string (default: \code{"90"}). Angle of the sample
 #'                  labels (columns).
 #' @param ... Additional arguments passed directly to the \code{pheatmap} function.
@@ -478,8 +961,7 @@ plot_clr_boxplot <- function(ecoda_object,
 #' \dontrun{
 #' # Assuming 'ecoda_obj' is a created ECODA object with metadata
 #'
-#' # Generate a heatmap clustered by both cell types and samples,
-#' # annotated by the 'Condition' column in the metadata:
+#' # 1. Heatmap using CLR data, clustered, and annotated by 'Condition':
 #' p1 <- plot_heatmap(
 #'   ecoda_obj,
 #'   label_col = "Condition",
@@ -487,14 +969,19 @@ plot_clr_boxplot <- function(ecoda_object,
 #'   fontsize = 8
 #' )
 #'
-#' # Generate a heatmap without clustering the samples:
+#' # 2. Heatmap using Relative Frequency data (freq), filtered to only HVCs,
+#' #    and without clustering the samples:
 #' p2 <- plot_heatmap(
 #'   ecoda_obj,
+#'   slot = "freq",
+#'   use_only_hvcs = TRUE,
 #'   label_col = "Batch",
 #'   cluster_cols = FALSE
 #' )
 #' }
 plot_heatmap <- function(ecoda_object,
+                         slot = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
+                         use_only_hvcs = FALSE,
                          label_col,
                          cluster_rows = TRUE,
                          cluster_cols = TRUE,
@@ -502,7 +989,14 @@ plot_heatmap <- function(ecoda_object,
                          clustering_method = "ward.D2",
                          angle_col = "90",
                          ...) {
-  df_heatmap <- ecoda_object@clr %>%
+  slot <- match.arg(slot)
+  df_heatmap <- slot(ecoda_object, slot)
+
+  if (use_only_hvcs) {
+    df_heatmap <- df_heatmap[, ecoda_object@hvcs]
+  }
+
+  df_heatmap <- df_heatmap %>%
     scale(center = TRUE, scale = FALSE) %>%
     t() %>%
     as.data.frame()
@@ -525,425 +1019,58 @@ plot_heatmap <- function(ecoda_object,
 }
 
 
+# Correlation plot ---------------------------
 
-
-
-
-
-
-# PCA ---------------------------
-
-#' @title Plot Principal Component Analysis and Calculate Clustering Scores
+#' @title Plot Cell Type Correlation Matrix
 #'
 #' @description
-#' Performs Principal Component Analysis (PCA) on the CLR-transformed abundance
-#' matrix (\code{ecoda_object@clr}) and visualizes the results in 2D or 3D.
-#' It can also calculate and display several metrics to evaluate the separation
-#' of groups defined by \code{label_col}.
+#' Calculates the pairwise Pearson correlation matrix for all cell types (columns)
+#' using the Centered Log-Ratio (CLR) transformed abundances stored in
+#' \code{ecoda_object@clr}. It then visualizes this matrix as a heatmap using
+#' \code{corrplot::corrplot}.
 #'
 #' @details
-#' The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess how well
-#' the sample groupings (\code{labels}) align with the underlying data structure
-#' in the feature space.
+#' The function uses the CLR matrix, where high correlation between two cell types
+#' suggests they vary together across samples, indicating potential co-occurrence
+#' or co-regulation.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object
-#' @param slot A slot in the ECODA object (default: \code{"clr"}): either the
-#'             CLR-transformed abundances in the \code{clr} slot or
-#'             the pseudobulk gene expression in the \code{pb} slot.
-#' @param label_col Character string (optional, default: \code{NULL}). The name of a
-#'                  column in \code{ecoda_object@metadata} used to color and group
-#'                  samples in the plot, and for calculating clustering scores.
-#' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
-#'               variables should be scaled to have unit variance before the analysis.
-#' @param pca_dims Integer (optional, default: \code{NULL}). The number of principal
-#'                 components (dimensions) to retain for the PCA calculation and
-#'                 downstream clustering score calculations. If \code{NULL}, all
-#'                 dimensions are retained.
-#' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
-#'              neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN)
-#'              graph construction, required for Modularity score calculation. If
-#'              \code{NULL}, it defaults to \code{max(3, round(sqrt(N)))}, where
-#'              \code{N} is the number of samples.
-#' @param title Character string (optional, default: \code{NULL}). The main title
-#'              for the plot. If clustering scores are calculated, they are appended
-#'              to this title.
-#' @param legend_title Character string (default: \code{"Group"}). The title for the color
-#'                     legend in the plot when a grouping column (\code{label_col}) is provided.
-#' @param show_label_samples Logical (default: \code{FALSE}). If \code{TRUE}, sample names are
-#'                           displayed next to the points in the plot. This automatically adds
-#'                           \code{"text"} to the \code{geom} parameter if it is not already present.
-#' @param score_digits Integer (default: \code{3}). The number of decimal places to
-#'                     round the clustering and ANOSIM scores appended to the plot title.
-#' @param cluster_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates
-#'                      the Adjusted Rand Index (ARI) using \code{\link{calc_ari}}.
-#' @param mod_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates the
-#'                  adjusted Modularity score using \code{\link{calc_modularity}}.
-#' @param sil_score Logical (default: \code{FALSE}). If \code{TRUE}, calculates the
-#'                  average Silhouette width using \code{\link{calc_sil}}.
-#' @param anosim_score Logical (default: \code{TRUE}). If \code{TRUE}, calculates
-#'                     the ANOSIM statistic (R) using \code{vegan::anosim}.
-#' @param anosim_permutations Integer (default: \code{99}). The number of permutations
-#'                      to use when calculating the ANOSIM statistic.
-#' @param anosim_parallel Integer (default: \code{detectCores()}). The number of parallel
-#'                      processes/cores to use for the ANOSIM calculation.
-#' @param pointsize Numeric (default: \code{3}). Size of the points in the plot.
-#' @param labelsize Numeric (default: \code{4}). Size of the variable labels in the plot.
-#' @param coord_equal Logical (default: \code{TRUE}). If \code{TRUE}, forces the
-#'                    aspect ratio of the plot to be equal.
-#' @param axes Numeric vector (default: \code{c(1, 2)}). The principal components
-#'             to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).
-#' @param plotly_3d Logical (default: \code{FALSE}). If \code{TRUE}, generates an
-#'                  interactive 3D scatter plot using \code{plotly} (requires \code{pca_dims >= 3}).
-#' @param invisible Character vector (default: \code{c("var", "quali")}). Elements to
-#'                    hide in the 2D plot. Can include "var" (variables/cell types),
-#'                    "ind" (samples), or "quali" (group centroids).
-#' @param geom Character string or vector (default: \code{"point"}). The geometry to be used
-#'             for the plot. Allowed values are combinations of:
-#'             \itemize{
-#'               \item \code{"point"} to show points for individuals (samples)
-#'               \item \code{"text"} to show labels for individuals (samples)
-#'               \item \code{"arrow"} to show vectors for variables (features)
-#'             }
-#'             The default \code{"point"} plots points for both individuals and variables.
-#'             Use \code{c("point", "text")} to show both points and labels for samples.
-#' @param n_ct_show Integer (default: \code{Inf}). Number of cell types (variables)
-#'                  to show based on their contribution to the selected axes. Set to
-#'                  \code{Inf} to show all.
-#' @param repel Logical (default: \code{TRUE}). Whether to use \code{ggrepel} to
-#'                prevent label overlap for variable names.
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the
+#'                     CLR-transformed abundances in the \code{clr} slot.
+#' @param use_only_hvcs Logical (default: \code{FALSE}). If \code{TRUE}, the correlation plot
+#'                      will be restricted to only the cell types present in the
+#'                      \code{ecoda_object@hvcs} slot (Highly Variable Cell Types).
+#' @param order Character string (default: \code{"hclust"}). The ordering method
+#'              for the correlation matrix. Common options include:
+#'              \itemize{
+#'                \item \code{"original"} (no reordering)
+#'                \item \code{"hclust"} (hierarchical clustering)
+#'                \item \code{"FPC"} (first principal component order)
+#'              }
+#' @param hclust.method Character string (default: \code{"ward.D2"}). The
+#'                      hierarchical clustering method to use if \code{order} is
+#'                      set to \code{"hclust"}.
+#' @param ... Additional arguments passed to \code{corrplot::corrplot} for plot
+#'            customization (e.g., \code{method}, \code{type}, \code{tl.col}).
 #'
-#' @return A \code{ggplot} object (2D, via \code{factoextra}) or a \code{plotly}
-#'         object (3D) visualizing the PCA results.
+#' @return A plot object generated by \code{corrplot::corrplot}, which is a
+#'         base R plot or a grid object depending on the `corrplot` version and options.
 #'
-#' @importFrom stats prcomp dist hclust cutree
-#' @importFrom vegan anosim
-#' @importFrom factoextra fviz_pca
-#' @importFrom plotly plot_ly add_markers add_paths group2NA
-#' @importFrom dplyr bind_rows
-#' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal
-#' @importFrom parallel detectCores
+#' @importFrom stats cor
+#' @importFrom corrplot corrplot
 #'
-#' @export plot_pca
-plot_pca <- function(ecoda_object,
-                     slot = c("clr", "pb"),
-                     label_col = NULL,
-                     scale. = FALSE,
-                     pca_dims = NULL,
-                     knn_k = NULL,
-                     title = NULL,
-                     legend_title = "Group",
-                     show_label_samples = FALSE,
-                     score_digits = 3,
-                     cluster_score = TRUE,
-                     mod_score = TRUE,
-                     sil_score = FALSE,
-                     anosim_score = TRUE,
-                     anosim_permutations = 99,
-                     anosim_parallel = detectCores(),
-                     pointsize = 3,
-                     labelsize = 4,
-                     coord_equal = TRUE,
-                     axes = c(1, 2),
-                     plotly_3d = FALSE,
-                     invisible = c("var", "quali"),
-                     geom = "point",
-                     n_ct_show = Inf,
-                     repel = TRUE) {
-  slot <- match.arg(slot)
-  feat_mat <- slot(ecoda_object, slot)
+#' @export plot_corr
+plot_corr <- function(ecoda_object,
+                      use_only_hvcs = FALSE,
+                      order = "hclust",
+                      hclust.method = "ward.D2",
+                      ...) {
+  feat_mat <- ecoda_object@clr
 
-  res.pca <- prcomp(feat_mat, scale. = scale., rank. = pca_dims)
-
-
-  if (!is.null(label_col)) {
-    labels <- ecoda_object@metadata[[label_col]]
-
-    if (anosim_score) {
-      anosim_score <- round(
-        anosim(
-          x = feat_mat,
-          grouping = labels,
-          distance = "euclidean",
-          permutations = anosim_permutations,
-          parallel = anosim_parallel
-        )[["statistic"]],
-        score_digits
-      )
-      title <- paste0(title, "\nANOSIM score: ", anosim_score)
-    }
-    if (cluster_score) {
-      cluster_score <- calc_ari(feat_mat, labels, digits = score_digits)
-      title <- paste0(title, "\nARI: ", cluster_score)
-    }
-    if (mod_score) {
-      mod_score <- calc_modularity(feat_mat, labels, knn_k, digits = score_digits)
-      title <- paste0(title, "\nModularity score: ", mod_score)
-    }
-    if (sil_score) {
-      sil_score <- calc_sil(feat_mat, labels, digits = score_digits)
-      title <- paste0(title, "\nSilhouette score: ", sil_score)
-    }
-  } else {
-    labels <- "none"
+  if (use_only_hvcs) {
+    feat_mat <- feat_mat[, ecoda_object@hvcs]
   }
 
-  if (plotly_3d) {
-    df <- as.data.frame(res.pca$x)
-    df$id <- seq_len(nrow(df))
-    df$vs <- factor(labels)
-    ms <- replicate(2, df, simplify = F)
-    ms[[2]]$PC3 <- min(df$PC3)
-    m <- ms %>%
-      bind_rows() %>%
-      group2NA("id", "vs")
-    # Plotting with plotly
-    p <- plot_ly(color = ~vs) %>%
-      add_markers(data = df, x = ~PC1, y = ~PC2, z = ~PC3) %>%
-      add_paths(data = m, x = ~PC1, y = ~PC2, z = ~PC3, opacity = 0.2)
-  } else {
-    if (!is.infinite(n_ct_show) & all(invisible %in% c("var", "quali"))) {
-      invisible <- "quali"
-    }
+  cor_matrix <- cor(feat_mat)
 
-    if (show_label_samples) {
-      if (!"text" %in% geom) {
-        geom <- c(geom, "text")
-      }
-    }
-
-    p <- fviz_pca(
-      res.pca,
-      axes = axes,
-      habillage = labels,
-      pointsize = pointsize,
-      labelsize = labelsize,
-      invisible = invisible,
-      select.var = list(contrib = n_ct_show),
-      repel = repel,
-      geom = geom
-    ) +
-      ggtitle(title) +
-      scale_color_discrete(name = legend_title)
-
-    if (!is.null(label_col)) {
-      p <- p + scale_shape_manual(
-        values = rep(19, length(unique(labels))),
-        name = legend_title
-      )
-    }
-
-    if (coord_equal) {
-      p <- p + coord_equal()
-    }
-  }
-
-  return(p)
-}
-
-
-#' Calculate Average Silhouette Width
-#'
-#' Calculates the average silhouette width for a given feature matrix, using pre-defined
-#' cluster assignments (\code{labels}). This metric assesses the quality of the clustering.
-#'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR-transformed
-#'                 abundances or PCA scores) on which the distance calculation is based.
-#' @param labels Vector of factors or character strings. The cluster assignments for
-#'               each row in \code{feat_mat} (i.e., the grouping variable).
-#' @param digits Integer (default: \code{3}). The number of decimal places to round the final score.
-#'
-#' @return A numeric value representing the mean silhouette width, typically ranging
-#'         from -1 (poor clustering) to +1 (excellent clustering).
-#'
-#' @importFrom cluster silhouette
-#' @importFrom stats dist
-#'
-#' @export calc_sil
-calc_sil <- function(feat_mat,
-                     labels,
-                     digits = 3) {
-  sils <- silhouette(
-    x = as.numeric(factor(labels)),
-    dist = dist(feat_mat)
-  ) %>%
-    as.data.frame()
-  score <- mean(sils[["sil_width"]])
-  return(round(score, digits))
-}
-
-
-
-#' Calculate Adjusted Modularity Score
-#'
-#' Calculates the Modularity score for a given clustering (\code{labels}) based on
-#' a Shared Nearest Neighbor (SNN) graph constructed from the feature matrix
-#' (\code{feat_mat}). The score is adjusted by the theoretical maximum modularity
-#' for the number of groups to always be between
-#' -0.5 (poor clustering) and +1 (excellent clustering)).
-#'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix used to compute
-#'                 the SNN graph (e.g., CLR abundances).
-#' @param labels Vector of factors or character strings. The cluster assignments for
-#'               each row in \code{feat_mat}.
-#' @param digits Integer (default: \code{3}). The number of decimal places to round the final adjusted score.
-#' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
-#'              neighbors (\code{k}) used for SNN graph construction. If \code{NULL},
-#'              it defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is
-#'              the number of samples.
-#'
-#' @return A numeric value representing the adjusted modularity score.
-#'
-#' @importFrom igraph modularity
-#'
-#' @export calc_modularity
-calc_modularity <- function(feat_mat,
-                            labels,
-                            digits = 3,
-                            knn_k = NULL) {
-  ngroups <- length(unique(labels))
-
-  if (is.null(knn_k)) {
-    knn_k <- max(3, round(sqrt(nrow(feat_mat))))
-  }
-
-  # Create a graph object
-  g <- compute_snn_graph(feat_mat = feat_mat, knn_k = knn_k)
-
-  # Compute modularity
-  modularity_score <- modularity(g, membership = as.numeric(factor(labels)))
-
-  # NOTE:
-  # Maximum modularity depends on the number of groups: max(mod) = 1 - 1 / (number of groups)
-  # see Brandes, Ulrik, et al. On finding graph clusterings with maximum modularity.
-
-  # Adjust modularity score for number of groups
-  maximum_modularity_score <- 1 - (1 / ngroups)
-  adjusted_modularity_score <- modularity_score / maximum_modularity_score
-
-  return(round(adjusted_modularity_score, digits))
-}
-
-
-
-#' Compute K-Nearest Neighbors (KNN)
-#'
-#' Calculates the indices of the K-nearest neighbors for each sample (row) in a
-#' feature matrix using the \code{RANN} package.
-#'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
-#' @param knn_k Integer. The number of neighbors (\code{k}) to return.
-#'
-#' @return A matrix where each row corresponds to a sample and contains the indices
-#'         of its \code{k} nearest neighbors.
-#'
-#' @importFrom RANN nn2
-#'
-#' @export compute_KNN
-compute_KNN <- function(feat_mat, knn_k) {
-  # Compute KNN
-  knn <- nn2(as.matrix(feat_mat), k = knn_k + 1)$nn.idx
-  knn <- knn[, -1] # Remove self-neighbor
-  return(knn)
-}
-
-
-
-#' Compute Shared Nearest Neighbor (SNN) Graph
-#'
-#' Constructs a graph where nodes are samples and edges are weighted by the number
-#' of shared nearest neighbors (SNN) between them. This graph is used for community
-#' detection or, in this context, modularity calculation.
-#'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
-#' @param knn_k Integer. The number of nearest neighbors (\code{k}) used for SNN calculation.
-#'
-#' @return An \code{igraph} graph object where edge weights represent shared neighbors.
-#'
-#' @importFrom igraph graph_from_adjacency_matrix
-#'
-#' @export compute_snn_graph
-compute_snn_graph <- function(feat_mat,
-                              knn_k) {
-  knn <- compute_KNN(feat_mat = feat_mat, knn_k = knn_k)
-
-  # Initialize adjacency matrix
-  n <- nrow(as.matrix(feat_mat))
-  adj_matrix <- matrix(0, n, n)
-
-  # Count shared neighbors
-  for (i in seq_len(n)) {
-    for (j in knn[i, ]) {
-      shared_neighbors <- length(intersect(knn[i, ], knn[j, ]))
-      adj_matrix[i, j] <- shared_neighbors
-      adj_matrix[j, i] <- shared_neighbors # Ensure symmetry
-    }
-  }
-
-  # Create graph object
-  g <- graph_from_adjacency_matrix(adj_matrix,
-    mode = "undirected",
-    weighted = TRUE,
-    diag = FALSE
-  )
-
-  return(g)
-}
-
-
-
-
-#' Calculate Adjusted Rand Index (ARI)
-#'
-#' Calculates the Adjusted Rand Index (ARI) to measure the agreement between the
-#' known cluster assignments (\code{labels}) and the cluster assignments derived
-#' from two unsupervised clustering methods: Hierarchical Clustering (\code{hclust})
-#' and Partitioning Around Medoids (\code{pam}).
-#'
-#' @param matrix Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).
-#' @param labels Vector of factors or character strings. The true or known cluster
-#'               assignments for each row in the matrix.
-#' @param nclusts Integer (optional, default: \code{NULL}). The target number of clusters
-#'                (\code{k}) to use for \code{hclust} and \code{pam}. If \code{NULL},
-#'                it defaults to the number of unique levels in \code{labels}.
-#' @param digits Integer (default: \code{3}). The number of decimal places to round the result.
-#' @param return_mean Logical (default: \code{TRUE}). If \code{TRUE}, returns the
-#'                    mean of the ARI scores from \code{hclust} and \code{pam}.
-#'                    If \code{FALSE}, returns a named list with both individual scores.
-#'
-#' @return A numeric value (mean ARI) or a list of two ARI scores. ARI ranges from
-#'         -1 (disagreement) to +1 (perfect agreement).
-#'
-#' @importFrom stats dist hclust cutree
-#' @importFrom cluster pam
-#' @importFrom mclust adjustedRandIndex
-#'
-#' @export calc_ari
-calc_ari <- function(matrix,
-                     labels,
-                     nclusts = NULL,
-                     digits = 3,
-                     return_mean = TRUE) {
-  results <- list()
-  dist_mat <- dist(matrix)
-
-  if (is.null(nclusts)) {
-    nclusts <- length(unique(labels))
-  }
-
-  # Perform hierarchical clustering
-  hc <- hclust(dist_mat, method = "ward.D2")
-  clust_labels <- cutree(hc, k = nclusts)
-  results[["hclust_accuracy"]] <- adjustedRandIndex(as.numeric(as.factor(labels)), clust_labels)
-
-  # Perform PAM clustering
-  clust_labels <- pam(matrix, k = nclusts)$cluster
-  results[["pamclust_accuracy"]] <- adjustedRandIndex(as.numeric(as.factor(labels)), clust_labels)
-
-  if (return_mean) {
-    return(round(mean(unlist(results)), digits))
-  } else {
-    results[["hclust_accuracy"]] <- round(results[["hclust_accuracy"]], digits)
-    results[["pamclust_accuracy"]] <- round(results[["pamclust_accuracy"]], digits)
-    return(results)
-  }
+  corrplot::corrplot(cor_matrix, order = "hclust", hclust.method = "ward.D2", ...)
 }

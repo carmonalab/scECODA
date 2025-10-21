@@ -15,7 +15,7 @@
 #' @slot variance_explained Numeric value indicating the total variance captured by
 #'                        highly variable cell types (HVCs).
 #' @slot top_n_hvcs Integer specifying the number of top highly variable cell types selected.
-#' @slot highly_variable_celltypes Character vector of names of the highly variable cell types.
+#' @slot hvcs Character vector of names of the highly variable cell types.
 #' @slot metadata Data frame of sample-level metadata (samples as rows).
 #' @slot pb Data frame of pseudobulk gene expression.
 #' @slot sample_distances Data frame storing calculated distances between samples.
@@ -29,12 +29,13 @@ setClass(
     freq = "data.frame",
     freq_imp = "data.frame",
     clr = "data.frame",
-    celltype_variances = "data.frame",
-    variance_explained = "numeric",
-    top_n_hvcs = "integer",
-    highly_variable_celltypes = "character",
-    metadata = "data.frame",
+    asin_sqrt = "data.frame",
     pb = "data.frame",
+    celltype_variances = "data.frame",
+    top_n_hvcs = "integer",
+    hvcs = "character",
+    variance_explained = "numeric",
+    metadata = "data.frame",
     sample_distances = "data.frame"
   ),
   # Define the default values for each slot.
@@ -44,12 +45,13 @@ setClass(
     freq = NULL,
     freq_imp = NULL,
     clr = NULL,
-    celltype_variances = NULL,
-    variance_explained = NULL,
-    top_n_hvcs = NULL,
-    highly_variable_celltypes = NULL,
-    metadata = NULL,
+    asin_sqrt = NULL,
     pb = NULL,
+    celltype_variances = NULL,
+    top_n_hvcs = NULL,
+    hvcs = NULL,
+    variance_explained = NULL,
+    metadata = NULL,
     sample_distances = NULL
   )
 )
@@ -152,10 +154,10 @@ create_ecoda_object <- function(data = NULL,
   metadata <- get_sample_metadata(cell_data_df, sample_col)
 
   ecoda_object <- create_ecoda_object_helper(
-    counts,
-    metadata,
-    variance_explained,
-    top_n_hvcs
+    counts = counts,
+    metadata = metadata,
+    variance_explained = variance_explained,
+    top_n_hvcs = top_n_hvcs
   )
 
   if (get_pb) {
@@ -186,7 +188,7 @@ create_ecoda_object <- function(data = NULL,
 #'                 must match the row names of the \code{counts} matrix.
 #' @param variance_explained Numeric (default: 0.5). The proportion of total variance
 #'                           that should be captured by the selected highly variable
-#'                           cell types (HVCs). Used by \code{find_highly_variable_celltypes}.
+#'                           cell types (HVCs). Used by \code{find_hvcs}.
 #' @param top_n_hvcs Integer (optional). Overrides \code{variance_explained} if provided,
 #'                   specifying the exact number of top HVCs to select based on variance.
 #'
@@ -200,7 +202,7 @@ create_ecoda_object <- function(data = NULL,
 #'
 #' @export create_ecoda_object_helper
 #'
-#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_highly_variable_celltypes}}
+#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_hvcs}}
 #'
 #' @examples
 #' \dontrun{
@@ -284,12 +286,17 @@ create_ecoda_object_helper <- function(counts = NULL,
     # Sort by rownames
     metadata <- metadata[mixedsort(rownames(metadata)), , drop = FALSE]
 
-    # Ensure correct dimensions
+    # Ensure correct rownames
     if (!all(rownames(counts) == rownames(metadata))) {
       stop("Rownames of cell counts do not match metadata.")
     }
     ecoda_object@metadata <- metadata
   }
+
+  asin_sqrt <- freq %>%
+    mutate(across(everything(), ~ . / 100)) %>%
+    sqrt() %>%
+    asin()
 
   sdist <- clr_df %>%
     dist() %>%
@@ -299,7 +306,7 @@ create_ecoda_object_helper <- function(counts = NULL,
   ecoda_object@clr <- clr_df
   ecoda_object@sample_distances <- sdist
 
-  ecoda_object <- find_highly_variable_celltypes(
+  ecoda_object <- find_hvcs(
     ecoda_object,
     variance_explained,
     top_n_hvcs
@@ -509,34 +516,35 @@ get_sample_metadata <- function(cell_data_df,
 #'           \item \code{celltype_variances}: Data frame of cell type variances.
 #'           \item \code{variance_explained}: The exact variance proportion captured by the selected HVCs.
 #'           \item \code{top_n_hvcs}: The number of HVCs selected.
-#'           \item \code{highly_variable_celltypes}: Character vector of the names of the selected HVCs.
+#'           \item \code{hvcs}: Character vector of the names of the selected HVCs.
 #'         }
 #'
-#' @export find_highly_variable_celltypes
+#' @export find_hvcs
 #'
-#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}, \code{\link{get_highly_variable_celltypes}}
+#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}, \code{\link{get_hvcs}}
 #'
 #' @examples
 #' \dontrun{
 #' # Assuming 'ecoda_obj' is a previously created ECODA object:
 #'
 #' # Select HVCs that explain 75% of the total variance
-#' ecoda_obj <- find_highly_variable_celltypes(ecoda_obj, variance_explained = 0.75)
+#' ecoda_obj <- find_hvcs(ecoda_obj, variance_explained = 0.75)
 #'
 #' # Select exactly the top 5 most variable cell types
-#' ecoda_obj <- find_highly_variable_celltypes(ecoda_obj, top_n_hvcs = 5)
+#' ecoda_obj <- find_hvcs(ecoda_obj, top_n_hvcs = 5)
 #' }
-find_highly_variable_celltypes <- function(ecoda_object,
-                                           variance_explained = 0.5,
-                                           top_n_hvcs = NULL) {
+find_hvcs <- function(ecoda_object,
+                      variance_explained = 0.5,
+                      top_n_hvcs = NULL) {
   df_var <- get_celltype_variances(
     ecoda_object,
     show_plot = FALSE
   )
 
-  hvcs <- get_highly_variable_celltypes(
+  hvcs <- get_hvcs(
     df_var,
-    variance_explained
+    variance_explained,
+    top_n_hvcs = top_n_hvcs
   )
 
   variance_explained <- (sum(df_var$Variance[1:length(hvcs)]) /
@@ -545,7 +553,7 @@ find_highly_variable_celltypes <- function(ecoda_object,
   ecoda_object@celltype_variances <- df_var
   ecoda_object@variance_explained <- variance_explained
   ecoda_object@top_n_hvcs <- length(hvcs)
-  ecoda_object@highly_variable_celltypes <- hvcs
+  ecoda_object@hvcs <- hvcs
 
 
   return(ecoda_object)
@@ -674,25 +682,25 @@ get_celltype_variances <- function(ecoda_object,
 #' @importFrom dplyr %>% slice pull slice_head
 #' @importFrom rlang .data
 #'
-#' @export get_highly_variable_celltypes
+#' @export get_hvcs
 #'
-#' @seealso \code{\link{find_highly_variable_celltypes}}, \code{\link{get_celltype_variances}}
+#' @seealso \code{\link{find_hvcs}}, \code{\link{get_celltype_variances}}
 #'
 #' @examples
 #' \dontrun{
 #' # Assuming 'df_variance' is a variance data frame sorted descendingly by variance.
 #' # Select cell types explaining at least 60% of variance:
-#' hvcs_60 <- get_highly_variable_celltypes(df_variance, variance_explained = 0.6)
+#' hvcs_60 <- get_hvcs(df_variance, variance_explained = 0.6)
 #'
 #' # Select the top 10 cell types:
-#' hvcs_top10 <- get_highly_variable_celltypes(df_variance, top_n_hvcs = 10)
+#' hvcs_top10 <- get_hvcs(df_variance, top_n_hvcs = 10)
 #'
 #' # Select the top 5% of cell types:
-#' hvcs_prop <- get_highly_variable_celltypes(df_variance, top_n_hvcs = 0.05)
+#' hvcs_prop <- get_hvcs(df_variance, top_n_hvcs = 0.05)
 #' }
-get_highly_variable_celltypes <- function(df_var,
-                                          variance_explained = 0.5,
-                                          top_n_hvcs = NULL) {
+get_hvcs <- function(df_var,
+                     variance_explained = 0.5,
+                     top_n_hvcs = NULL) {
   if (!is.null(top_n_hvcs)) {
     warning("Setting top_n_hvcs overrules variance_explained parameter")
     if (top_n_hvcs < 1) {
@@ -729,28 +737,40 @@ get_highly_variable_celltypes <- function(df_var,
 }
 
 
-#' Generates a Mean-Variance Plot for CLR-transformed Cell Type Data.
+
+#' @title Generates a Mean-Variance Plot for CLR-transformed Cell Type Data.
 #'
+#' @description
 #' This function visualizes the relationship between the mean abundance (CLR) and
 #' the variance (CLR) for each cell type, which is typically used to identify
 #' Highly Variable Cell Types (HVCs).
 #'
+#' @details
+#' If \code{highlight_hvcs} is \code{TRUE}, cell types previously identified and
+#' stored in the \code{ecoda_object@highly_variable_celltypes} slot will be
+#' highlighted in red on the plot.
+#'
 #' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing pre-calculated
-#'                     cell type variances in the \code{celltype_variances} slot.
+#'                     cell type variances in the \code{celltype_variances} slot and
+#'                     the HVC list in the \code{highly_variable_celltypes} slot.
 #' @param plot_title Character string (default: ""). The title for the plot.
-#' @param smooth_method Character string (default: "lm"). The smoothing method to
-#'                      use for the regression line (e.g., "lm" for linear model, "loess" for local regression).
-#' @param label_points Logical (default: \code{TRUE}). If \code{TRUE}, cell type
+#' @param highlight_hvcs Logical (default: \code{TRUE}). If \code{TRUE}, the points
+#'                       corresponding to the Highly Variable Cell Types (HVCs)
+#'                       stored in the ECODA object are colored red.
+#' @param label_points Logical (default: \code{FALSE}). If \code{TRUE}, cell type
 #'                     names are added to the points using \code{ggrepel::geom_text_repel}
 #'                     to minimize overlap.
-#' @param highlight_cts Character vector (optional, default: \code{NULL}). A vector
-#'                      of cell type names to highlight on the plot (not currently used
-#'                      in the function body but kept for future functionality).
+#' @param plot_fit_line Logical (default: \code{FALSE}). If \code{TRUE}, a smoothing
+#'                      regression line is added to the plot.
+#' @param smooth_method Character string (default: "lm"). The smoothing method to
+#'                      use for the regression line if \code{plot_fit_line} is \code{TRUE}
+#'                      (e.g., "lm" for linear model, "loess" for local regression).
 #'
 #' @return A \code{ggplot} object representing the mean-variance plot.
 #'
-#' @importFrom ggplot2 ggplot aes geom_point geom_smooth labs theme_classic xlab ylab
+#' @importFrom ggplot2 ggplot aes geom_point geom_smooth labs theme_classic xlab ylab scale_color_manual
 #' @importFrom ggrepel geom_text_repel
+#' @importFrom dplyr mutate if_else
 #'
 #' @export plot_varmean
 #'
@@ -758,38 +778,80 @@ get_highly_variable_celltypes <- function(df_var,
 #'
 #' @examples
 #' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object with calculated variances:
+#' # Assuming 'ecoda_obj' is a created ECODA object with calculated HVCs:
 #'
-#' # Generate the standard mean-variance plot
-#' plot_varmean(ecoda_obj, plot_title = "Cell Type Variance vs Mean Abundance")
+#' # 1. Generate the plot, highlighting HVCs (default)
+#' plot_varmean(ecoda_obj, plot_title = "HVCs on Mean-Variance Plot")
 #'
-#' # Generate the plot without labeling points
-#' plot_varmean(ecoda_obj, label_points = FALSE)
-#'
-#' # Use a LOESS smoothing method
-#' plot_varmean(ecoda_obj, smooth_method = "loess")
+#' # 2. Generate the plot without highlighting HVCs and add a fit line
+#' plot_varmean(ecoda_obj,
+#'   highlight_hvcs = FALSE,
+#'   plot_fit_line = TRUE,
+#'   smooth_method = "loess"
+#' )
 #' }
 plot_varmean <- function(ecoda_object,
                          plot_title = "",
-                         smooth_method = "lm",
-                         label_points = TRUE,
-                         highlight_cts = NULL) {
+                         highlight_hvcs = TRUE,
+                         label_points = FALSE,
+                         plot_fit_line = FALSE,
+                         smooth_method = "lm") {
   df_var <- ecoda_object@celltype_variances
 
-  p <- ggplot(df_var, aes(x = Relative_abundance, y = Variance)) +
+  # --- 1. Create a highlighting factor column ---
+  if (highlight_hvcs) {
+    highlight_celltypes <- ecoda_object@hvcs
+
+    df_var <- df_var %>%
+      dplyr::mutate(
+        is_highlighted = dplyr::if_else(
+          .data$celltype %in% highlight_celltypes,
+          "HVC selected",
+          "Not selected"
+        )
+      )
+    color_map <- c("HVC selected" = "red", "Not selected" = "black")
+
+    p <- ggplot(df_var, aes(x = avg_clr_abundance, y = Variance, color = is_highlighted)) +
+      scale_color_manual(values = color_map, name = "Cell Type Group")
+  } else {
+    p <- ggplot(df_var, aes(x = avg_clr_abundance, y = Variance))
+  }
+
+  p <- p +
     geom_point() +
-    geom_smooth(method = smooth_method, color = "red", fill = "#69b3a2", se = TRUE) +
     labs(title = paste(plot_title)) +
     theme_classic() +
     xlab("Mean (CLR)") +
     ylab("Variance (CLR)")
 
+  if (plot_fit_line) {
+    p <- p +
+      geom_smooth(method = smooth_method, color = "red", fill = "#69b3a2", se = TRUE)
+  }
+
+  # if (label_points) {
+  #   p <- p + geom_text_repel(data = df_var, aes(label = celltype), vjust = -0.5)
+  # }
+
+  # Ensure the legend is not shown if we are not highlighting anything
+  if (!highlight_hvcs) {
+    p <- p + ggplot2::theme(legend.position = "none")
+  }
+
   if (label_points) {
-    p <- p + geom_text_repel(data = df_var, aes(label = celltype), vjust = -0.5)
+    # Use the color aesthetic inside ggrepel so highlighted labels match the point color
+    if (highlight_hvcs) {
+      p <- p + ggrepel::geom_text_repel(data = df_var, aes(label = celltype, color = is_highlighted), size = 3)
+    } else {
+      p <- p + ggrepel::geom_text_repel(data = df_var, aes(label = celltype), size = 3, color = "black")
+    }
   }
 
   return(p)
 }
+
+
 
 
 # Get Pseudobulk and normalize ---------------------------

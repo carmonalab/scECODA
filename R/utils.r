@@ -81,12 +81,13 @@
 #' table(pbmc3k_DiffAbu@meta.data$condition_id, pbmc3k_DiffAbu@meta.data$seurat_annotations)
 #' }
 seurat_multiply_cells_in_condition <- function(
-    seurat_object,
-    condition_column,
-    target_condition,
-    celltype_column,
-    target_celltypes,
-    multiplier) {
+  seurat_object,
+  condition_column,
+  target_condition,
+  celltype_column,
+  target_celltypes,
+  multiplier
+) {
   if (!requireNamespace("Seurat", quietly = TRUE)) {
     stop(
       "Package \"Seurat\" must be installed to use this function.",
@@ -130,7 +131,7 @@ seurat_multiply_cells_in_condition <- function(
   }
 
   # Initial data to start the accumulation
-  multiplied_counts <- seurat_object@assays[["RNA"]]@counts
+  multiplied_counts <- seurat_object@assays[["RNA"]]$counts
   multiplied_metadata <- metadata
 
   # 2. Iterate and Duplicate (Multiplier - 1) times

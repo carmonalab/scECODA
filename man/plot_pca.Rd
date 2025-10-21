@@ -6,19 +6,21 @@
 \usage{
 plot_pca(
   ecoda_object,
-  slot = c("clr", "pb"),
+  slot = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
+  use_only_hvcs = FALSE,
   label_col = NULL,
   scale. = FALSE,
   pca_dims = NULL,
   knn_k = NULL,
   title = NULL,
   legend_title = "Group",
-  label_samples = FALSE,
+  show_label_samples = FALSE,
   score_digits = 3,
   cluster_score = TRUE,
   mod_score = TRUE,
   sil_score = FALSE,
   anosim_score = TRUE,
+  anosim_distance = "euclidian",
   anosim_permutations = 99,
   anosim_parallel = detectCores(),
   pointsize = 3,
@@ -33,18 +35,26 @@ plot_pca(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object}
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
 
-\item{slot}{A slot in the ECODA object (default: \code{"clr"}): either the
-CLR-transformed abundances in the \code{clr} slot or
-the pseudobulk gene expression in the \code{pb} slot.}
+\item{slot}{Character string (default: \code{"clr"}). The name of the data matrix
+slot in the \code{ECODA} object to use for PCA. Must be one of:
+\code{"clr"} (CLR-transformed abundances, default), \code{"pb"}
+(pseudobulk gene expression), \code{"counts"} (raw counts),
+\code{"counts_imp"} (imputed counts), \code{"freq"} (relative
+frequencies), \code{"freq_imp"} (imputed frequencies), or
+\code{"asin_sqrt"} (arcsin-square root transformed data).}
+
+\item{use_only_hvcs}{Logical (default: \code{FALSE}). If \code{TRUE}, the heatmap
+will be restricted to only the cell types listed in the
+\code{ecoda_object@highly_variable_celltypes} slot (HVCs).}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name of a
 column in \code{ecoda_object@metadata} used to color and group
 samples in the plot, and for calculating clustering scores.}
 
 \item{scale.}{Logical (default: \code{FALSE}). A value indicating whether the
-variables should be scaled to have unit variance before the analysis.}
+variables should be scaled to have unit variance before the PCA.}
 
 \item{pca_dims}{Integer (optional, default: \code{NULL}). The number of principal
 components (dimensions) to retain for the PCA calculation and
@@ -64,7 +74,7 @@ to this title.}
 \item{legend_title}{Character string (default: \code{"Group"}). The title for the color
 legend in the plot when a grouping column (\code{label_col}) is provided.}
 
-\item{label_samples}{Logical (default: \code{FALSE}). If \code{TRUE}, sample names are
+\item{show_label_samples}{Logical (default: \code{FALSE}). If \code{TRUE}, sample names are
 displayed next to the points in the plot. This automatically adds
 \code{"text"} to the \code{geom} parameter if it is not already present.}
 
@@ -82,6 +92,10 @@ average Silhouette width using \code{\link{calc_sil}}.}
 
 \item{anosim_score}{Logical (default: \code{TRUE}). If \code{TRUE}, calculates
 the ANOSIM statistic (R) using \code{vegan::anosim}.}
+
+\item{anosim_distance}{Character string (default: \code{"euclidian"}). The distance
+method used for the ANOSIM calculation (e.g., "euclidean",
+"manhattan").}
 
 \item{anosim_permutations}{Integer (default: \code{99}). The number of permutations
 to use when calculating the ANOSIM statistic.}
@@ -128,13 +142,13 @@ A \code{ggplot} object (2D, via \code{factoextra}) or a \code{plotly}
 object (3D) visualizing the PCA results.
 }
 \description{
-Performs Principal Component Analysis (PCA) on the CLR-transformed abundance
-matrix (\code{ecoda_object@clr}) and visualizes the results in 2D or 3D.
-It can also calculate and display several metrics to evaluate the separation
-of groups defined by \code{label_col}.
+Performs Principal Component Analysis (PCA) on a selected data matrix from the
+\code{ECODA} object (default: CLR-transformed abundances, \code{clr}) and
+visualizes the results in 2D or 3D. It can also calculate and display several
+metrics to evaluate the separation of groups defined by \code{label_col}.
 }
 \details{
 The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess how well
 the sample groupings (\code{labels}) align with the underlying data structure
-in the feature space.
+in the feature space defined by the PCA.
 }

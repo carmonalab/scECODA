@@ -2,10 +2,12 @@
 % Please edit documentation in R/plotting.r
 \name{plot_heatmap}
 \alias{plot_heatmap}
-\title{Generates a Heatmap of CLR-transformed Cell Type Abundances.}
+\title{Generates a Heatmap of Cell Abundance Data from an ECODA Slot.}
 \usage{
 plot_heatmap(
   ecoda_object,
+  slot = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
+  use_only_hvcs = FALSE,
   label_col,
   cluster_rows = TRUE,
   cluster_cols = TRUE,
@@ -16,8 +18,17 @@ plot_heatmap(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the CLR-transformed
-abundances in the \code{clr} slot.}
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the data matrices
+and metadata.}
+
+\item{slot}{Character string (default: \code{"clr"}). The name of the data slot
+in \code{ecoda_object} to use for the heatmap. Options include:
+\code{"clr"}, \code{"counts"}, \code{"counts_imp"}, \code{"freq"},
+\code{"freq_imp"}, \code{"asin_sqrt"}, or \code{"pb"}.}
+
+\item{use_only_hvcs}{Logical (default: \code{FALSE}). If \code{TRUE}, the heatmap
+will be restricted to only the cell types present in the
+\code{ecoda_object@hvcs} slot (Highly Variable Cell Types).}
 
 \item{label_col}{Character string. The name of the column in \code{ecoda_object@metadata}
 to use for annotating the samples (columns) of the heatmap.}
@@ -29,13 +40,15 @@ clustering to the cell types (rows).}
 clustering to the samples (columns).}
 
 \item{scale}{Character string (default: \code{"none"}). Method for scaling the
-CLR abundance values within the heatmap. Options include "none",
-"row", or "column". Note: The data is mean-centered before passing
-to \code{pheatmap}, but further scaling is controlled here.}
+abundance values within the heatmap using \code{pheatmap}. Options
+include \code{"none"}, \code{"row"}, or \code{"column"}. Note: The data
+is internally \strong{mean-centered} (\code{scale(center=TRUE, scale=FALSE)})
+across samples before being passed to \code{pheatmap}, regardless of this argument.}
 
 \item{clustering_method}{Character string (default: \code{"ward.D2"}). The clustering
 method to use for hierarchical clustering. Options are
-passed directly to \code{hclust} (e.g., "complete", "average", "ward.D2").}
+passed directly to \code{hclust} (e.g., \code{"complete"},
+\code{"average"}, \code{"ward.D2"}).}
 
 \item{angle_col}{Character string (default: \code{"90"}). Angle of the sample
 labels (columns).}
@@ -47,17 +60,16 @@ A \code{pheatmap} object, which is typically visualized automatically
 when called interactively.
 }
 \description{
-This function visualizes the CLR-transformed abundance matrix after mean-centering,
-allowing for clustering of both cell types and samples, and includes
-a sample annotation sidebar based on a specified metadata column.
-It is important to not re-scale in order to avoid amplifying tiny differences.
+This function visualizes a data matrix from a specified slot (e.g., CLR-transformed,
+frequency, or pseudobulk data) after mean-centering. It supports optional
+filtering to only Highly Variable Cell Types (HVCs) and includes a sample
+annotation sidebar based on a specified metadata column.
 }
 \examples{
 \dontrun{
 # Assuming 'ecoda_obj' is a created ECODA object with metadata
 
-# Generate a heatmap clustered by both cell types and samples,
-# annotated by the 'Condition' column in the metadata:
+# 1. Heatmap using CLR data, clustered, and annotated by 'Condition':
 p1 <- plot_heatmap(
   ecoda_obj,
   label_col = "Condition",
@@ -65,9 +77,12 @@ p1 <- plot_heatmap(
   fontsize = 8
 )
 
-# Generate a heatmap without clustering the samples:
+# 2. Heatmap using Relative Frequency data (freq), filtered to only HVCs,
+#    and without clustering the samples:
 p2 <- plot_heatmap(
   ecoda_obj,
+  slot = "freq",
+  use_only_hvcs = TRUE,
   label_col = "Batch",
   cluster_cols = FALSE
 )

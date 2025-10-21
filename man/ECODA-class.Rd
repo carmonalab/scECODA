@@ -29,7 +29,7 @@ highly variable cell types (HVCs).}
 
 \item{\code{top_n_hvcs}}{Integer specifying the number of top highly variable cell types selected.}
 
-\item{\code{highly_variable_celltypes}}{Character vector of names of the highly variable cell types.}
+\item{\code{hvcs}}{Character vector of names of the highly variable cell types.}
 
 \item{\code{metadata}}{Data frame of sample-level metadata (samples as rows).}
 

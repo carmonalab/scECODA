@@ -7,27 +7,33 @@
 plot_varmean(
   ecoda_object,
   plot_title = "",
-  smooth_method = "lm",
-  label_points = TRUE,
-  highlight_cts = NULL
+  highlight_hvcs = TRUE,
+  label_points = FALSE,
+  plot_fit_line = FALSE,
+  smooth_method = "lm"
 )
 }
 \arguments{
 \item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing pre-calculated
-cell type variances in the \code{celltype_variances} slot.}
+cell type variances in the \code{celltype_variances} slot and
+the HVC list in the \code{highly_variable_celltypes} slot.}
 
 \item{plot_title}{Character string (default: ""). The title for the plot.}
 
-\item{smooth_method}{Character string (default: "lm"). The smoothing method to
-use for the regression line (e.g., "lm" for linear model, "loess" for local regression).}
+\item{highlight_hvcs}{Logical (default: \code{TRUE}). If \code{TRUE}, the points
+corresponding to the Highly Variable Cell Types (HVCs)
+stored in the ECODA object are colored red.}
 
-\item{label_points}{Logical (default: \code{TRUE}). If \code{TRUE}, cell type
+\item{label_points}{Logical (default: \code{FALSE}). If \code{TRUE}, cell type
 names are added to the points using \code{ggrepel::geom_text_repel}
 to minimize overlap.}
 
-\item{highlight_cts}{Character vector (optional, default: \code{NULL}). A vector
-of cell type names to highlight on the plot (not currently used
-in the function body but kept for future functionality).}
+\item{plot_fit_line}{Logical (default: \code{FALSE}). If \code{TRUE}, a smoothing
+regression line is added to the plot.}
+
+\item{smooth_method}{Character string (default: "lm"). The smoothing method to
+use for the regression line if \code{plot_fit_line} is \code{TRUE}
+(e.g., "lm" for linear model, "loess" for local regression).}
 }
 \value{
 A \code{ggplot} object representing the mean-variance plot.
@@ -37,18 +43,24 @@ This function visualizes the relationship between the mean abundance (CLR) and
 the variance (CLR) for each cell type, which is typically used to identify
 Highly Variable Cell Types (HVCs).
 }
+\details{
+If \code{highlight_hvcs} is \code{TRUE}, cell types previously identified and
+stored in the \code{ecoda_object@highly_variable_celltypes} slot will be
+highlighted in red on the plot.
+}
 \examples{
 \dontrun{
-# Assuming 'ecoda_obj' is a created ECODA object with calculated variances:
+# Assuming 'ecoda_obj' is a created ECODA object with calculated HVCs:
 
-# Generate the standard mean-variance plot
-plot_varmean(ecoda_obj, plot_title = "Cell Type Variance vs Mean Abundance")
+# 1. Generate the plot, highlighting HVCs (default)
+plot_varmean(ecoda_obj, plot_title = "HVCs on Mean-Variance Plot")
 
-# Generate the plot without labeling points
-plot_varmean(ecoda_obj, label_points = FALSE)
-
-# Use a LOESS smoothing method
-plot_varmean(ecoda_obj, smooth_method = "loess")
+# 2. Generate the plot without highlighting HVCs and add a fit line
+plot_varmean(ecoda_obj,
+  highlight_hvcs = FALSE,
+  plot_fit_line = TRUE,
+  smooth_method = "loess"
+)
 }
 }
 \seealso{
