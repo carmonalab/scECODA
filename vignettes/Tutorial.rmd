@@ -143,6 +143,8 @@ ecoda_object <- create_ecoda_object(
 
 Metadata can be added optionally.
 
+Here, we load the immune cell composition in samples from a breast cancer cohort [@zhang2021]
+
 **NOTES:**
 
 -   If you create an ECODA object from a data frame containg relative abundances
@@ -251,15 +253,14 @@ composition between groups.
 
 **NOTE:** It is highly recommended to only do statistical testing on
 log-ratio-transformed compositional data and not on counts or relative
-abundances in %. For details, see review by Greenacre M. ([**see
-References**](#references)).
+abundances in % [@greenacre2021].
 
 The main focus of scECODA is **exploratory** (unsupervised) analysis of samples
 based on cell type composition. If you want to do down-stream comparative
 (supervised) differential abundance testing of *a priori known groups*
 (including statistical designs with multiple known covariates), there are other
-tools available for that purpose, e.g. scCODA or tascCODA ([**see
-References**](#references)).
+tools available for that purpose, e.g. scCODA [@büttner2021] or tascCODA
+[@tasccoda].
 
 ```{r}
 plot_boxplot(ecoda_object, title = "CLR Abundance by Cell Type")
@@ -323,8 +324,7 @@ plot_heatmap(
 )
 ```
 
-And here an example of a large healthy cohort with 868 samples and 69 cell types
-by Gong & Sharma *et al.* ([**see References**](#references)):
+And here an example of a large healthy cohort with 868 samples and 69 cell types [@gong2024]:
 
 ```{r fig.height=16, fig.width=12}
 ecoda_object <- create_ecoda_object_helper(
@@ -367,9 +367,14 @@ that might be of relevance to explain possible groups of samples in your data:
 plot_corr(ecoda_object)
 ```
 
-While the correlation plot below showing only the HVCs is easier to read, it is nevertheless interesting to see the full correlation plot above. It seems that there is additional information that might be overlooked:
+While the correlation plot below showing only the HVCs is easier to read, it is
+nevertheless interesting to see the full correlation plot above. It seems that
+there is additional information that might be overlooked:
 
-Besides the main cell type clusters of effector memory cells (separating samples by cytomegalovirus (CMV) infection status) and SOX4+ naive T cells (separating samples by age), there seems to be a cluster of ISG+ cell types, memory T cells and monocytes/DCs whose abundance strongly correlate, respectively.
+Besides the main cell type clusters of effector memory cells (separating samples
+by cytomegalovirus (CMV) infection status) and SOX4+ naive T cells (separating
+samples by age), there seems to be a cluster of ISG+ cell types, memory T cells
+and monocytes/DCs whose abundance strongly correlate, respectively.
 
 ```{r fig.height=16, fig.width=16}
 plot_corr(ecoda_object, use_only_hvcs = TRUE)
@@ -606,24 +611,7 @@ plot_pca(ecoda_object_DiffAbu, label_col = "condition_id", title = "PCA cell typ
 plot_pca(ecoda_object_DiffAbu, slot = "pb", label_col = "condition_id", title = "PCA pseudobulk")
 ```
 
-# References {#references}
-
--   Compositional Data Analysis. Greenacre M., Annual Review of Statistics and
-    Its Application Volume 8 (2021).
-    [**https://doi.org/10.1146/annurev-statistics-042720-124436**](https://doi.org/10.1146/annurev-statistics-042720-124436)
--   scCODA is a Bayesian model for compositional single-cell data analysis.
-    Büttner, M., Ostner, J., Müller, C.L. et al. Nat Commun 12, 6876 (2021).
-    <https://doi.org/10.1038/s41467-021-27150-6>
-    <https://github.com/theislab/scCODA>
--   tascCODA: Bayesian Tree-Aggregated Analysis of Compositional Amplicon and
-    Single-Cell Data. Ostner J, Carcy S, Müller CL. Front Genet. (2021) Dec
-    7;12:766405. doi: 10.3389/fgene.2021.766405.
-    <https://pubmed.ncbi.nlm.nih.gov/34950190/>
-    <https://github.com/bio-datascience/tascCODA>
--   Longitudinal Multi-omic Immune Profiling Reveals Age-Related Immune Cell
-    Dynamics in Healthy Adults. Gong Q. & Sharma M. et al., bioRxiv [Preprint].
-    2024 Sep 14:2024.09.10.612119. [**doi:
-    10.1101/2024.09.10.612119**](https://pubmed.ncbi.nlm.nih.gov/39314416/).
+# References
 
 # Session Info
 
