@@ -11,6 +11,22 @@ The following is an example a healthy human cohort, comprised of 868 samples, by
 
 <img width="3600" height="3600" alt="GongSharma" src="https://github.com/user-attachments/assets/e80c6599-9140-468c-8fe9-4136eb7c5778" />
 
+### Package Installation
+
+To install `scECODA` directly from its Git repository, run the following code from within R or RStudio:
+
+``` r
+install.packages("remotes")
+library(remotes)
+
+remotes::install_github("carmonalab/scECODA")
+```
+
+### scECODA Tutorial
+
+# TBD: ADD LINK to tutorial website
+
+Find a step-by-step tutorial for `scECODA` at: [scECODA tutorial](https://github.com/carmonalab/scECODA)
 
 ## References
 
