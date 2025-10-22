@@ -1,6 +1,6 @@
 # scECODA
 
-The scECODA package provides functions for ***s***ingle-***c***ell ***E***xploratory ***CO***mpositional ***D***ata ***A***nalysis at the population-scale.
+The scECODA package provides functions for sample representation and ***s***ingle-***c***ell ***E***xploratory ***CO***mpositional ***D***ata ***A***nalysis at the population-scale.
 
 It enables users to explore their dataset by visualizing the sample structure and how groups of samples relate to each other
 by providing numerous convenient plotting functions.
