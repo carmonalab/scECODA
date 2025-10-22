@@ -9,11 +9,11 @@ which cell types are driving this separation (differential abundance analysis).
 
 The following is an example a healthy human cohort, comprised of 868 samples, by of the [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/) showing a few of the most highly variable cell types driving separation of samples:
 
-<img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/cf6bb7f9-d744-43c0-b7b0-611d2fc359c7" />
+<img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/aa8b34ba-722c-495d-a9f7-3aea92842652" />
 
 ### Package Installation
 
-To install `scECODA` directly from its Git repository, run the following code from within R or RStudio:
+To install `scECODA` directly from the GitHub repository, run the following code from within R or RStudio:
 
 ``` r
 install.packages("remotes")
@@ -24,9 +24,7 @@ remotes::install_github("carmonalab/scECODA")
 
 ### scECODA Tutorial
 
-# TBD: ADD LINK to tutorial website
-
-Find a step-by-step tutorial for `scECODA` at: [scECODA tutorial](https://github.com/carmonalab/scECODA)
+Find a step-by-step tutorial for `scECODA` at: [scECODA tutorial](https://carmonalab.github.io/scECODA_demo/Tutorial.html)
 
 ## References
 
