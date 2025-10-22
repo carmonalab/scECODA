@@ -7,7 +7,7 @@ by providing numerous convenient plotting functions.
 Additionally, it provides metrics to quantify how strongly groups of samples separate and
 which cell types are driving this separation (differential abundance analysis).
 
-The following is an example a healthy human cohort, comprised of 868 samples, by of the Gong & Sharma *et al.* showing a few of the most highly variable cell types driving separation of samples:
+The following is an example a healthy human cohort, comprised of 868 samples, by of the [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/) showing a few of the most highly variable cell types driving separation of samples:
 
 <img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/cf6bb7f9-d744-43c0-b7b0-611d2fc359c7" />
 
