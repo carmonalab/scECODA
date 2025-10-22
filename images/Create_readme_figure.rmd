@@ -35,8 +35,11 @@ ecoda_object <- create_ecoda_object_helper(
 
 p <- plot_pca(
   ecoda_object, label_col = "age_cmv",
-  title = "PCA - Population-scale sample representation\nBased on Cell type composition",
-  n_ct_show = 9, pointsize = 1.75, labelsize = 3
+  title = "PCA - Population-scale sample representation\nBased on cell type composition",
+  n_ct_show = 9,
+  pointsize = 1.75,
+  labelsize = 3,
+  cluster_score = FALSE, mod_score = FALSE, anosim_score = FALSE
 ) +
   guides(shape = guide_legend(override.aes = list(size = 3.3))) +
   theme(
