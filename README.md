@@ -9,7 +9,7 @@ which cell types are driving this separation (differential abundance analysis).
 
 The following is an example a healthy human cohort, comprised of 868 samples, by of the Gong & Sharma *et al.* showing a few of the most highly variable cell types driving separation of samples:
 
-<img width="3600" height="3600" alt="GongSharma" src="https://github.com/user-attachments/assets/e80c6599-9140-468c-8fe9-4136eb7c5778" />
+<img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/cf6bb7f9-d744-43c0-b7b0-611d2fc359c7" />
 
 ### Package Installation
 
