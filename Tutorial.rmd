@@ -87,17 +87,18 @@ a data frame of relative abundances.
 
 ```{r message=FALSE, warning=FALSE}
 # Loading an example Seurat dataset
+library(Seurat)
 library(SeuratData)
 # InstallData("pbmc3k")
 data("pbmc3k")
-seurat_object <- Seurat::UpdateSeuratObject(pbmc3k)
+seurat_object <- UpdateSeuratObject(pbmc3k)
 ```
 
 The cells of this example dataset are annotated but not assigned to samples or
 biological conditions. Let us artificially assign them by creating a sample and
 condition column in the metadata.
 
-```{r pressure, echo=FALSE}
+```{r}
 n_samples <- 40
 n_groups <- 2
 

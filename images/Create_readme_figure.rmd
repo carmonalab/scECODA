@@ -22,7 +22,7 @@ data(example_data)
 It is also possible to create an ECODA object from counts or frequency. Optionally, metadata can be added.
 It is important to make sure that the counts/frequency and the metadata data frames have the same row names.
 
-```{r fig.height=12, fig.width=12}
+```{r fig.height=7, fig.width=9}
 ds <- example_data$GongSharma_full
 counts <- ds$cell_counts_highresolution
 metadata <- ds$metadata
@@ -35,10 +35,16 @@ ecoda_object <- create_ecoda_object_helper(
 
 p <- plot_pca(
   ecoda_object, label_col = "age_cmv",
-  title = "PCA - Population-scale sample separation\nBased on Cell type composition",
-  n_ct_show = 9
-)
+  title = "PCA - Population-scale sample representation\nBased on Cell type composition",
+  n_ct_show = 9, pointsize = 1.75, labelsize = 3
+) +
+  guides(shape = guide_legend(override.aes = list(size = 3.3))) +
+  theme(
+    # axis.text=element_text(size=14),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12)
+  )
 print(p)
 
-ggsave(file.path(getwd(), "images", "GongSharma.png"), plot = p, width = 12, height = 12)
+ggsave(file.path(getwd(), "images", "GongSharma.png"), plot = p, height = 7, width = 9)
 ```
