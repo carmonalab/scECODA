@@ -293,7 +293,7 @@ create_ecoda_object_helper <- function(counts = NULL,
     ecoda_object@metadata <- metadata
   }
 
-  asin_sqrt <- freq %>%
+  ecoda_object@asin_sqrt <- freq %>%
     mutate(across(everything(), ~ . / 100)) %>%
     sqrt() %>%
     asin()
