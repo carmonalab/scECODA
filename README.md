@@ -11,6 +11,7 @@ The following is an example a healthy human cohort, comprised of 868 samples, by
 
 <img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/aa8b34ba-722c-495d-a9f7-3aea92842652" />
 
+
 ### Package Installation
 
 To install `scECODA` directly from the GitHub repository, run the following code from within R or RStudio:
@@ -22,9 +23,22 @@ library(remotes)
 remotes::install_github("carmonalab/scECODA")
 ```
 
+
 ### scECODA Tutorial
 
 Find a step-by-step tutorial for `scECODA` at: [scECODA tutorial](https://carmonalab.github.io/scECODA_demo/Tutorial.html)
+
+
+### Why scECODA?
+
+scECODA allows for unprecedented insights in biological sample grouping structure:
+
+**Case Study 1: Granularity Matters** -
+Learn why **fine-grained cell type annotation** can be crucial to uncover biological insights missed by broad, low-resolution annotation.
+
+**Case Study 2: Cell type composition vs. Gene expression** -
+See how scECODA's compositional analysis compares to traditional **pseudobulk** methods, and outperforms it especially when differences are driven by **low-abundance cell types**.
+
 
 ## References
 
