@@ -33,10 +33,10 @@ Find a step-by-step tutorial for `scECODA` at: [scECODA tutorial](https://carmon
 
 scECODA allows for unprecedented insights in biological sample grouping structure:
 
-**Case Study 1: Granularity Matters** -
+[**Case Study 1: Granularity Matters**](https://github.com/carmonalab/scECODA_demo/blob/master/docs/Case_Study_1.html) -
 Learn why **fine-grained cell type annotation** is crucial to uncover biological insights missed by broad, low-resolution annotation.
 
-**Case Study 2: Cell type composition vs. Gene expression** -
+[**Case Study 2: Cell type composition vs. Gene expression**](https://github.com/carmonalab/scECODA_demo/blob/master/docs/Case_Study_2.html) -
 See how scECODA's compositional analysis compares to traditional **pseudobulk** methods, and outperforms it especially when differences are driven by **low-abundance cell types**.
 
 
