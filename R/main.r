@@ -1,3 +1,5 @@
+# Create ECODA object ---------------------------
+
 # Define ECODA object to store data
 
 #' An S4 class to represent a compositional data analysis object (ECODA).
@@ -79,7 +81,7 @@ setClass(
 #' @param celltype_col The column name in the single-cell object's metadata (or cell-level
 #'                     data frame) that defines the cell type annotation for each cell.
 #'                     (Required if \code{data} is a single-cell object).
-#' @param get_pb Logical, if \code{TRUE} (default: \code{FALSE}), the function will
+#' @param get_pb Logical, if \code{TRUE} (default: \code{TRUE}), the function will
 #'               calculate and store DESeq2-normalized pseudobulk data in the \code{pb} slot.
 #' @param variance_explained Numeric (default: 0.5). Used in subsequent steps by
 #'                         \code{create_ecoda_object_helper} to determine how many
@@ -114,7 +116,7 @@ setClass(
 create_ecoda_object <- function(data = NULL,
                                 sample_col = NULL,
                                 celltype_col = NULL,
-                                get_pb = FALSE,
+                                get_pb = TRUE,
                                 variance_explained = 0.5,
                                 top_n_hvcs = NULL) {
   # --- A) Handle input from a Seurat or SingleCellExperiment object ---
@@ -127,10 +129,14 @@ create_ecoda_object <- function(data = NULL,
     if (inherits(data, "Seurat")) {
       cell_data_df <- as.data.frame(data@meta.data)
       if (get_pb) {
-        pb <- calculate_pseudobulk(
-          count_matrix = data[["RNA"]]$counts,
-          sample_ids = cell_data_df[[sample_col]]
-        )
+        if (!is.null(data[["RNA"]]$counts)) {
+          pb <- calculate_pseudobulk(
+            count_matrix = data[["RNA"]]$counts,
+            sample_ids = cell_data_df[[sample_col]]
+          )
+        } else {
+          warning("Could not find RNA counts in Seurat object")
+        }
       }
     } else if (inherits(data, "SingleCellExperiment")) {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
@@ -142,10 +148,14 @@ create_ecoda_object <- function(data = NULL,
       cell_data_df <- as.data.frame(SummarizedExperiment::colData(data))
       names(cell_data_df) <- names(SummarizedExperiment::colData(data))
       if (get_pb) {
-        pb <- calculate_pseudobulk(
-          count_matrix = SummarizedExperiment::assay(data, "counts"),
-          sample_ids = cell_data_df[[sample_col]]
-        )
+        if (!is.null(SummarizedExperiment::assay(data, "counts"))) {
+          pb <- calculate_pseudobulk(
+            count_matrix = SummarizedExperiment::assay(data, "counts"),
+            sample_ids = cell_data_df[[sample_col]]
+          )
+        } else {
+          warning("Could not find RNA counts in SingleCellExperiment object")
+        }
       }
     }
   } else {
@@ -1075,7 +1085,6 @@ deseq2_normalize <- function(pb,
     })
   })
 
-  # --- Transpose to Samples x Genes format (REQUIRED FORMAT) ---
   # Current format: Genes x Samples (pb_norm)
   pb_norm <- t(pb_norm) # New format: Samples x Genes
 
