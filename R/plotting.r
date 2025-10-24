@@ -16,14 +16,12 @@
 #' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
 #' @param slot Character string (default: \code{"clr"}). The name of the data matrix
 #'             slot in the \code{ECODA} object to use for PCA. Must be one of:
-#'             \code{"clr"} (CLR-transformed abundances, default), \code{"pb"}
-#'             (pseudobulk gene expression), \code{"counts"} (raw counts),
-#'             \code{"counts_imp"} (imputed counts), \code{"freq"} (relative
-#'             frequencies), \code{"freq_imp"} (imputed frequencies), or
-#'             \code{"asin_sqrt"} (arcsin-square root transformed data).
-#' @param use_only_hvcs Logical (default: \code{FALSE}). If \code{TRUE}, the heatmap
-#'                      will be restricted to only the cell types listed in the
-#'                      \code{ecoda_object@highly_variable_celltypes} slot (HVCs).
+#'             \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+#'             (CLR-transformed abundances of only the most highly variable cell
+#'             types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+#'             \code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+#'             \code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+#'             frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name of a
 #'                  column in \code{ecoda_object@metadata} used to color and group
 #'                  samples in the plot, and for calculating clustering scores.
@@ -101,8 +99,7 @@
 #'
 #' @export plot_pca
 plot_pca <- function(ecoda_object,
-                     slot = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
-                     use_only_hvcs = FALSE,
+                     slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
                      label_col = NULL,
                      scale. = FALSE,
                      pca_dims = NULL,
@@ -129,10 +126,6 @@ plot_pca <- function(ecoda_object,
                      repel = TRUE) {
   slot <- match.arg(slot)
   feat_mat <- slot(ecoda_object, slot)
-
-  if (use_only_hvcs) {
-    feat_mat <- feat_mat[, ecoda_object@hvcs]
-  }
 
   res.pca <- prcomp(feat_mat, scale. = scale., rank. = pca_dims)
 
@@ -919,15 +912,15 @@ plot_boxplot <- function(ecoda_object,
 #' filtering to only Highly Variable Cell Types (HVCs) and includes a sample
 #' annotation sidebar based on a specified metadata column.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the data matrices
-#'                     and metadata.
-#' @param slot Character string (default: \code{"clr"}). The name of the data slot
-#'             in \code{ecoda_object} to use for the heatmap. Options include:
-#'             \code{"clr"}, \code{"counts"}, \code{"counts_imp"}, \code{"freq"},
-#'             \code{"freq_imp"}, \code{"asin_sqrt"}, or \code{"pb"}.
-#' @param use_only_hvcs Logical (default: \code{FALSE}). If \code{TRUE}, the heatmap
-#'                      will be restricted to only the cell types present in the
-#'                      \code{ecoda_object@hvcs} slot (Highly Variable Cell Types).
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
+#' @param slot Character string (default: \code{"clr"}). The name of the data matrix
+#'             slot in the \code{ECODA} object to use for the heatmap. Must be one of:
+#'             \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+#'             (CLR-transformed abundances of only the most highly variable cell
+#'             types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+#'             \code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+#'             \code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+#'             frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string. The name of the column in \code{ecoda_object@metadata}
 #'                  to use for annotating the samples (columns) of the heatmap.
 #' @param cluster_rows Logical (default: \code{TRUE}). Whether to apply hierarchical
@@ -969,19 +962,17 @@ plot_boxplot <- function(ecoda_object,
 #'   fontsize = 8
 #' )
 #'
-#' # 2. Heatmap using Relative Frequency data (freq), filtered to only HVCs,
+#' # 2. Heatmap using Relative Frequency data (clr_hvc), filtered to only HVCs,
 #' #    and without clustering the samples:
 #' p2 <- plot_heatmap(
 #'   ecoda_obj,
-#'   slot = "freq",
-#'   use_only_hvcs = TRUE,
+#'   slot = "clr_hvc",
 #'   label_col = "Batch",
 #'   cluster_cols = FALSE
 #' )
 #' }
 plot_heatmap <- function(ecoda_object,
-                         slot = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
-                         use_only_hvcs = FALSE,
+                         slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
                          label_col,
                          cluster_rows = TRUE,
                          cluster_cols = TRUE,
@@ -991,10 +982,6 @@ plot_heatmap <- function(ecoda_object,
                          ...) {
   slot <- match.arg(slot)
   df_heatmap <- slot(ecoda_object, slot)
-
-  if (use_only_hvcs) {
-    df_heatmap <- df_heatmap[, ecoda_object@hvcs]
-  }
 
   df_heatmap <- df_heatmap %>%
     scale(center = TRUE, scale = FALSE) %>%
@@ -1034,11 +1021,15 @@ plot_heatmap <- function(ecoda_object,
 #' suggests they vary together across samples, indicating potential co-occurrence
 #' or co-regulation.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the
-#'                     CLR-transformed abundances in the \code{clr} slot.
-#' @param use_only_hvcs Logical (default: \code{FALSE}). If \code{TRUE}, the correlation plot
-#'                      will be restricted to only the cell types present in the
-#'                      \code{ecoda_object@hvcs} slot (Highly Variable Cell Types).
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
+#' @param slot Character string (default: \code{"clr"}). The name of the data matrix
+#'             slot in the \code{ECODA} object to use for the correlation plot Must be one of:
+#'             \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+#'             (CLR-transformed abundances of only the most highly variable cell
+#'             types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+#'             \code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+#'             \code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+#'             frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param order Character string (default: \code{"hclust"}). The ordering method
 #'              for the correlation matrix. Common options include:
 #'              \itemize{
@@ -1060,15 +1051,12 @@ plot_heatmap <- function(ecoda_object,
 #'
 #' @export plot_corr
 plot_corr <- function(ecoda_object,
-                      use_only_hvcs = FALSE,
+                      slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
                       order = "hclust",
                       hclust.method = "ward.D2",
                       ...) {
-  feat_mat <- ecoda_object@clr
-
-  if (use_only_hvcs) {
-    feat_mat <- feat_mat[, ecoda_object@hvcs]
-  }
+  slot <- match.arg(slot)
+  feat_mat <- slot(ecoda_object, slot)
 
   cor_matrix <- cor(feat_mat)
 

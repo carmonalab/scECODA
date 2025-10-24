@@ -29,6 +29,7 @@ setClass(
     freq = "data.frame",
     freq_imp = "data.frame",
     clr = "data.frame",
+    clr_hvc = "data.frame",
     asin_sqrt = "data.frame",
     pb = "data.frame",
     celltype_variances = "data.frame",
@@ -45,6 +46,7 @@ setClass(
     freq = NULL,
     freq_imp = NULL,
     clr = NULL,
+    clr_hvc = NULL,
     asin_sqrt = NULL,
     pb = NULL,
     celltype_variances = NULL,
@@ -311,6 +313,8 @@ create_ecoda_object_helper <- function(counts = NULL,
     variance_explained,
     top_n_hvcs
   )
+
+  ecoda_object@clr_hvc <- clr(freq_imp[, ecoda_object@hvcs, drop = FALSE])
 
   return(ecoda_object)
 }
