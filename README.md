@@ -1,13 +1,15 @@
 # scECODA
 
-The scECODA R package provides functions for sample representation and ***s***ingle-***c***ell ***E***xploratory ***CO***mpositional ***D***ata ***A***nalysis at the population-scale.
+The scECODA R package faciliates ***Exploratory COmpositional Data Analysis (ECODA)*** and visualization, especially for single-cell omics data embeddings at the sample/population level
 
-It enables users to explore their dataset by visualizing the sample structure and how groups of samples relate to each other
-by providing numerous convenient plotting functions.
-Additionally, it provides metrics to quantify how strongly groups of samples separate and
-which cell types are driving this separation (differential abundance analysis).
+It enables users to explore multi-sample datasets, such as those from large patient cohorts, facilitating the unsupervised identification of samples with similar cell type compositional patterns (e.g. patient clustering/statification).
+Additionally, it provides metrics to quantify how strongly different sample groups (e.g. different conditions) separate from each other and which cell types or cell states abundance changes are driving this separation.
 
 The following is an example a healthy human cohort, comprised of 868 samples, by of the [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/) showing a few of the most highly variable cell types driving separation of samples:
+
+```r
+scECODA::plot_pca(ecoda_object)
+```
 
 <img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/aa8b34ba-722c-495d-a9f7-3aea92842652" />
 
@@ -24,22 +26,20 @@ remotes::install_github("carmonalab/scECODA")
 ```
 
 
-### scECODA Tutorial
+### Tutorial
 
-Find a step-by-step tutorial for `scECODA` at: [scECODA tutorial](https://carmonalab.github.io/scECODA_demo/Tutorial.html) ([RMD](https://github.com/carmonalab/scECODA_demo/blob/master/Tutorial.rmd))
+Check out our step-by-step [scECODA tutorial](https://carmonalab.github.io/scECODA_demo/Tutorial.html) ([RMD](https://github.com/carmonalab/scECODA_demo/blob/master/Tutorial.rmd))
 
 
-### Why scECODA?
-
-scECODA allows for unprecedented insights in biological sample grouping structure:
+### Case studies
 
 [**Case Study 1: Granularity Matters**](https://carmonalab.github.io/scECODA_demo/Case_Study_1.html) -
-Learn why **fine-grained cell type annotation** is crucial to uncover biological insights missed by broad, low-resolution annotation or pseudobulk gene expression. ([RMD](https://github.com/carmonalab/scECODA_demo/blob/master/Case_Study_1.rmd))
+See how **fine-grained cell type annotation** can be crucial to uncover inter-sample biological variation missed by broad, low-resolution annotation or pseudobulk gene expression in these ECODA anlayses of i) blood samples from healthy individuals and ii) lung samples from patients with different pulmonary diseases. ([RMD](https://github.com/carmonalab/scECODA_demo/blob/master/Case_Study_1.rmd))
 
-[**Case Study 2: Cell type composition vs. Gene expression**](https://carmonalab.github.io/scECODA_demo/Case_Study_2.html) -
-See how scECODA's compositional analysis compares to traditional **pseudobulk** methods, and outperforms it especially when differences are driven by **low-abundance cell types**. ([RMD](https://github.com/carmonalab/scECODA_demo/blob/master/Case_Study_2.rmd))
+[**Case Study 2: Cell type composition vs. Pseudo-bulk gene expression**](https://carmonalab.github.io/scECODA_demo/Case_Study_2.html) -
+See how scECODA's compositional analysis compares to **pseudobulk** analysis and outperforms it when differences are driven by **low-abundance cell types** in a semi-synthetic dataset. ([RMD](https://github.com/carmonalab/scECODA_demo/blob/master/Case_Study_2.rmd))
 
 
 ## References
 
-Longitudinal Multi-omic Immune Profiling Reveals Age-Related Immune Cell Dynamics in Healthy Adults. Gong Q. & Sharma M. *et al.*, bioRxiv [Preprint]. 2024 Sep 14:2024.09.10.612119. [doi: 10.1101/2024.09.10.612119](https://pubmed.ncbi.nlm.nih.gov/39314416/).
+Halter C, et al. 2025
