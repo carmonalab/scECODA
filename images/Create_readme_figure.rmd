@@ -13,6 +13,7 @@ output:
 
 ```{r}
 library(scECODA)
+library(ggplot2)
 
 # Load example datasets
 data(example_data)
