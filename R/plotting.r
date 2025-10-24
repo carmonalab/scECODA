@@ -133,6 +133,13 @@ plot_pca <- function(ecoda_object,
   if (!is.null(label_col)) {
     labels <- ecoda_object@metadata[[label_col]]
 
+    if (slot == "clr_hvc") {
+      title <- paste0(
+        title,
+        "\nHVCs: ", ecoda_object@top_n_hvcs,
+        " Variance explained: ", ecoda_object@variance_explained
+      )
+    }
     if (anosim_score) {
       anosim_score <- calc_anosim(
         feat_mat,
