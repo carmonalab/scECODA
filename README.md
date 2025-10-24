@@ -8,7 +8,8 @@ It enables intuitive exploration of multi-sample datasets –such as large patie
 The following example uses 868 (celltype annotated) scRNA-seq samples from the blood of healthy donors (data from [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/)) . It illustrates how samples naturally separate in an unsupervised manner by donor age and CMV infection status, and highlights the top cell types whose changes in abundance drive inter-sample variation.
 
 ```r
-scECODA::plot_pca(ecoda_object)
+ecoda_object <- create_ecoda_object(Seurat_Object) # or SCE_object or count data
+plot_pca(ecoda_object)
 ```
 
 <img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/aa8b34ba-722c-495d-a9f7-3aea92842652" />
