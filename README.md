@@ -2,11 +2,10 @@
 
 The scECODA R package faciliates ***Exploratory COmpositional Data Analysis (ECODA)*** and visualization, especially for single-cell omics data embeddings at the sample/population level
 
-It enables users to explore multi-sample datasets, such as those from large patient cohorts, facilitating the unsupervised identification of samples with similar cell type compositional patterns (e.g. patient clustering/statification).
-Additionally, it provides metrics to quantify how strongly different sample groups (e.g. different conditions) separate from each other and which cell types or cell states abundance changes are driving this separation.
+It enables intuitive exploration of multi-sample datasets –such as large patient cohorts– and supports the unsupervised identification of samples with similar cell type compositional profiles (e.g., patient clustering or stratification). In addition, scECODA provides metrics to quantify the degree of separation between sample groups (e.g., biological conditions) and to pinpoint the cell types or cell states whose abundance changes drive these differences.
 
 ### Example
-The following example uses 868 scRNA-seq samples from the blood of healthy donors (data from [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/)) . It illustrates how samples naturally separate in an unsupervised manner by donor age and CMV infection status, and highlights the top cell types whose changes in abundance drive inter-sample variation.
+The following example uses 868 (celltype annotated) scRNA-seq samples from the blood of healthy donors (data from [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/)) . It illustrates how samples naturally separate in an unsupervised manner by donor age and CMV infection status, and highlights the top cell types whose changes in abundance drive inter-sample variation.
 
 ```r
 scECODA::plot_pca(ecoda_object)
