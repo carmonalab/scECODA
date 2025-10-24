@@ -5,7 +5,8 @@ The scECODA R package faciliates ***Exploratory COmpositional Data Analysis (ECO
 It enables users to explore multi-sample datasets, such as those from large patient cohorts, facilitating the unsupervised identification of samples with similar cell type compositional patterns (e.g. patient clustering/statification).
 Additionally, it provides metrics to quantify how strongly different sample groups (e.g. different conditions) separate from each other and which cell types or cell states abundance changes are driving this separation.
 
-The following is an example a healthy human cohort, comprised of 868 samples, by of the [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/) showing a few of the most highly variable cell types driving separation of samples:
+### Example
+The following example uses 868 scRNA-seq samples from the blood of healthy donors (data from [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/)) . It illustrates how samples naturally separate in an unsupervised manner by donor age and CMV infection status, and highlights the top cell types whose changes in abundance drive inter-sample variation.
 
 ```r
 scECODA::plot_pca(ecoda_object)
