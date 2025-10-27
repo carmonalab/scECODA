@@ -6,19 +6,24 @@
 \usage{
 plot_corr(
   ecoda_object,
-  use_only_hvcs = FALSE,
+  slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt",
+    "pb"),
   order = "hclust",
   hclust.method = "ward.D2",
   ...
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the
-CLR-transformed abundances in the \code{clr} slot.}
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
 
-\item{use_only_hvcs}{Logical (default: \code{FALSE}). If \code{TRUE}, the correlation plot
-will be restricted to only the cell types present in the
-\code{ecoda_object@hvcs} slot (Highly Variable Cell Types).}
+\item{slot}{Character string (default: \code{"clr"}). The name of the data matrix
+slot in the \code{ECODA} object to use for the correlation plot Must be one of:
+\code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+(CLR-transformed abundances of only the most highly variable cell
+types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+\code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+\code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{order}{Character string (default: \code{"hclust"}). The ordering method
 for the correlation matrix. Common options include:

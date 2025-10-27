@@ -6,8 +6,8 @@
 \usage{
 plot_pca(
   ecoda_object,
-  slot = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
-  use_only_hvcs = FALSE,
+  slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt",
+    "pb"),
   label_col = NULL,
   scale. = FALSE,
   pca_dims = NULL,
@@ -39,15 +39,12 @@ plot_pca(
 
 \item{slot}{Character string (default: \code{"clr"}). The name of the data matrix
 slot in the \code{ECODA} object to use for PCA. Must be one of:
-\code{"clr"} (CLR-transformed abundances, default), \code{"pb"}
-(pseudobulk gene expression), \code{"counts"} (raw counts),
-\code{"counts_imp"} (imputed counts), \code{"freq"} (relative
-frequencies), \code{"freq_imp"} (imputed frequencies), or
-\code{"asin_sqrt"} (arcsin-square root transformed data).}
-
-\item{use_only_hvcs}{Logical (default: \code{FALSE}). If \code{TRUE}, the heatmap
-will be restricted to only the cell types listed in the
-\code{ecoda_object@highly_variable_celltypes} slot (HVCs).}
+\code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+(CLR-transformed abundances of only the most highly variable cell
+types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+\code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+\code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name of a
 column in \code{ecoda_object@metadata} used to color and group

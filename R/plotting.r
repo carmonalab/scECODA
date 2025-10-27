@@ -1067,5 +1067,5 @@ plot_corr <- function(ecoda_object,
 
   cor_matrix <- cor(feat_mat)
 
-  corrplot::corrplot(cor_matrix, order = "hclust", hclust.method = "ward.D2", ...)
+  corrplot(cor_matrix, order = "hclust", hclust.method = "ward.D2", ...)
 }

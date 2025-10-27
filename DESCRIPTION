@@ -29,6 +29,7 @@ Imports:
     SummarizedExperiment (>= 1.34.0), 
     BiocGenerics,
     cluster,
+    corrplot,
     DESeq2,
     dplyr,
     factoextra,

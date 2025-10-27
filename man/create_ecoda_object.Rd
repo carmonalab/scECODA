@@ -8,7 +8,7 @@ create_ecoda_object(
   data = NULL,
   sample_col = NULL,
   celltype_col = NULL,
-  get_pb = FALSE,
+  get_pb = TRUE,
   variance_explained = 0.5,
   top_n_hvcs = NULL
 )
@@ -29,7 +29,7 @@ data frame) that defines the unique sample ID for each cell.
 data frame) that defines the cell type annotation for each cell.
 (Required if \code{data} is a single-cell object).}
 
-\item{get_pb}{Logical, if \code{TRUE} (default: \code{FALSE}), the function will
+\item{get_pb}{Logical, if \code{TRUE} (default: \code{TRUE}), the function will
 calculate and store DESeq2-normalized pseudobulk data in the \code{pb} slot.}
 
 \item{variance_explained}{Numeric (default: 0.5). Used in subsequent steps by

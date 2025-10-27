@@ -6,8 +6,8 @@
 \usage{
 plot_heatmap(
   ecoda_object,
-  slot = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "pb"),
-  use_only_hvcs = FALSE,
+  slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt",
+    "pb"),
   label_col,
   cluster_rows = TRUE,
   cluster_cols = TRUE,
@@ -18,17 +18,16 @@ plot_heatmap(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the data matrices
-and metadata.}
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
 
-\item{slot}{Character string (default: \code{"clr"}). The name of the data slot
-in \code{ecoda_object} to use for the heatmap. Options include:
-\code{"clr"}, \code{"counts"}, \code{"counts_imp"}, \code{"freq"},
-\code{"freq_imp"}, \code{"asin_sqrt"}, or \code{"pb"}.}
-
-\item{use_only_hvcs}{Logical (default: \code{FALSE}). If \code{TRUE}, the heatmap
-will be restricted to only the cell types present in the
-\code{ecoda_object@hvcs} slot (Highly Variable Cell Types).}
+\item{slot}{Character string (default: \code{"clr"}). The name of the data matrix
+slot in the \code{ECODA} object to use for the heatmap. Must be one of:
+\code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+(CLR-transformed abundances of only the most highly variable cell
+types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+\code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+\code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{label_col}{Character string. The name of the column in \code{ecoda_object@metadata}
 to use for annotating the samples (columns) of the heatmap.}
@@ -77,12 +76,11 @@ p1 <- plot_heatmap(
   fontsize = 8
 )
 
-# 2. Heatmap using Relative Frequency data (freq), filtered to only HVCs,
+# 2. Heatmap using Relative Frequency data (clr_hvc), filtered to only HVCs,
 #    and without clustering the samples:
 p2 <- plot_heatmap(
   ecoda_obj,
-  slot = "freq",
-  use_only_hvcs = TRUE,
+  slot = "clr_hvc",
   label_col = "Batch",
   cluster_cols = FALSE
 )
