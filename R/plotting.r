@@ -136,7 +136,7 @@ plot_pca <- function(ecoda_object,
       title <- paste0(
         title,
         "\nHVCs: ", ecoda_object@top_n_hvcs,
-        " Variance explained: ", ecoda_object@variance_explained
+        " Variance explained: ", round(ecoda_object@variance_explained, score_digits)
       )
     }
     if (anosim_score) {
