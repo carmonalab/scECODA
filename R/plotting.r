@@ -39,6 +39,8 @@
 #' @param title Character string (optional, default: \code{NULL}). The main title
 #'              for the plot. If clustering scores are calculated, they are appended
 #'              to this title.
+#' @param title_show_n_features Logical (optional, default: \code{TRUE}) Show the number of
+#'                              features (cell types or genes) used.
 #' @param legend_title Character string (default: \code{"Group"}). The title for the color
 #'                     legend in the plot when a grouping column (\code{label_col}) is provided.
 #' @param show_label_samples Logical (default: \code{FALSE}). If \code{TRUE}, sample names are
@@ -104,6 +106,7 @@ plot_pca <- function(ecoda_object,
                      pca_dims = NULL,
                      knn_k = NULL,
                      title = NULL,
+                     title_show_n_features = TRUE,
                      legend_title = "Group",
                      show_label_samples = FALSE,
                      score_digits = 3,
@@ -132,12 +135,24 @@ plot_pca <- function(ecoda_object,
   if (!is.null(label_col)) {
     labels <- ecoda_object@metadata[[label_col]]
 
-    if (slot == "clr_hvc") {
-      title <- paste0(
-        title,
-        "\nHVCs: ", ecoda_object@top_n_hvcs,
-        " Variance explained: ", round(ecoda_object@variance_explained, score_digits)
-      )
+    if (title_show_n_features) {
+      if (slot == "clr_hvc") {
+        title <- paste0(
+          title,
+          "\nHVCs: ", ecoda_object@top_n_hvcs,
+          " Variance explained: ", round(ecoda_object@variance_explained, score_digits)
+        )
+      } else if (slot == "pb") {
+        title <- paste0(
+          title,
+          "\nNumber of genes: ", ncol(feat_mat)
+        )
+      } else {
+        title <- paste0(
+          title,
+          "\nNumber of cell types: ", ncol(feat_mat)
+        )
+      }
     }
     if (anosim_score) {
       anosim_score <- calc_anosim(
