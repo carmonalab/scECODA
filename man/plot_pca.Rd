@@ -13,6 +13,7 @@ plot_pca(
   pca_dims = NULL,
   knn_k = NULL,
   title = NULL,
+  title_show_n_features = TRUE,
   legend_title = "Group",
   show_label_samples = FALSE,
   score_digits = 3,
@@ -67,6 +68,9 @@ graph construction, required for Modularity score calculation. If
 \item{title}{Character string (optional, default: \code{NULL}). The main title
 for the plot. If clustering scores are calculated, they are appended
 to this title.}
+
+\item{title_show_n_features}{Logical (optional, default: \code{TRUE}) Show the number of
+features (cell types or genes) used.}
 
 \item{legend_title}{Character string (default: \code{"Group"}). The title for the color
 legend in the plot when a grouping column (\code{label_col}) is provided.}
