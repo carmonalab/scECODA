@@ -30,7 +30,7 @@ plot_pca(
   plotly_3d = FALSE,
   invisible = c("var", "quali"),
   geom = "point",
-  n_ct_show = Inf,
+  n_hv_feat_show = Inf,
   repel = TRUE
 )
 }
@@ -127,9 +127,8 @@ for the plot. Allowed values are combinations of:
 The default \code{"point"} plots points for both individuals and variables.
 Use \code{c("point", "text")} to show both points and labels for samples.}
 
-\item{n_ct_show}{Integer (default: \code{Inf}). Number of cell types (variables)
-to show based on their contribution to the selected axes. Set to
-\code{Inf} to show all.}
+\item{n_hv_feat_show}{Integer (default: \code{Inf}). Number of most highly variable features
+to show based on their contribution to the selected axes.}
 
 \item{repel}{Logical (default: \code{TRUE}). Whether to use \code{ggrepel} to
 prevent label overlap for variable names.}
