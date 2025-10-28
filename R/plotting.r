@@ -81,9 +81,8 @@
 #'             }
 #'             The default \code{"point"} plots points for both individuals and variables.
 #'             Use \code{c("point", "text")} to show both points and labels for samples.
-#' @param n_ct_show Integer (default: \code{Inf}). Number of cell types (variables)
-#'                  to show based on their contribution to the selected axes. Set to
-#'                  \code{Inf} to show all.
+#' @param n_hv_feat_show Integer (default: \code{Inf}). Number of most highly variable features
+#'                  to show based on their contribution to the selected axes.
 #' @param repel Logical (default: \code{TRUE}). Whether to use \code{ggrepel} to
 #'              prevent label overlap for variable names.
 #'
@@ -122,7 +121,7 @@ plot_pca <- function(ecoda_object,
                      plotly_3d = FALSE,
                      invisible = c("var", "quali"),
                      geom = "point",
-                     n_ct_show = Inf,
+                     n_hv_feat_show = Inf,
                      repel = TRUE) {
   slot <- match.arg(slot)
   feat_mat <- slot(ecoda_object, slot)
@@ -181,7 +180,7 @@ plot_pca <- function(ecoda_object,
       add_markers(data = df, x = ~PC1, y = ~PC2, z = ~PC3) %>%
       add_paths(data = m, x = ~PC1, y = ~PC2, z = ~PC3, opacity = 0.2)
   } else {
-    if (!is.infinite(n_ct_show) & all(invisible %in% c("var", "quali"))) {
+    if (!is.infinite(n_hv_feat_show) & all(invisible %in% c("var", "quali"))) {
       invisible <- "quali"
     }
 
@@ -198,7 +197,7 @@ plot_pca <- function(ecoda_object,
       pointsize = pointsize,
       labelsize = labelsize,
       invisible = invisible,
-      select.var = list(contrib = n_ct_show),
+      select.var = list(contrib = n_hv_feat_show),
       repel = repel,
       geom = geom
     ) +
