@@ -863,22 +863,6 @@ plot_boxplot <- function(ecoda_object,
     nr_of_boxplots <- length(unique(plot_data[[label_col]]))
     label_col_sym <- sym(label_col)
 
-    # --- DYNAMIC STATISTICAL TEST SELECTION ---
-    current_stat_method <- stat_method
-
-    if (nr_of_boxplots > 2) {
-      # For 3+ non-parametric groups, use Kruskal-Wallis (overall test)
-      # We only override if the user used a 2-group method like wilcox.test or t.test
-      if (stat_method %in% c("wilcox.test", "t.test")) {
-        current_stat_method <- "kruskal.test"
-        warning(paste0(
-          "stat_method automatically switched from '", stat_method,
-          "' to 'kruskal.test' for multi-group (N=", nr_of_boxplots, ") comparison."
-        ))
-      }
-    }
-    # ---------------------------------------------
-
     # Add jittered points with dodging
     p <- p + geom_jitter(
       mapping = aes(color = !!label_col_sym), # Map color to group
@@ -888,10 +872,10 @@ plot_boxplot <- function(ecoda_object,
     )
 
     # Add significance testing: logic changes based on Kruskal-Wallis vs. Pairwise test
-    if (current_stat_method == "kruskal.test") {
+    if (stat_method == "kruskal.test") {
       # Kruskal-Wallis: Overall test (no 'group' aesthetic needed)
       p <- p + stat_compare_means(
-        method = current_stat_method,
+        method = stat_method,
         label.y.npc = "top", # Place label at the top
         label.x.npc = "center",
         label = "p.format" # Show the overall p-value
