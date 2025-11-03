@@ -751,7 +751,6 @@ get_hvcs <- function(df_var,
 }
 
 
-
 #' @title Generates a Mean-Variance Plot for CLR-transformed Cell Type Data.
 #'
 #' @description
@@ -864,8 +863,6 @@ plot_varmean <- function(ecoda_object,
 
   return(p)
 }
-
-
 
 
 # Get Pseudobulk and normalize ---------------------------

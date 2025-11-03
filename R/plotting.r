@@ -768,6 +768,8 @@ plot_barplot <- function(ecoda_object,
 #' @param label_col Character string (optional, default: \code{NULL}). The name of a
 #'                  column in \code{ecoda_object@metadata} used to define groups for
 #'                  comparison. If \code{NULL}, a single boxplot is generated per cell type.
+#' @param selected_celltypes Specify selected celltypes you want to plot
+#'                           instead of plotting boxplots for all.
 #' @param title Character string (default: \code{""}). The main title for the plot.
 #' @param stat_method Character string (default: \code{"wilcox.test"}). The statistical
 #'                    method used for comparisons between 2 groups (e.g., "t.test",
@@ -818,12 +820,21 @@ plot_barplot <- function(ecoda_object,
 #' }
 plot_boxplot <- function(ecoda_object,
                          label_col = NULL,
+                         selected_celltypes = NULL,
                          title = "",
                          stat_method = "wilcox.test",
                          paired = FALSE,
                          signif_label = c("p.signif", "p.format")) {
   signif_label <- match.arg(signif_label)
   plot_data <- create_long_data(ecoda_object, data_slot = "clr", label_col = label_col)
+
+  if (!is.null(selected_celltypes)) {
+    if (!all(selected_celltypes) %in% plot_data$celltype) {
+      stop("Not all selected_celltypes found in ecoda_object. Please check colnames(ecoda_object@clr).")
+    }
+
+    plot_data <- plot_data[plot_data$celltype %in% selected_celltypes, ]
+  }
 
   # Ensure celltype is a factor for plotting
   plot_data$celltype <- factor(plot_data$celltype)
@@ -880,16 +891,28 @@ plot_boxplot <- function(ecoda_object,
         label.x.npc = "center",
         label = "p.format" # Show the overall p-value
       )
-    } else {
+    } else if (nr_of_boxplots == 2) {
       # Wilcoxon or t.test: Pairwise test (requires 'group' aesthetic)
-      p <- p + stat_compare_means(
-        aes(group = !!label_col_sym),
-        method = stat_method,
-        paired = paired,
-        label = signif_label, # Show significance stars
-        tip.length = 0,
-        hide.ns = TRUE
+      p <- p + ggsignif::geom_signif(
+        comparisons = combn(sort(unique(as.character(plot_data$celltype))), 2, simplify = F),
+        step_increase = 0.08, test = "wilcox.test", test.args = list(exact = FALSE)
       )
+    } else if (nr_of_boxplots > 2) {
+      y_var <- colnames(plot_dat)[3]
+      x_group_var <- colnames(plot_dat)[2]
+      fill_compare_var <- colnames(plot_dat)[4]
+
+      dsub_stats <- plot_dat %>%
+        group_by(!!sym(x_group_var)) %>%
+        rstatix::wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
+        rstatix::add_xy_position(x = x_group_var)
+
+      p <- p +
+        # Add p-values using the generated stats table
+        ggpubr::stat_pvalue_manual(dsub_stats,
+          label = "p.adj.signif",
+          tip.length = 0.01
+        )
     }
 
     # Add legend title
