@@ -829,7 +829,7 @@ plot_boxplot <- function(ecoda_object,
   plot_data <- create_long_data(ecoda_object, data_slot = "clr", label_col = label_col)
 
   if (!is.null(selected_celltypes)) {
-    if (!all(selected_celltypes) %in% plot_data$celltype) {
+    if (!all(selected_celltypes %in% unique(plot_data$celltype)) {
       stop("Not all selected_celltypes found in ecoda_object. Please check colnames(ecoda_object@clr).")
     }
 
