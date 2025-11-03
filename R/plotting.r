@@ -898,11 +898,11 @@ plot_boxplot <- function(ecoda_object,
         step_increase = 0.08, test = "wilcox.test", test.args = list(exact = FALSE)
       )
     } else if (nr_of_boxplots > 2) {
-      y_var <- colnames(plot_dat)[3]
-      x_group_var <- colnames(plot_dat)[2]
-      fill_compare_var <- colnames(plot_dat)[4]
+      y_var <- colnames(plot_data)[3]
+      x_group_var <- colnames(plot_data)[2]
+      fill_compare_var <- colnames(plot_data)[4]
 
-      dsub_stats <- plot_dat %>%
+      dsub_stats <- plot_data %>%
         group_by(!!sym(x_group_var)) %>%
         rstatix::wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
         rstatix::add_xy_position(x = x_group_var)
