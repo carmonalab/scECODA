@@ -20,7 +20,6 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends: R (>= 4.4)
-LazyData: true
 Suggests: 
     Seurat (>= 5.0.0) 
 Config/testthat/edition: 3
