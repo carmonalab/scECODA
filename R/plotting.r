@@ -856,6 +856,7 @@ plot_barplot <- function(ecoda_object,
 #' @importFrom stringr str_to_title
 #' @importFrom rlang sym
 #' @importFrom rstatix wilcox_test add_xy_position
+#' @importFrom stats as.formula
 #'
 #' @export plot_boxplot
 #'
