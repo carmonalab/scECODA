@@ -787,9 +787,10 @@ plot_barplot <- function(ecoda_object,
 #'         for 3+ groups).
 #'
 #' @importFrom ggplot2 aes geom_jitter labs theme element_text guides position_jitterdodge
-#' @importFrom ggpubr ggboxplot stat_compare_means
+#' @importFrom ggpubr ggboxplot stat_compare_means stat_pvalue_manual
 #' @importFrom stringr str_to_title
 #' @importFrom rlang sym
+#' @importFrom rstatix wilcox_test add_xy_position
 #'
 #' @export plot_boxplot
 #'
@@ -893,9 +894,13 @@ plot_boxplot <- function(ecoda_object,
       )
     } else if (nr_of_boxplots == 2) {
       # Wilcoxon or t.test: Pairwise test (requires 'group' aesthetic)
-      p <- p + ggsignif::geom_signif(
-        comparisons = combn(sort(unique(as.character(plot_data$celltype))), 2, simplify = F),
-        step_increase = 0.08, test = "wilcox.test", test.args = list(exact = FALSE)
+      p <- p + stat_compare_means(
+        aes(group = !!label_col_sym),
+        method = stat_method,
+        paired = paired,
+        label = signif_label, # Show significance stars
+        tip.length = 0,
+        hide.ns = TRUE
       )
     } else if (nr_of_boxplots > 2) {
       y_var <- colnames(plot_data)[3]
@@ -904,12 +909,12 @@ plot_boxplot <- function(ecoda_object,
 
       dsub_stats <- plot_data %>%
         group_by(!!sym(x_group_var)) %>%
-        rstatix::wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
-        rstatix::add_xy_position(x = x_group_var)
+        wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
+        add_xy_position(x = x_group_var)
 
       p <- p +
         # Add p-values using the generated stats table
-        ggpubr::stat_pvalue_manual(dsub_stats,
+        stat_pvalue_manual(dsub_stats,
           label = "p.adj.signif",
           tip.length = 0.01
         )

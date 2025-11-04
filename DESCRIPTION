@@ -14,7 +14,17 @@ Authors@R: c(
       role = c("aut"),
       comment = c(ORCID = '0000-0002-2495-0671'))
     )
-Description: The scECODA R package provides a complete workflow for the analysis and visualization of compositional data, primarily focusing on cell type proportions derived from single-cell data. It implements specialized methods, such as the Centered Log-Ratio (CLR) transformation, to properly analyze proportional data while avoiding the biases introduced by the compositional constraint. The package encapsulates data management, transformation, and analysis into a single ECODA S4 object, offering downstream tools for dimensionality reduction via PCA, calculating critical metrics like the Adjusted Rand Index (ARI) and Modularity to quantify sample grouping quality, and generating high-quality visualizations like heatmaps and scatter plots.
+Description: The scECODA R package provides a complete workflow for the 
+    analysis and visualization of compositional data, primarily focusing on 
+    cell type proportions derived from single-cell data. It implements 
+    specialized methods, such as the Centered Log-Ratio (CLR) transformation, 
+    to properly analyze proportional data while avoiding the biases introduced 
+    by the compositional constraint. The package encapsulates data management, 
+    transformation, and analysis into a single ECODA S4 object, offering 
+    downstream tools for dimensionality reduction via PCA, calculating critical
+    metrics like the Adjusted Rand Index (ARI) and Modularity to quantify 
+    sample grouping quality, and generating high-quality visualizations like 
+    heatmaps and scatter plots.
 License:GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -43,8 +53,7 @@ Imports:
     plotly,
     RANN,
     rlang,
+    rstatix,
     stringr,
-    tibble,
     tidyr,
-    vegan,
-    corrplot
+    vegan
