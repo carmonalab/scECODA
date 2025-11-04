@@ -13,40 +13,47 @@ create_ecoda_object_helper(
 )
 }
 \arguments{
-\item{counts}{A data frame or matrix of cell type counts where \strong{rows are samples}
-and \strong{columns are cell types}. Must contain non-negative integers.}
+\item{counts}{A data frame or matrix of cell type counts where \strong{rows are
+samples} and \strong{columns are cell types}. Must contain non-negative
+integers.}
 
-\item{freq}{A data frame or matrix of \strong{relative cell type frequencies} (proportions)
-where \strong{rows are samples} and \strong{columns are cell types}. Values must be
-between 0 and 100 (or close to 1 across rows). If provided, this matrix
-is used directly for CLR transformation.}
+\item{freq}{A data frame or matrix of \strong{relative cell type frequencies}
+(proportions) where \strong{rows are samples} and \strong{columns are cell types}.
+Values must be between 0 and 100 (or close to 1 across rows). If provided,
+this matrix is used directly for CLR transformation.}
 
-\item{metadata}{An optional data frame containing sample-level metadata. Row names
-must match the row names of the \code{counts} matrix.}
+\item{metadata}{An optional data frame containing sample-level metadata. Row
+names must match the row names of the \code{counts} matrix.}
 
-\item{variance_explained}{Numeric (default: 0.5). The proportion of total variance
-that should be captured by the selected highly variable
-cell types (HVCs). Used by \code{find_hvcs}.}
+\item{variance_explained}{Numeric (default: 0.5). The proportion of total
+variance that should be captured by the selected highly variable cell types
+(HVCs). Used by \code{find_hvcs}.}
 
-\item{top_n_hvcs}{Integer (optional). Overrides \code{variance_explained} if provided,
-specifying the exact number of top HVCs to select based on variance.}
+\item{top_n_hvcs}{Integer (optional). Overrides \code{variance_explained} if
+provided, specifying the exact number of top HVCs to select based on
+variance.}
 }
 \value{
-A fully initialized \link[=ECODA-class]{ECODA} object, populated with counts,
-frequency data, CLR transformed data, sample distances, and HVCs.
+A fully initialized \link[=ECODA-class]{ECODA} object, populated with
+counts, frequency data, CLR transformed data, sample distances, and HVCs.
 }
 \description{
-This is the core constructor function that initializes and performs the initial
-compositional analysis steps for an \link[=ECODA-class]{ECODA} object, assuming the
-cell type count matrix is already available. It handles zero-imputation,
-calculates relative frequencies, Centered Log-Ratio (CLR) transformed data,
-sample distances, and identifies highly variable cell types (HVCs).
+This is the core constructor function that initializes and performs the
+initial compositional analysis steps for an \link[=ECODA-class]{ECODA}
+object, assuming the cell type count matrix is already available. It handles
+zero-imputation, calculates relative frequencies, Centered Log-Ratio (CLR)
+transformed data, sample distances, and identifies highly variable cell types
+(HVCs).
 }
 \examples{
 \dontrun{
 # Assuming 'my_counts' and 'my_metadata' are defined data frames:
-counts_df <- data.frame(row.names = c("S1", "S2"), A = c(10, 5), B = c(0, 15))
-meta_df <- data.frame(row.names = c("S1", "S2"), Group = c("Treated", "Control"))
+counts_df <- data.frame(
+  row.names = c("S1", "S2"), A = c(10, 5), B = c(0, 15)
+)
+meta_df <- data.frame(
+  row.names = c("S1", "S2"), Group = c("Treated", "Control")
+)
 
 ecoda_obj <- create_ecoda_object_helper(
   counts = counts_df,
@@ -58,5 +65,6 @@ ecoda_obj <- create_ecoda_object_helper(
 }
 }
 \seealso{
-\link[=ECODA-class]{ECODA}, \code{\link{calc_freq}}, \code{\link{clr}}, \code{\link{find_hvcs}}
+\link[=ECODA-class]{ECODA}, \code{\link{calc_freq}},
+\code{\link{clr}}, \code{\link{find_hvcs}}
 }

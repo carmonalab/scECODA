@@ -13,38 +13,37 @@ deseq2_normalize(
 )
 }
 \arguments{
-\item{pb}{A gene x sample pseudobulk count matrix (Genes as rows, Samples as columns).
-Must contain non-negative integer counts.}
+\item{pb}{A gene x sample pseudobulk count matrix (Genes as rows, Samples as
+columns). Must contain non-negative integer counts.}
 
-\item{metadata}{A data.frame with sample-level metadata. Row names must exactly
-match the column names of \code{pb}. The function will reorder
-the metadata to match \code{pb}.}
+\item{metadata}{A data.frame with sample-level metadata. Row names must
+exactly match the column names of \code{pb}. The function will reorder the
+metadata to match \code{pb}.}
 
 \item{deseq2_design}{Optional: A \code{formula} object specifying the design
-used by \code{DESeq2} to estimate size factors and variance
-for the VST. This formula should reference columns in the
-\code{metadata} data frame. If \code{NULL} (the default),
-the minimal design \code{~ 1} is used. Note: the design
-will be considered for pseudobulk normalization as the
-function uses vst(blind = FALSE, ...) internally.}
+used by \code{DESeq2} to estimate size factors and variance for the VST.
+This formula should reference columns in the \code{metadata} data frame. If
+\code{NULL} (the default), the minimal design \code{~ 1} is used. Note: the
+design will be considered for pseudobulk normalization as the function uses
+vst(blind = FALSE, ...) internally.}
 
-\item{hvg}{Optional character vector of gene names to use as highly variable genes.
-If provided, only these genes will be returned after VST.}
+\item{hvg}{Optional character vector of gene names to use as highly variable
+genes. If provided, only these genes will be returned after VST.}
 
 \item{nvar_genes}{Number of top variable genes to select (default: 2000).
-Only used if \code{hvg = NULL}; the function will select the
-top \code{nvar_genes} by variance after VST.}
+Only used if \code{hvg = NULL}; the function will select the top
+\code{nvar_genes} by variance after VST.}
 }
 \value{
-A normalized expression matrix (VST-transformed) with \strong{samples as rows}
-and \strong{genes as columns}.
+A normalized expression matrix (VST-transformed) with\
+\strong{samples as rows} and \strong{genes as columns}.
 }
 \description{
 This function normalizes a gene x sample pseudobulk count matrix using the
-Variance Stabilizing Transformation (VST) from the \code{DESeq2} package.
-It estimates size factors and variance for all genes, performs the VST, and then
-subsets the results to include only highly variable genes (HVCs),
-either specified by the user or automatically selected based on variance.
+Variance Stabilizing Transformation (VST) from the \code{DESeq2} package. It
+estimates size factors and variance for all genes, performs the VST, and then
+subsets the results to include only highly variable genes (HVCs), either
+specified by the user or automatically selected based on variance.
 }
 \details{
 \strong{Note:} If \code{deseq2_design} is not specified, the VST is performed using a
@@ -52,12 +51,10 @@ minimal design formula (\code{~ 1}) for size factor and variance estimation.
 }
 \examples{
 \dontrun{
-# Assuming 'pb' is the pseudobulk matrix and 'metadata' is the sample annotation
-
 # 1. Auto-select top 2000 most variable genes after VST
 pb_norm_auto <- deseq2_normalize(pb, metadata)
 
-# 2. Use a specific design formula to account for a 'Group' column in metadata
+# 2. Use specific design formula to account for a 'Group' column in metadata
 my_design <- ~Group
 pb_norm_design <- deseq2_normalize(
   pb,

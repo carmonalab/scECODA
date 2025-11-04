@@ -1190,5 +1190,6 @@ deseq2_normalize <- function(pb,
 utils::globalVariables(c(
   "sample_id", "celltype", "values", "Variance",
   "cumulative_variance", "rel_abundance", "mean_rel_abund",
-  "ordered_group", "x_var", "y_var", "Relative_abundance"
+  "ordered_group", "x_var", "y_var", "Relative_abundance",
+  "avg_clr_abundance", "is_highlighted"
 ))

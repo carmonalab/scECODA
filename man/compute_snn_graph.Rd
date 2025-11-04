@@ -7,15 +7,18 @@
 compute_snn_graph(feat_mat, knn_k)
 }
 \arguments{
-\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).}
+\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR
+abundances).}
 
-\item{knn_k}{Integer. The number of nearest neighbors (\code{k}) used for SNN calculation.}
+\item{knn_k}{Integer. The number of nearest neighbors (\code{k}) used for SNN
+calculation.}
 }
 \value{
-An \code{igraph} graph object where edge weights represent shared neighbors.
+An \code{igraph} graph object where edge weights represent shared
+neighbors.
 }
 \description{
-Constructs a graph where nodes are samples and edges are weighted by the number
-of shared nearest neighbors (SNN) between them. This graph is used for community
-detection or, in this context, modularity calculation.
+Constructs a graph where nodes are samples and edges are weighted by the
+number of shared nearest neighbors (SNN) between them. This graph is used for
+community detection or, in this context, modularity calculation.
 }

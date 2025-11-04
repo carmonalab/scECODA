@@ -7,28 +7,31 @@
 calc_ari(feat_mat, labels, nclusts = NULL, digits = 3, return_mean = TRUE)
 }
 \arguments{
-\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).}
+\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR
+abundances).}
 
-\item{labels}{Vector of factors or character strings. The true or known cluster
-assignments for each row in the matrix.}
+\item{labels}{Vector of factors or character strings. The true or known
+cluster assignments for each row in the matrix.}
 
-\item{nclusts}{Integer (optional, default: \code{NULL}). The target number of clusters
-(\code{k}) to use for \code{hclust} and \code{pam}. If \code{NULL},
-it defaults to the number of unique levels in \code{labels}.}
+\item{nclusts}{Integer (optional, default: \code{NULL}). The target number of
+clusters (\code{k}) to use for \code{hclust} and \code{pam}. If
+\code{NULL}, it defaults to the number of unique levels in \code{labels}.}
 
-\item{digits}{Integer (default: \code{3}). The number of decimal places to round the result.}
+\item{digits}{Integer (default: \code{3}). The number of decimal places to
+round the result.}
 
-\item{return_mean}{Logical (default: \code{TRUE}). If \code{TRUE}, returns the
-mean of the ARI scores from \code{hclust} and \code{pam}.
-If \code{FALSE}, returns a named list with both individual scores.}
+\item{return_mean}{Logical (default: \code{TRUE}). If \code{TRUE}, returns
+the mean of the ARI scores from \code{hclust} and \code{pam}. If
+\code{FALSE}, returns a named list with both individual scores.}
 }
 \value{
-A numeric value (mean ARI) or a list of two ARI scores. ARI ranges from
+A numeric value (mean ARI) or a list of two ARI scores. ARI ranges
+from
 -1 (disagreement) to +1 (perfect agreement).
 }
 \description{
 Calculates the Adjusted Rand Index (ARI) to measure the agreement between the
 known cluster assignments (\code{labels}) and the cluster assignments derived
-from two unsupervised clustering methods: Hierarchical Clustering (\code{hclust})
-and Partitioning Around Medoids (\code{pam}).
+from two unsupervised clustering methods: Hierarchical Clustering
+(\code{hclust}) and Partitioning Around Medoids (\code{pam}).
 }

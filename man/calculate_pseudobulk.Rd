@@ -7,26 +7,27 @@
 calculate_pseudobulk(count_matrix, sample_ids, min_cells = 10)
 }
 \arguments{
-\item{count_matrix}{A gene x cell count matrix (can be a dense matrix or sparse Matrix).
-Gene identifiers should be row names and cell barcodes should be column names.}
+\item{count_matrix}{A gene x cell count matrix (can be a dense matrix or
+sparse Matrix). Gene identifiers should be row names and cell barcodes
+should be column names.}
 
-\item{sample_ids}{A vector of sample identifiers, one for each column (cell) in
-\code{count_matrix}. The length must equal \code{ncol(count_matrix)}.
+\item{sample_ids}{A vector of sample identifiers, one for each column (cell)
+in \code{count_matrix}. The length must equal \code{ncol(count_matrix)}.
 Must not contain \code{NA} values.}
 
 \item{min_cells}{Minimum number of cells required per sample (default: 1).
-Samples with fewer cells than this threshold will be excluded
-from the final pseudobulk matrix.}
+Samples with fewer cells than this threshold will be excluded from the
+final pseudobulk matrix.}
 }
 \value{
 A gene x sample pseudobulk count matrix. The columns correspond to
 the unique sample IDs, and the rows correspond to the genes.
 }
 \description{
-This function aggregates single-cell count data into a "pseudobulk" matrix
-by summing the counts for all cells belonging to the same sample ID.
-It is robust to both dense and sparse count matrices. It also includes
-filtering logic to exclude samples that do not meet a minimum cell count threshold.
+This function aggregates single-cell count data into a "pseudobulk" matrix by
+summing the counts for all cells belonging to the same sample ID. It is
+robust to both dense and sparse count matrices. It also includes filtering
+logic to exclude samples that do not meet a minimum cell count threshold.
 }
 \examples{
 \dontrun{

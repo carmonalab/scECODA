@@ -2,7 +2,8 @@
 % Please edit documentation in R/plotting.r
 \name{plot_boxplot}
 \alias{plot_boxplot}
-\title{Generates Boxplots for CLR-transformed Cell Type Abundances with Optional Group Comparison.}
+\title{Generates Boxplots for CLR-transformed Cell Type Abundances with Optional
+Group Comparison.}
 \usage{
 plot_boxplot(
   ecoda_object,
@@ -15,51 +16,55 @@ plot_boxplot(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the CLR-transformed
-abundances in the \code{clr} slot.}
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the
+CLR-transformed abundances in the \code{clr} slot.}
 
-\item{label_col}{Character string (optional, default: \code{NULL}). The name of a
-column in \code{ecoda_object@metadata} used to define groups for
+\item{label_col}{Character string (optional, default: \code{NULL}). The name
+of a column in \code{ecoda_object@metadata} used to define groups for
 comparison. If \code{NULL}, a single boxplot is generated per cell type.}
 
-\item{selected_celltypes}{Specify selected celltypes you want to plot
-instead of plotting boxplots for all.}
+\item{selected_celltypes}{Specify selected celltypes you want to plot instead
+of plotting boxplots for all.}
 
-\item{title}{Character string (default: \code{""}). The main title for the plot.}
+\item{title}{Character string (default: \code{""}). The main title for the
+plot.}
 
-\item{stat_method}{Character string (default: \code{"wilcox.test"}). The statistical
-method used for comparisons between 2 groups (e.g., "t.test",
+\item{stat_method}{Character string (default: \code{"wilcox.test"}). The
+statistical method used for comparisons between 2 groups (e.g., "t.test",
 "wilcox.test"). Note: This is overridden by "kruskal.test" for 3+ groups.}
 
-\item{paired}{Logical (default: \code{FALSE}). If \code{TRUE}, performs a paired
-statistical test (e.g., paired t-test or paired Wilcoxon test). Only
+\item{paired}{Logical (default: \code{FALSE}). If \code{TRUE}, performs a
+paired statistical test (e.g., paired t-test or paired Wilcoxon test). Only
 applicable for 2-group comparisons.}
 
 \item{signif_label}{Character string (default: \code{"p.signif"}). Controls
-how p-values are displayed for 2-group comparisons (e.g.,
-"p.signif" for stars, "p.format" for numeric p-value).}
+how p-values are displayed for 2-group comparisons (e.g., "p.signif" for
+stars, "p.format" for numeric p-value).}
 }
 \value{
 A \code{ggplot} object (enhanced by \code{ggpubr}) representing the
 CLR abundance boxplot, including jittered data points and dynamic
-significance information (pairwise stars for 2 groups, overall p-value
-for 3+ groups).
+significance information (pairwise stars for 2 groups, overall p-value for
+3+ groups).
 }
 \description{
-This function visualizes the distribution of CLR-transformed abundance for each
-cell type using boxplots, optionally splitting the data by a sample metadata
-column and performing statistical tests for comparison between groups.
+This function visualizes the distribution of CLR-transformed abundance for
+each cell type using boxplots, optionally splitting the data by a sample
+metadata column and performing statistical tests for comparison between
+groups.
 }
 \details{
 \strong{Statistical Test Logic:}
 \itemize{
-\item If the number of groups (\code{label_col} levels) is \strong{2}, the function
-uses the specified \code{stat_method} (default: "wilcox.test") and displays
-pairwise significance labels or stars.
-\item If the number of groups is \strong{3 or more}, and \code{stat_method} is
-"wilcox.test" or "t.test", the function automatically switches to the
-global non-parametric test, \strong{"kruskal.test"}, and displays the
-overall p-value for the comparison across all groups.
+\item If the number of groups (\code{label_col} levels) is \strong{2}, the
+function uses the specified \code{stat_method}
+(default: "wilcox.test") and displays pairwise significance labels
+or stars.
+\item If the number of groups is \strong{3 or more}, and
+\code{stat_method} is "wilcox.test" or "t.test", the function
+automatically switches to the global non-parametric test,
+\strong{"kruskal.test"}, and displays the overall p-value
+for the comparison across all groups.
 }
 }
 \examples{
@@ -75,14 +80,6 @@ p2 <- plot_boxplot(
   label_col = "Treatment",
   stat_method = "wilcox.test",
   title = "CLR Abundance by Treatment Group"
-)
-
-# 3. Boxplots grouped by 'Dose' (3+ groups) - automatically uses Kruskal-Wallis:
-p3 <- plot_boxplot(
-  ecoda_obj,
-  label_col = "Dose",
-  stat_method = "wilcox.test", # will be overridden by kruskal.test
-  title = "CLR Abundance by Dose Group (Kruskal-Wallis)"
 )
 }
 }

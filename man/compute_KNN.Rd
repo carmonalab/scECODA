@@ -7,13 +7,14 @@
 compute_KNN(feat_mat, knn_k)
 }
 \arguments{
-\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR abundances).}
+\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR
+abundances).}
 
 \item{knn_k}{Integer. The number of neighbors (\code{k}) to return.}
 }
 \value{
-A matrix where each row corresponds to a sample and contains the indices
-of its \code{k} nearest neighbors.
+A matrix where each row corresponds to a sample and contains the
+indices of its \code{k} nearest neighbors.
 }
 \description{
 Calculates the indices of the K-nearest neighbors for each sample (row) in a

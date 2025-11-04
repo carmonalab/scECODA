@@ -15,8 +15,8 @@ A data frame of the same dimensions, where each row sums to 100.
 }
 \description{
 This function takes a matrix or data frame of counts and transforms each row
-(assumed to be a sample or observation) into relative frequencies,
-expressing each component as a percentage of the row's total sum.
+(assumed to be a sample or observation) into relative frequencies, expressing
+each component as a percentage of the row's total sum.
 }
 \examples{
 counts <- data.frame(A = c(10, 50), B = c(90, 50))

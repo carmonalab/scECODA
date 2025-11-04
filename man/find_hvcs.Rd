@@ -7,32 +7,35 @@
 find_hvcs(ecoda_object, variance_explained = 0.5, top_n_hvcs = NULL)
 }
 \arguments{
-\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object containing the
-CLR-transformed data in the \code{clr} slot.}
+\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object
+containing the CLR-transformed data in the \code{clr} slot.}
 
 \item{variance_explained}{Numeric (default: 0.5). The target cumulative
-proportion of total variance to be explained by the
-selected HVCs. The function stops selecting cell types
-once this threshold is met.}
+proportion of total variance to be explained by the selected HVCs. The
+function stops selecting cell types once this threshold is met.}
 
 \item{top_n_hvcs}{Integer (optional). If provided, this overrides
-\code{variance_explained} and selects exactly the top N cell
-types with the highest variance.}
+\code{variance_explained} and selects exactly the top N cell types with the
+highest variance.}
 }
 \value{
-The updated \link[=ECODA-class]{ECODA} object with the following slots populated:
+The updated \link[=ECODA-class]{ECODA} object with the following
+slots populated:
 \itemize{
 \item \code{celltype_variances}: Data frame of cell type variances.
-\item \code{variance_explained}: The exact variance proportion captured by the selected HVCs.
+\item \code{variance_explained}: The exact variance proportion
+captured by the selected HVCs.
 \item \code{top_n_hvcs}: The number of HVCs selected.
-\item \code{hvcs}: Character vector of the names of the selected HVCs.
+\item \code{hvcs}: Character vector of the names
+of the selected HVCs.
 }
 }
 \description{
 This function calculates the variance of each cell type across all samples
 based on the Centered Log-Ratio (CLR) transformed data. It then selects the
 subset of highly variable cell types (HVCs) that collectively explain a
-specified proportion of the total variance, or a fixed number of top cell types.
+specified proportion of the total variance, or a fixed number of top cell
+types.
 }
 \examples{
 \dontrun{
@@ -46,5 +49,6 @@ ecoda_obj <- find_hvcs(ecoda_obj, top_n_hvcs = 5)
 }
 }
 \seealso{
-\link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}, \code{\link{get_hvcs}}
+\link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}},
+\code{\link{get_hvcs}}
 }

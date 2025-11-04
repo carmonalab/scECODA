@@ -6,28 +6,33 @@
 \title{An S4 class to represent a compositional data analysis object (ECODA).}
 \description{
 This class is designed to store various forms of compositional data derived
-from cell counts (or similar proportional data), alongside associated metadata,
-transformation results, and variability analysis outcomes.
+from cell counts (or similar proportional data), alongside associated
+metadata, transformation results, and variability analysis outcomes.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{counts}}{Original cell count data (samples as rows, cell types as columns).}
+\item{\code{counts}}{Original cell count data (samples as rows, cell types as
+columns).}
 
-\item{\code{counts_imp}}{Imputed cell count data, typically used to handle zero counts.}
+\item{\code{counts_imp}}{Imputed cell count data, typically used to handle zero
+counts.}
 
-\item{\code{freq}}{Relative frequency (percentage) of cell types derived from \code{counts}.}
+\item{\code{freq}}{Relative frequency (percentage) of cell types derived from
+\code{counts}.}
 
 \item{\code{freq_imp}}{Relative frequency (percentage) derived from \code{counts_imp}.}
 
 \item{\code{clr}}{Centered Log-Ratio transformed data, derived from \code{freq_imp}.}
 
-\item{\code{celltype_variances}}{Data frame detailing the variance metrics for each cell type.}
+\item{\code{celltype_variances}}{Data frame detailing the variance metrics for each
+cell type.}
 
-\item{\code{variance_explained}}{Numeric value indicating the total variance captured by
-highly variable cell types (HVCs).}
+\item{\code{variance_explained}}{Numeric value indicating the total variance captured
+by highly variable cell types (HVCs).}
 
-\item{\code{top_n_hvcs}}{Integer specifying the number of top highly variable cell types selected.}
+\item{\code{top_n_hvcs}}{Integer specifying the number of top highly variable cell
+types selected.}
 
 \item{\code{hvcs}}{Character vector of names of the highly variable cell types.}
 
@@ -35,8 +40,7 @@ highly variable cell types (HVCs).}
 
 \item{\code{pb}}{Data frame of pseudobulk gene expression.}
 
-\item{\code{sample_distances}}{Data frame storing calculated distances between samples.
-
-#' @importFrom methods setClass}
+\item{\code{sample_distances}}{Data frame storing calculated distances between
+samples.}
 }}
 

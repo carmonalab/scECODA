@@ -10,29 +10,32 @@ create_long_data(ecoda_object, data_slot, label_col = NULL)
 \item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object.}
 
 \item{data_slot}{Character string specifying the data matrix to use. Must be
-either \code{"freq"} (for relative abundance) or \code{"clr"}
-(for CLR-transformed abundance).}
+either \code{"freq"} (for relative abundance) or \code{"clr"} (for
+CLR-transformed abundance).}
 
-\item{label_col}{Character string (optional, default: \code{NULL}). The name of a
-column in the \code{ecoda_object@metadata} slot to merge into
-the long data frame (e.g., "Disease_State" or "Batch"). If \code{NULL},
-only the abundance data and sample/celltype IDs are returned.}
+\item{label_col}{Character string (optional, default: \code{NULL}). The name
+of a column in the \code{ecoda_object@metadata} slot to merge into the long
+data frame (e.g., "Disease_State" or "Batch"). If \code{NULL}, only the
+abundance data and sample/celltype IDs are returned.}
 }
 \value{
 A tidy, long format data frame with columns:
 \itemize{
 \item \code{sample_id}: Sample identifier.
 \item \code{celltype}: Cell type name.
-\item \code{rel_abundance} or \code{clr_abundance}: The quantitative value
-depending on the chosen \code{data_slot}.
-\item \code{...}: Additional column specified by \code{label_col} (if provided).
+\item \code{rel_abundance} or \code{clr_abundance}:
+The quantitative value depending on the chosen
+\code{data_slot}.
+\item \code{...}: Additional column specified by
+\code{label_col} (if provided).
 }
 }
 \description{
-This function takes either the relative abundance (\code{freq}) or CLR-transformed
-abundance (\code{clr}) matrix from an \link[=ECODA-class]{ECODA} object, converts it
-from a wide (samples x cell types) to a long (sample, celltype, value) format,
-and optionally joins it with a specified column from the sample metadata.
+This function takes either the relative abundance (\code{freq}) or
+CLR-transformed abundance (\code{clr}) matrix from an
+\link[=ECODA-class]{ECODA} object, converts it from a wide (samples x cell
+types) to a long (sample, celltype, value) format, and optionally joins it
+with a specified column from the sample metadata.
 }
 \examples{
 \dontrun{
@@ -41,7 +44,8 @@ and optionally joins it with a specified column from the sample metadata.
 # 1. Create long data with CLR abundance only
 long_clr <- create_long_data(ecoda_obj, data_slot = "clr")
 
-# 2. Create long data with relative abundance and merge the 'Treatment' metadata column
+# 2. Create long data with relative abundance
+# and merge the 'Treatment' metadata column
 long_freq_labeled <- create_long_data(
   ecoda_obj,
   data_slot = "freq",

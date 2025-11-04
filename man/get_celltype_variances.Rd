@@ -14,39 +14,46 @@ get_celltype_variances(
 )
 }
 \arguments{
-\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object containing
-CLR-transformed data in the \code{clr} slot.}
+\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object
+containing CLR-transformed data in the \code{clr} slot.}
 
-\item{show_plot}{Logical (default: \code{TRUE}). If \code{TRUE}, a mean-variance
-plot is generated using the internal \code{plot_varmean} function.}
+\item{show_plot}{Logical (default: \code{TRUE}). If \code{TRUE}, a
+mean-variance plot is generated using the internal \code{plot_varmean}
+function.}
 
-\item{label_points}{Logical (default: \code{TRUE}). If \code{TRUE}, the points
-on the plot will be labeled with cell type names.}
+\item{label_points}{Logical (default: \code{TRUE}). If \code{TRUE}, the
+points on the plot will be labeled with cell type names.}
 
-\item{plot_title}{Character string (default: ""). Title for the generated plot.}
+\item{plot_title}{Character string (default: ""). Title for the generated
+plot.}
 
-\item{smooth_method}{Character string (default: "lm"). Smoothing method to use
-for the regression line in the mean-variance plot (e.g., "lm", "loess").}
+\item{smooth_method}{Character string (default: "lm"). Smoothing method to
+use for the regression line in the mean-variance plot (e.g., "lm",
+"loess").}
 
-\item{descending}{Logical (default: \code{TRUE}). If \code{TRUE}, the returned
-data frame is sorted by variance in descending order.}
+\item{descending}{Logical (default: \code{TRUE}). If \code{TRUE}, the
+returned data frame is sorted by variance in descending order.}
 }
 \value{
 A data frame (samples as rows, cell types as columns) containing:
 \itemize{
 \item \code{celltype}: The name of the cell type.
-\item \code{avg_clr_abundance}: The mean CLR value for that cell type across all samples.
-\item \code{Variance}: The variance of the CLR values for that cell type across all samples.
-\item \code{cumulative_variance}: Cumulative sum of the variance, ranked by variance.
-\item \code{variance_exp}: The proportion of total variance explained cumulatively.
+\item \code{avg_clr_abundance}: The mean CLR value for that
+cell type across all samples.
+\item \code{Variance}: The variance of the CLR values for that
+cell type across all samples.
+\item \code{cumulative_variance}: Cumulative sum of the variance,
+ranked by variance.
+\item \code{variance_exp}: The proportion of total variance
+explained cumulatively.
 }
 }
 \description{
 This function takes the Centered Log-Ratio (CLR) transformed cell type
-abundance data from an \link[=ECODA-class]{ECODA} object, calculates the mean CLR
-abundance and variance for each cell type, and optionally generates a
-mean-variance plot. It also calculates the cumulative variance explained
-by the cell types when ranked by variance.
+abundance data from an \link[=ECODA-class]{ECODA} object, calculates the mean
+CLR abundance and variance for each cell type, and optionally generates a
+mean-variance plot. It also calculates the cumulative variance explained by
+the cell types when ranked by variance.
 }
 \examples{
 \dontrun{
@@ -56,7 +63,10 @@ by the cell types when ranked by variance.
 df_var <- get_celltype_variances(ecoda_obj)
 
 # Calculate variances without plotting, sorted by ascending variance
-df_var_asc <- get_celltype_variances(ecoda_obj, show_plot = FALSE, descending = FALSE)
+df_var_asc <- get_celltype_variances(
+  ecoda_obj,
+  show_plot = FALSE, descending = FALSE
+)
 }
 }
 \seealso{

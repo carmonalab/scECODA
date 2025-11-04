@@ -7,19 +7,22 @@
 calc_sil(feat_mat, labels, digits = 3)
 }
 \arguments{
-\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR-transformed
-abundances or PCA scores) on which the distance calculation is based.}
+\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g.,
+CLR-transformed abundances or PCA scores) on which the distance calculation
+is based.}
 
-\item{labels}{Vector of factors or character strings. The cluster assignments for
-each row in \code{feat_mat} (i.e., the grouping variable).}
+\item{labels}{Vector of factors or character strings. The cluster assignments
+for each row in \code{feat_mat} (i.e., the grouping variable).}
 
-\item{digits}{Integer (default: \code{3}). The number of decimal places to round the final score.}
+\item{digits}{Integer (default: \code{3}). The number of decimal places to
+round the final score.}
 }
 \value{
-A numeric value representing the mean silhouette width, typically ranging
-from -1 (poor clustering) to +1 (excellent clustering).
+A numeric value representing the mean silhouette width, typically
+ranging from -1 (poor clustering) to +1 (excellent clustering).
 }
 \description{
-Calculates the average silhouette width for a given feature matrix, using pre-defined
-cluster assignments (\code{labels}). This metric assesses the quality of the clustering.
+Calculates the average silhouette width for a given feature matrix, using
+pre-defined cluster assignments (\code{labels}). This metric assesses the
+quality of the clustering.
 }

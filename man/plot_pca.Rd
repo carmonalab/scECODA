@@ -38,91 +38,95 @@ plot_pca(
 \arguments{
 \item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
 
-\item{slot}{Character string (default: \code{"clr"}). The name of the data matrix
-slot in the \code{ECODA} object to use for PCA. Must be one of:
+\item{slot}{Character string (default: \code{"clr"}). The name of the data
+matrix slot in the \code{ECODA} object to use for PCA. Must be one of:
 \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
-(CLR-transformed abundances of only the most highly variable cell
-types (HVCs)), \code{"pb"} (pseudobulk gene expression),
-\code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
-\code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
-frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
+(CLR-transformed abundances of only the most highly variable cell types
+(HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
+counts), \code{"counts_imp"} (imputed counts), \code{"freq"} (relative
+frequencies), \code{"freq_imp"} (imputed frequencies), or
+\code{"asin_sqrt"} (arcsin-square root transformed data).}
 
-\item{label_col}{Character string (optional, default: \code{NULL}). The name of a
-column in \code{ecoda_object@metadata} used to color and group
-samples in the plot, and for calculating clustering scores.}
+\item{label_col}{Character string (optional, default: \code{NULL}). The name
+of a column in \code{ecoda_object@metadata} used to color and group samples
+in the plot, and for calculating clustering scores.}
 
 \item{scale.}{Logical (default: \code{FALSE}). A value indicating whether the
 variables should be scaled to have unit variance before the PCA.}
 
-\item{pca_dims}{Integer (optional, default: \code{NULL}). The number of principal
-components (dimensions) to retain for the PCA calculation and
-downstream clustering score calculations. If \code{NULL}, all
-dimensions are retained.}
+\item{pca_dims}{Integer (optional, default: \code{NULL}). The number of
+principal components (dimensions) to retain for the PCA calculation and
+downstream clustering score calculations. If \code{NULL}, all dimensions
+are retained.}
 
 \item{knn_k}{Integer (optional, default: \code{NULL}). The number of nearest
-neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN)
-graph construction, required for Modularity score calculation. If
-\code{NULL}, it defaults to \code{max(3, round(sqrt(N)))}, where
-\code{N} is the number of samples.}
+neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN) graph
+construction, required for Modularity score calculation. If \code{NULL}, it
+defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is the number of
+samples.}
 
-\item{title}{Character string (optional, default: \code{NULL}). The main title
-for the plot. If clustering scores are calculated, they are appended
+\item{title}{Character string (optional, default: \code{NULL}). The main
+title for the plot. If clustering scores are calculated, they are appended
 to this title.}
 
-\item{title_show_n_features}{Logical (optional, default: \code{TRUE}) Show the number of
-features (cell types or genes) used.}
+\item{title_show_n_features}{Logical (optional, default: \code{TRUE}) Show
+the number of features (cell types or genes) used.}
 
-\item{legend_title}{Character string (default: \code{"Group"}). The title for the color
-legend in the plot when a grouping column (\code{label_col}) is provided.}
+\item{legend_title}{Character string (default: \code{"Group"}). The title for
+the color legend in the plot when a grouping column (\code{label_col}) is
+provided.}
 
-\item{show_label_samples}{Logical (default: \code{FALSE}). If \code{TRUE}, sample names are
-displayed next to the points in the plot. This automatically adds
-\code{"text"} to the \code{geom} parameter if it is not already present.}
+\item{show_label_samples}{Logical (default: \code{FALSE}). If \code{TRUE},
+sample names are displayed next to the points in the plot. This
+automatically adds \code{"text"} to the \code{geom} parameter if it is not
+already present.}
 
-\item{score_digits}{Integer (default: \code{3}). The number of decimal places to
-round the clustering and ANOSIM scores appended to the plot title.}
+\item{score_digits}{Integer (default: \code{3}). The number of decimal places
+to round the clustering and ANOSIM scores appended to the plot title.}
 
-\item{cluster_score}{Logical (default: \code{TRUE}). If \code{TRUE}, calculates
-the Adjusted Rand Index (ARI) using \code{\link{calc_ari}}.}
+\item{cluster_score}{Logical (default: \code{TRUE}). If \code{TRUE},
+calculates the Adjusted Rand Index (ARI) using \code{\link{calc_ari}}.}
 
-\item{mod_score}{Logical (default: \code{TRUE}). If \code{TRUE}, calculates the
-adjusted Modularity score using \code{\link{calc_modularity}}.}
+\item{mod_score}{Logical (default: \code{TRUE}). If \code{TRUE}, calculates
+the adjusted Modularity score using \code{\link{calc_modularity}}.}
 
-\item{sil_score}{Logical (default: \code{FALSE}). If \code{TRUE}, calculates the
-average Silhouette width using \code{\link{calc_sil}}.}
+\item{sil_score}{Logical (default: \code{FALSE}). If \code{TRUE}, calculates
+the average Silhouette width using \code{\link{calc_sil}}.}
 
-\item{anosim_score}{Logical (default: \code{TRUE}). If \code{TRUE}, calculates
-the ANOSIM statistic (R) using \code{vegan::anosim}.}
+\item{anosim_score}{Logical (default: \code{TRUE}). If \code{TRUE},
+calculates the ANOSIM statistic (R) using \code{vegan::anosim}.}
 
-\item{anosim_distance}{Character string (default: \code{"euclidian"}). The distance
-method used for the ANOSIM calculation (e.g., "euclidean",
+\item{anosim_distance}{Character string (default: \code{"euclidian"}). The
+distance method used for the ANOSIM calculation (e.g., "euclidean",
 "manhattan").}
 
-\item{anosim_permutations}{Integer (default: \code{99}). The number of permutations
-to use when calculating the ANOSIM statistic.}
+\item{anosim_permutations}{Integer (default: \code{99}). The number of
+permutations to use when calculating the ANOSIM statistic.}
 
-\item{anosim_parallel}{Integer (default: \code{detectCores()}). The number of parallel
-processes/cores to use for the ANOSIM calculation.}
+\item{anosim_parallel}{Integer (default: \code{detectCores()}). The number of
+parallel processes/cores to use for the ANOSIM calculation.}
 
 \item{pointsize}{Numeric (default: \code{3}). Size of the points in the plot.}
 
-\item{labelsize}{Numeric (default: \code{4}). Size of the variable labels in the plot.}
+\item{labelsize}{Numeric (default: \code{4}). Size of the variable labels in
+the plot.}
 
 \item{coord_equal}{Logical (default: \code{TRUE}). If \code{TRUE}, forces the
 aspect ratio of the plot to be equal.}
 
-\item{axes}{Numeric vector (default: \code{c(1, 2)}). The principal components
-to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).}
+\item{axes}{Numeric vector (default: \code{c(1, 2)}). The principal
+components to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).}
 
-\item{plotly_3d}{Logical (default: \code{FALSE}). If \code{TRUE}, generates an
-interactive 3D scatter plot using \code{plotly} (requires \code{pca_dims >= 3}).}
+\item{plotly_3d}{Logical (default: \code{FALSE}). If \code{TRUE}, generates
+an interactive 3D scatter plot using \code{plotly} (requires \code{pca_dims
+  >= 3}).}
 
-\item{invisible}{Character vector (default: \code{c("var", "quali")}). Elements to
-hide in the 2D plot. Can include "var" (variables/cell types),
+\item{invisible}{Character vector (default: \code{c("var", "quali")}).
+Elements to hide in the 2D plot. Can include "var" (variables/cell types),
 "ind" (samples), or "quali" (group centroids).}
 
-\item{geom}{Character string or vector (default: \code{"point"}). The geometry to be used
-for the plot. Allowed values are combinations of:
+\item{geom}{Character string or vector (default: \code{"point"}). The
+geometry to be used for the plot. Allowed values are combinations of:
 \itemize{
 \item \code{"point"} to show points for individuals (samples)
 \item \code{"text"} to show labels for individuals (samples)
@@ -131,8 +135,8 @@ for the plot. Allowed values are combinations of:
 The default \code{"point"} plots points for both individuals and variables.
 Use \code{c("point", "text")} to show both points and labels for samples.}
 
-\item{n_hv_feat_show}{Integer (default: \code{Inf}). Number of most highly variable features
-to show based on their contribution to the selected axes.}
+\item{n_hv_feat_show}{Integer (default: \code{Inf}). Number of most highly
+variable features to show based on their contribution to the selected axes.}
 
 \item{repel}{Logical (default: \code{TRUE}). Whether to use \code{ggrepel} to
 prevent label overlap for variable names.}
@@ -142,13 +146,14 @@ A \code{ggplot} object (2D, via \code{factoextra}) or a \code{plotly}
 object (3D) visualizing the PCA results.
 }
 \description{
-Performs Principal Component Analysis (PCA) on a selected data matrix from the
-\code{ECODA} object (default: CLR-transformed abundances, \code{clr}) and
-visualizes the results in 2D or 3D. It can also calculate and display several
-metrics to evaluate the separation of groups defined by \code{label_col}.
+Performs Principal Component Analysis (PCA) on a selected data
+matrix from the \code{ECODA} object (default: CLR-transformed abundances,
+\code{clr}) and visualizes the results in 2D or 3D. It can also calculate and
+display several metrics to evaluate the separation of groups defined by
+\code{label_col}.
 }
 \details{
-The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess how well
-the sample groupings (\code{labels}) align with the underlying data structure
-in the feature space defined by the PCA.
+The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
+how well the sample groupings (\code{labels}) align with the underlying data
+structure in the feature space defined by the PCA.
 }

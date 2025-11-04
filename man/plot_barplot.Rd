@@ -14,12 +14,12 @@ plot_barplot(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing cell type relative
-frequencies in the \code{freq} slot.}
+\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing cell type
+relative frequencies in the \code{freq} slot.}
 
-\item{label_col}{Character string (optional, default: \code{NULL}). The name of a
-column in \code{ecoda_object@metadata} used to define grouping
-or groups (required if \code{plot_by = "group"}).}
+\item{label_col}{Character string (optional, default: \code{NULL}). The name
+of a column in \code{ecoda_object@metadata} used to define grouping or
+groups (required if \code{plot_by = "group"}).}
 
 \item{plot_by}{Character string (default: \code{"sample"}). Specifies whether
 to plot the relative abundance for each individual sample (\code{"sample"})
@@ -27,16 +27,16 @@ or the average relative abundance aggregated by a group (\code{"group"})
 defined by \code{label_col}.}
 
 \item{custom_sample_order}{Character vector (optional, default: \code{NULL}).
-A vector of sample IDs to enforce a specific order
-when \code{plot_by = "sample"}. If \code{NULL}, samples
-are ordered first by \code{label_col} (if provided)
-and then naturally.}
+A vector of sample IDs to enforce a specific order when \code{plot_by =
+  "sample"}. If \code{NULL}, samples are ordered first by \code{label_col}
+(if provided) and then naturally.}
 
-\item{title}{Character string (default: \code{""}). The main title for the plot.}
+\item{title}{Character string (default: \code{""}). The main title for the
+plot.}
 
 \item{facet_by_label_col}{Logical (default: \code{TRUE}). If \code{TRUE} and
-\code{plot_by = "sample"}, the plot will be faceted
-(split) horizontally by the categories in \code{label_col}.}
+\code{plot_by = "sample"}, the plot will be faceted (split) horizontally by
+the categories in \code{label_col}.}
 }
 \value{
 A \code{ggplot} object representing the stacked bar plot.
@@ -53,7 +53,8 @@ preparation and ordering based on the provided parameters.
 # 1. Plot frequency for every sample, ordered by sample ID:
 p1 <- plot_barplot(ecoda_obj)
 
-# 2. Plot frequency for every sample, faceted and ordered by 'Treatment' column:
+# 2. Plot frequency for every sample,
+# faceted and ordered by 'Treatment' column:
 p2 <- plot_barplot(ecoda_obj, label_col = "Treatment", plot_by = "sample")
 
 # 3. Plot average frequency aggregated by 'Treatment' group:

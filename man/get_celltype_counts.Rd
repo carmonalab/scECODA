@@ -2,24 +2,28 @@
 % Please edit documentation in R/main.r
 \name{get_celltype_counts}
 \alias{get_celltype_counts}
-\title{Get the cell type counts from a long data frame (e.g. seurat object metadata) where each cell is a row.}
+\title{Get the cell type counts from a long data frame (e.g. seurat object metadata)
+where each cell is a row.}
 \usage{
 get_celltype_counts(cell_data_df, sample_col, celltype_col)
 }
 \arguments{
-\item{cell_data_df}{A data frame where each row represents a single cell, and columns
-contain cell-level information, including sample ID and cell type annotation.}
+\item{cell_data_df}{A data frame where each row represents a single cell, and
+columns contain cell-level information, including sample ID and cell type
+annotation.}
 
 \item{sample_col}{The column that defines the sample ID for each cell}
 
-\item{celltype_col}{The column that defines the cell type annotation for each cell}
+\item{celltype_col}{The column that defines the cell type annotation for each
+cell}
 }
 \value{
 A data frame with samples as rows and cell types as columns,
 containing the count of each cell type per sample.
 }
 \description{
-Get the cell type counts from a long data frame (e.g. seurat object metadata) where each cell is a row.
+Get the cell type counts from a long data frame (e.g. seurat object metadata)
+where each cell is a row.
 }
 \examples{
 # Create example data frame

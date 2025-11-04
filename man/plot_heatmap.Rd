@@ -20,49 +20,52 @@ plot_heatmap(
 \arguments{
 \item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
 
-\item{slot}{Character string (default: \code{"clr"}). The name of the data matrix
-slot in the \code{ECODA} object to use for the heatmap. Must be one of:
-\code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
-(CLR-transformed abundances of only the most highly variable cell
-types (HVCs)), \code{"pb"} (pseudobulk gene expression),
-\code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
-\code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
-frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
+\item{slot}{Character string (default: \code{"clr"}). The name of the data
+matrix slot in the \code{ECODA} object to use for the heatmap. Must be one
+of: \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+(CLR-transformed abundances of only the most highly variable cell types
+(HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
+counts), \code{"counts_imp"} (imputed counts), \code{"freq"} (relative
+frequencies), \code{"freq_imp"} (imputed frequencies), or
+\code{"asin_sqrt"} (arcsin-square root transformed data).}
 
-\item{label_col}{Character string. The name of the column in \code{ecoda_object@metadata}
-to use for annotating the samples (columns) of the heatmap.}
+\item{label_col}{Character string. The name of the column in
+\code{ecoda_object@metadata} to use for annotating the samples (columns) of
+the heatmap.}
 
-\item{cluster_rows}{Logical (default: \code{TRUE}). Whether to apply hierarchical
-clustering to the cell types (rows).}
+\item{cluster_rows}{Logical (default: \code{TRUE}). Whether to apply
+hierarchical clustering to the cell types (rows).}
 
-\item{cluster_cols}{Logical (default: \code{TRUE}). Whether to apply hierarchical
-clustering to the samples (columns).}
+\item{cluster_cols}{Logical (default: \code{TRUE}). Whether to apply
+hierarchical clustering to the samples (columns).}
 
-\item{scale}{Character string (default: \code{"none"}). Method for scaling the
-abundance values within the heatmap using \code{pheatmap}. Options
-include \code{"none"}, \code{"row"}, or \code{"column"}. Note: The data
-is internally \strong{mean-centered} (\code{scale(center=TRUE, scale=FALSE)})
-across samples before being passed to \code{pheatmap}, regardless of this argument.}
+\item{scale}{Character string (default: \code{"none"}). Method for scaling
+the abundance values within the heatmap using \code{pheatmap}. Options
+include \code{"none"}, \code{"row"}, or \code{"column"}. Note: The data is
+internally \strong{mean-centered} (\code{scale(center=TRUE, scale=FALSE)})
+across samples before being passed to \code{pheatmap}, regardless of this
+argument.}
 
-\item{clustering_method}{Character string (default: \code{"ward.D2"}). The clustering
-method to use for hierarchical clustering. Options are
-passed directly to \code{hclust} (e.g., \code{"complete"},
-\code{"average"}, \code{"ward.D2"}).}
+\item{clustering_method}{Character string (default: \code{"ward.D2"}). The
+clustering method to use for hierarchical clustering. Options are passed
+directly to \code{hclust} (e.g., \code{"complete"}, \code{"average"},
+\code{"ward.D2"}).}
 
 \item{angle_col}{Character string (default: \code{"90"}). Angle of the sample
 labels (columns).}
 
-\item{...}{Additional arguments passed directly to the \code{pheatmap} function.}
+\item{...}{Additional arguments passed directly to the \code{pheatmap}
+function.}
 }
 \value{
 A \code{pheatmap} object, which is typically visualized automatically
 when called interactively.
 }
 \description{
-This function visualizes a data matrix from a specified slot (e.g., CLR-transformed,
-frequency, or pseudobulk data) after mean-centering. It supports optional
-filtering to only Highly Variable Cell Types (HVCs) and includes a sample
-annotation sidebar based on a specified metadata column.
+This function visualizes a data matrix from a specified slot (e.g.,
+CLR-transformed, frequency, or pseudobulk data) after mean-centering. It
+supports optional filtering to only Highly Variable Cell Types (HVCs) and
+includes a sample annotation sidebar based on a specified metadata column.
 }
 \examples{
 \dontrun{

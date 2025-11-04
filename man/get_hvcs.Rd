@@ -2,40 +2,44 @@
 % Please edit documentation in R/main.r
 \name{get_hvcs}
 \alias{get_hvcs}
-\title{Selects Highly Variable Cell Types (HVCs) based on variance or count threshold.}
+\title{Selects Highly Variable Cell Types (HVCs) based on variance or count
+threshold.}
 \usage{
 get_hvcs(df_var, variance_explained = 0.5, top_n_hvcs = NULL)
 }
 \arguments{
-\item{df_var}{A data frame (typically the output of \code{\link{get_celltype_variances}})
-that must contain at least the columns \code{celltype} and \code{variance_exp}
-(cumulative variance explained) and must be sorted by variance in
-descending order.}
+\item{df_var}{A data frame (typically the output of
+\code{\link{get_celltype_variances}}) that must contain at least the
+columns \code{celltype} and \code{variance_exp} (cumulative variance
+explained) and must be sorted by variance in descending order.}
 
-\item{variance_explained}{Numeric (default: 0.5). The cumulative proportion of
-total variance that the selected HVCs must explain.
-This parameter is ignored if \code{top_n_hvcs} is set.}
+\item{variance_explained}{Numeric (default: 0.5). The cumulative proportion
+of total variance that the selected HVCs must explain. This parameter is
+ignored if \code{top_n_hvcs} is set.}
 
 \item{top_n_hvcs}{Integer or Numeric (optional).
 \itemize{
-\item If an integer (>= 1), it specifies the exact number of
-top cell types to select.
-\item If a numeric value between 0 and 1, it specifies the
-proportion of cell types to select (e.g., 0.1 for the top 10\%).
+\item If an integer (>= 1), it specifies the exact
+number of top cell types to select.
+\item If a numeric value between 0 and 1, it specifies
+the proportion of cell types to select
+(e.g., 0.1 for the top 10\%).
 }}
 }
 \value{
-A character vector containing the names of the selected highly variable cell types.
-The function ensures that at least two cell types are always returned.
+A character vector containing the names of the selected highly
+variable cell types. The function ensures that at least two cell types are
+always returned.
 }
 \description{
 This is a utility function that selects the most variable cell types from a
-variance-ranked data frame. Selection can be controlled either by defining the
-cumulative variance to be explained or by specifying a fixed number of cell types.
+variance-ranked data frame. Selection can be controlled either by defining
+the cumulative variance to be explained or by specifying a fixed number of
+cell types.
 }
 \examples{
 \dontrun{
-# Assuming 'df_variance' is a variance data frame sorted descendingly by variance.
+# 'df_variance' is a variance data frame sorted descendingly by variance.
 # Select cell types explaining at least 60\% of variance:
 hvcs_60 <- get_hvcs(df_variance, variance_explained = 0.6)
 
