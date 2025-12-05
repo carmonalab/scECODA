@@ -1,6 +1,10 @@
 # scECODA
 
-The scECODA R package faciliates ***Exploratory COmpositional Data Analysis (ECODA)*** and visualization, especially for single-cell omics data embeddings at the sample/population level
+<p align="center">
+<img width="154" height="154" alt="image" src="https://github.com/user-attachments/assets/ecd4f6c8-de4b-433c-b0f7-75aa2e37dee7" />
+</p>
+
+This R package faciliates ***Exploratory COmpositional Data Analysis (ECODA)*** and visualization, especially for single-cell omics data embeddings at the sample/population level
 
 It enables intuitive exploration of multi-sample datasets –such as large patient cohorts– and supports the unsupervised identification of samples with similar cell type compositional profiles (e.g., patient clustering or stratification). In addition, scECODA provides metrics to quantify the degree of separation between sample groups (e.g., biological conditions) and to pinpoint the cell types or cell states whose abundance changes drive these differences.
 
