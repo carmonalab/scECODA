@@ -419,7 +419,7 @@ clr <- function(df) {
 #' @examples
 #' # Create example data frame
 #' cell_data_df <- data.frame(
-#'   Cell_ID = paste0("C", 1:10),
+#'   Cell_ID = paste0("C", seq(10)),
 #'   Sample_Name = c(rep("S1", 5), rep("S2", 5)),
 #'   Cluster_Annotation = factor(c(
 #'     "B_Cell", "T_Cell", "B_Cell", NA, "T_Cell",
@@ -490,7 +490,7 @@ get_celltype_counts <- function(cell_data_df,
 #' \dontrun{
 #' # Assuming you have a data frame 'cell_df'
 #' cell_df <- data.frame(
-#'   Cell_ID = paste0("C", 1:10),
+#'   Cell_ID = paste0("C", seq(10)),
 #'   Sample_ID = c(rep("S1", 5), rep("S2", 5)),
 #'   Age = c(rep(30, 5), rep(45, 5)),
 #'   Gender = c(rep("M", 5), rep("F", 5)),
@@ -596,7 +596,7 @@ find_hvcs <- function(ecoda_object,
     top_n_hvcs = top_n_hvcs
   )
 
-  variance_explained <- (sum(df_var$Variance[1:length(hvcs)]) /
+  variance_explained <- (sum(df_var$Variance[seq_along(hvcs)]) /
     sum(df_var$Variance))
 
   ecoda_object@celltype_variances <- df_var
@@ -785,11 +785,11 @@ get_hvcs <- function(df_var,
           "(or data is empty). Returning top 2."
         )
       )
-      return(df_var$celltype[1:min(2, nrow(df_var))])
+      return(df_var$celltype[seq_len(min(2, nrow(df_var)))])
     }
 
     top_hvcs <- df_var %>%
-      slice(1:last_hvc_index) %>%
+      slice(seq_len(last_hvc_index)) %>%
       pull(celltype)
   }
 

@@ -257,10 +257,10 @@ plot_pca <- function(ecoda_object,
 #' the mean of rank dissimilarities within groups. The R-statistic ranges from
 #' \$-1\$ to \$1\$:
 #' \itemize{
-#'   \item An R value close to **\$1\$** indicates clear separation of groups.
-#'   \item An R value close to **\$0\$** indicates that the separation is
+#'   \item An R value close to **1** indicates clear separation of groups.
+#'   \item An R value close to **0** indicates that the separation is
 #'         no greater than expected by chance (i.e., poor separation).
-#'   \item An R value close to **\$-1\$** indicates that within-group
+#'   \item An R value close to **-1** indicates that within-group
 #'         dissimilarities are greater than between-group dissimilarities
 #'         (a very rare result).
 #' }
@@ -445,7 +445,6 @@ compute_KNN <- function(feat_mat, knn_k) {
 }
 
 
-
 #' Compute Shared Nearest Neighbor (SNN) Graph
 #'
 #' Constructs a graph where nodes are samples and edges are weighted by the
@@ -521,7 +520,6 @@ calc_sil <- function(feat_mat,
   score <- mean(sils[["sil_width"]])
   return(round(score, digits))
 }
-
 
 
 # Box and bar plots ---------------------------
