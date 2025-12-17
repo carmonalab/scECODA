@@ -397,7 +397,7 @@ calc_ari <- function(feat_mat,
 calc_modularity <- function(feat_mat,
                             labels,
                             digits = 3,
-                            knn_k = NULL) {
+                            knn_k = 3) {
   ngroups <- length(unique(labels))
 
   if (is.null(knn_k)) {
