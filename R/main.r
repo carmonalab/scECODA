@@ -151,10 +151,6 @@ ecoda <- function(data = NULL,
 
     data <- get_celltype_counts(cell_data_df, sample_col, celltype_col)
     metadata <- get_sample_metadata(cell_data_df, sample_col)
-  } else {
-    if (is.null(metadata)) {
-      stop("Please provide metadata")
-    }
   }
 
   # Sort by rownames
