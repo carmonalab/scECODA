@@ -67,7 +67,7 @@ setClass(
 )
 
 
-#' Creates an ECODA object from various data types.
+#' Create an ECODA object from various data types
 #'
 #' This is a smart constructor function used to initialize an
 #' \link[=ECODA-class]{ECODA} object. It handles the processing of single-cell
@@ -76,55 +76,36 @@ setClass(
 #' DESeq2-normalized pseudobulk data.
 #'
 #' @param data The primary input, which can be:
-#'             \itemize{
-#'               \item A \code{Seurat} object.
-#'               \item A \code{SingleCellExperiment} object.
-#'               \item A pre-calculated sample x cell type count
-#'                     matrix/data frame.
-#'             }
-#' @param sample_col The column name in the single-cell object's metadata (or
-#'   cell-level data frame) that defines the unique sample ID for each cell.
-#'   (Required if \code{data} is a single-cell object).
-#' @param celltype_col The column name in the single-cell object's metadata (or
-#'   cell-level data frame) that defines the cell type annotation for each cell.
-#'   (Required if \code{data} is a single-cell object).
-#' @param get_pb Logical, if \code{TRUE} (default: \code{TRUE}), the function
-#'   will calculate and store DESeq2-normalized pseudobulk data in the \code{pb}
-#'   slot.
-#' @param variance_explained Numeric (default: 0.5). Used in subsequent steps by
-#'   \code{ecoda_helper} to determine how many highly variable
-#'   cell types (HVCs) to select.
-#' @param top_n_hvcs Integer (optional). Overrides \code{variance_explained} if
-#'   provided, specifying the exact number of top HVCs to select.
+#'   \itemize{
+#'     \item A \code{Seurat} object.
+#'     \item A \code{SingleCellExperiment} object.
+#'     \item A sample x cell type matrix or data frame (counts or frequencies).
+#'   }
+#' @param data_is_freq Logical (default: \code{FALSE}). If \code{TRUE}, the
+#'   input \code{data} is treated as relative frequencies (proportions) rather
+#'   than raw counts.
+#' @param metadata A data frame containing sample-level metadata. Required if
+#'   \code{data} is a matrix/data frame. If \code{data} is a single-cell object,
+#'   metadata is extracted automatically.
+#' @param sample_col The metadata column name defining unique sample IDs.
+#'   Required if \code{data} is a single-cell object.
+#' @param celltype_col The metadata column name defining cell type annotations.
+#'   Required if \code{data} is a single-cell object.
+#' @param get_pb Logical (default: \code{FALSE}). If \code{TRUE}, calculates
+#'   and stores DESeq2-normalized pseudobulk data in the \code{pb} slot.
+#' @param variance_explained Numeric (default: 0.5). Proportion of variance
+#'   used to determine the number of highly variable cell types (HVCs).
+#' @param top_n_hvcs Integer (optional). If provided, specifies the exact
+#'   number of top HVCs to select, overriding \code{variance_explained}.
 #'
-#' @return A new \link[=ECODA-class]{ECODA} object populated with \code{counts},
-#'   \code{metadata}, and optionally \code{pb} and the initial compositional
-#'   analysis results.
+#' @return A new \link[=ECODA-class]{ECODA} object.
 #'
 #' @importFrom methods new
-#' @importFrom utils read.csv
+#' @importFrom gtools mixedsort
 #'
 #' @export ecoda
-#'
-#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calculate_pseudobulk}},
-#'   \code{\link{get_celltype_counts}}, \code{\link{get_sample_metadata}}
-#'
-#' @examples
-#' \dontrun{
-#' # Example using a Seurat object (assuming object 'pbmc' is loaded)
-#' ecoda_obj <- ecoda(
-#'   data = pbmc,
-#'   sample_col = "orig.ident",
-#'   celltype_col = "cell_type",
-#'   get_pb = TRUE
-#' )
-#'
-#' # Example using a pre-calculated count matrix
-#' # counts_df <- read.csv("cell_counts.csv", row.names = 1)
-#' # ecoda_obj <- ecoda(data = counts_df)
-#' }
 ecoda <- function(data = NULL,
-                  freq = NULL,
+                  data_is_freq = FALSE,
                   metadata = NULL,
                   sample_col = NULL,
                   celltype_col = NULL,
@@ -152,13 +133,7 @@ ecoda <- function(data = NULL,
       }
     } else if (inherits(data, "SingleCellExperiment")) {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
-        stop(
-          paste0(
-            "Package \"SummarizedExperiment\" must ",
-            "be installed to use this function."
-          ),
-          call. = FALSE
-        )
+        stop("Package 'SummarizedExperiment' must be installed.")
       }
       cell_data_df <- as.data.frame(SummarizedExperiment::colData(data))
       names(cell_data_df) <- names(SummarizedExperiment::colData(data))
@@ -174,7 +149,7 @@ ecoda <- function(data = NULL,
       }
     }
 
-    counts <- get_celltype_counts(cell_data_df, sample_col, celltype_col)
+    data <- get_celltype_counts(cell_data_df, sample_col, celltype_col)
     metadata <- get_sample_metadata(cell_data_df, sample_col)
   } else {
     if (is.null(metadata)) {
@@ -182,15 +157,28 @@ ecoda <- function(data = NULL,
     }
   }
 
+  # Sort by rownames
+  data <- data[mixedsort(rownames(data)), ]
+
+  if (!is.null(metadata)) {
+    # Sort by rownames
+    metadata <- metadata[mixedsort(rownames(metadata)), , drop = FALSE]
+
+    # Ensure correct rownames
+    if (!all(rownames(data) == rownames(metadata))) {
+      stop("Rownames of cell counts (or freq) do not match metadata.")
+    }
+  }
+
   ecoda_object <- ecoda_helper(
-    counts = counts,
-    freq = freq,
-    metadata = metadata,
+    data = data,
+    data_is_freq = data_is_freq,
     variance_explained = variance_explained,
     top_n_hvcs = top_n_hvcs
   )
+  ecoda_object@metadata <- metadata
 
-  if (get_pb) {
+  if (get_pb && exists("pb")) {
     pb <- deseq2_normalize(pb)
     pb <- pb[mixedsort(rownames(pb)), ]
     ecoda_object@pb <- pb
@@ -200,75 +188,43 @@ ecoda <- function(data = NULL,
 }
 
 
-#' Creates an ECODA object from pre-calculated cell type counts.
+#' Core constructor for ECODA objects from count/frequency matrices
 #'
-#' This is the core constructor function that initializes and performs the
-#' initial compositional analysis steps for an \link[=ECODA-class]{ECODA}
-#' object, assuming the cell type count matrix is already available. It handles
-#' zero-imputation, calculates relative frequencies, Centered Log-Ratio (CLR)
-#' transformed data, sample distances, and identifies highly variable cell types
-#' (HVCs).
+#' This is the internal engine that initializes an \link[=ECODA-class]{ECODA}
+#' object. It performs zero-imputation, Centered Log-Ratio (CLR)
+#' transformation, calculates sample distances, and identifies highly variable
+#' cell types (HVCs).
 #'
-#' @param counts A data frame or matrix of cell type counts where **rows are
-#'   samples** and **columns are cell types**. Must contain non-negative
-#'   integers.
-#' @param freq A data frame or matrix of **relative cell type frequencies**
-#'   (proportions) where **rows are samples** and **columns are cell types**.
-#'   Values must be between 0 and 100 (or close to 1 across rows). If provided,
-#'   this matrix is used directly for CLR transformation.
-#' @param metadata An optional data frame containing sample-level metadata. Row
-#'   names must match the row names of the \code{counts} matrix.
-#' @param variance_explained Numeric (default: 0.5). The proportion of total
-#'   variance that should be captured by the selected highly variable cell types
-#'   (HVCs). Used by \code{find_hvcs}.
-#' @param top_n_hvcs Integer (optional). Overrides \code{variance_explained} if
-#'   provided, specifying the exact number of top HVCs to select based on
-#'   variance.
+#' @param data A matrix or data frame where **rows are samples** and
+#'   **columns are cell types**.
+#' @param data_is_freq Logical. If \code{TRUE}, \code{data} is treated as
+#'   proportions (0-1 or 0-100). If \code{FALSE}, treated as raw integer counts.
+#' @param variance_explained Numeric (default: 0.5). Target variance for HVCs.
+#' @param top_n_hvcs Integer (optional). Number of top HVCs to select.
 #'
-#' @return A fully initialized \link[=ECODA-class]{ECODA} object, populated with
-#'   counts, frequency data, CLR transformed data, sample distances, and HVCs.
+#' @return A fully initialized \link[=ECODA-class]{ECODA} object.
 #'
 #' @importFrom methods new
-#' @importFrom gtools mixedsort
 #' @importFrom dplyr %>%
 #' @importFrom stats dist
 #'
-#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calc_freq}},
-#'   \code{\link{clr}}, \code{\link{find_hvcs}}
-#'
-#' @examples
-#' \dontrun{
-#' # Assuming 'my_counts' and 'my_metadata' are defined data frames:
-#' counts_df <- data.frame(
-#'   row.names = c("S1", "S2"), A = c(10, 5), B = c(0, 15)
-#' )
-#' meta_df <- data.frame(
-#'   row.names = c("S1", "S2"), Group = c("Treated", "Control")
-#' )
-#'
-#' ecoda_obj <- ecoda_helper(
-#'   counts = counts_df,
-#'   metadata = meta_df,
-#'   top_n_hvcs = 2
-#' )
-#' # ecoda_obj@counts will contain the original counts
-#' # ecoda_obj@clr will contain the CLR transformed data
-#' }
-ecoda_helper <- function(counts = NULL,
-                         freq = NULL,
-                         metadata = NULL,
+#' @export ecoda_helper
+ecoda_helper <- function(data = NULL,
+                         data_is_freq = NULL,
                          variance_explained = 0.5,
                          top_n_hvcs = NULL) {
   # Initialize the object with default values
   ecoda_object <- new("ECODA")
 
-  if (!is.null(counts) && !is.null(freq)) {
-    stop("Please provide only counts or freq.")
+  if (data_is_freq) {
+    counts <- NULL
+    freq <- data
+  } else {
+    counts <- data
+    freq <- NULL
   }
 
   if (!is.null(counts)) {
-    counts <- counts[mixedsort(rownames(counts)), ]
-
     counts_imp <- counts
     if (any(counts == 0)) {
       counts_imp <- counts_imp + 1
@@ -284,8 +240,6 @@ ecoda_helper <- function(counts = NULL,
   }
 
   if (!is.null(freq)) {
-    freq <- freq[mixedsort(rownames(freq)), ]
-
     row_sums <- rowSums(freq)
 
     # Check if all row sums are close to 100
@@ -322,17 +276,6 @@ ecoda_helper <- function(counts = NULL,
 
     ecoda_object@freq <- freq
     ecoda_object@freq_imp <- freq_imp
-  }
-
-  if (!is.null(metadata)) {
-    # Sort by rownames
-    metadata <- metadata[mixedsort(rownames(metadata)), , drop = FALSE]
-
-    # Ensure correct rownames
-    if (!all(rownames(counts) == rownames(metadata))) {
-      stop("Rownames of cell counts do not match metadata.")
-    }
-    ecoda_object@metadata <- metadata
   }
 
   ecoda_object@asin_sqrt <- freq %>%

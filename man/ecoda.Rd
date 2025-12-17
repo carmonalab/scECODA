@@ -2,11 +2,11 @@
 % Please edit documentation in R/main.r
 \name{ecoda}
 \alias{ecoda}
-\title{Creates an ECODA object from various data types.}
+\title{Create an ECODA object from various data types}
 \usage{
 ecoda(
   data = NULL,
-  freq = NULL,
+  data_is_freq = FALSE,
   metadata = NULL,
   sample_col = NULL,
   celltype_col = NULL,
@@ -20,33 +20,34 @@ ecoda(
 \itemize{
 \item A \code{Seurat} object.
 \item A \code{SingleCellExperiment} object.
-\item A pre-calculated sample x cell type count
-matrix/data frame.
+\item A sample x cell type matrix or data frame (counts or frequencies).
 }}
 
-\item{sample_col}{The column name in the single-cell object's metadata (or
-cell-level data frame) that defines the unique sample ID for each cell.
-(Required if \code{data} is a single-cell object).}
+\item{data_is_freq}{Logical (default: \code{FALSE}). If \code{TRUE}, the
+input \code{data} is treated as relative frequencies (proportions) rather
+than raw counts.}
 
-\item{celltype_col}{The column name in the single-cell object's metadata (or
-cell-level data frame) that defines the cell type annotation for each cell.
-(Required if \code{data} is a single-cell object).}
+\item{metadata}{A data frame containing sample-level metadata. Required if
+\code{data} is a matrix/data frame. If \code{data} is a single-cell object,
+metadata is extracted automatically.}
 
-\item{get_pb}{Logical, if \code{TRUE} (default: \code{TRUE}), the function
-will calculate and store DESeq2-normalized pseudobulk data in the \code{pb}
-slot.}
+\item{sample_col}{The metadata column name defining unique sample IDs.
+Required if \code{data} is a single-cell object.}
 
-\item{variance_explained}{Numeric (default: 0.5). Used in subsequent steps by
-\code{ecoda_helper} to determine how many highly variable
-cell types (HVCs) to select.}
+\item{celltype_col}{The metadata column name defining cell type annotations.
+Required if \code{data} is a single-cell object.}
 
-\item{top_n_hvcs}{Integer (optional). Overrides \code{variance_explained} if
-provided, specifying the exact number of top HVCs to select.}
+\item{get_pb}{Logical (default: \code{FALSE}). If \code{TRUE}, calculates
+and stores DESeq2-normalized pseudobulk data in the \code{pb} slot.}
+
+\item{variance_explained}{Numeric (default: 0.5). Proportion of variance
+used to determine the number of highly variable cell types (HVCs).}
+
+\item{top_n_hvcs}{Integer (optional). If provided, specifies the exact
+number of top HVCs to select, overriding \code{variance_explained}.}
 }
 \value{
-A new \link[=ECODA-class]{ECODA} object populated with \code{counts},
-\code{metadata}, and optionally \code{pb} and the initial compositional
-analysis results.
+A new \link[=ECODA-class]{ECODA} object.
 }
 \description{
 This is a smart constructor function used to initialize an
@@ -54,23 +55,4 @@ This is a smart constructor function used to initialize an
 objects (\code{Seurat} or \code{SingleCellExperiment}) or raw data frames to
 extract cell type counts, calculate sample metadata, and optionally generate
 DESeq2-normalized pseudobulk data.
-}
-\examples{
-\dontrun{
-# Example using a Seurat object (assuming object 'pbmc' is loaded)
-ecoda_obj <- ecoda(
-  data = pbmc,
-  sample_col = "orig.ident",
-  celltype_col = "cell_type",
-  get_pb = TRUE
-)
-
-# Example using a pre-calculated count matrix
-# counts_df <- read.csv("cell_counts.csv", row.names = 1)
-# ecoda_obj <- ecoda(data = counts_df)
-}
-}
-\seealso{
-\link[=ECODA-class]{ECODA}, \code{\link{calculate_pseudobulk}},
-\code{\link{get_celltype_counts}}, \code{\link{get_sample_metadata}}
 }
