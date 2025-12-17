@@ -92,7 +92,7 @@ setClass(
 #'   will calculate and store DESeq2-normalized pseudobulk data in the \code{pb}
 #'   slot.
 #' @param variance_explained Numeric (default: 0.5). Used in subsequent steps by
-#'   \code{create_ecoda_object_helper} to determine how many highly variable
+#'   \code{ecoda_helper} to determine how many highly variable
 #'   cell types (HVCs) to select.
 #' @param top_n_hvcs Integer (optional). Overrides \code{variance_explained} if
 #'   provided, specifying the exact number of top HVCs to select.
@@ -104,7 +104,7 @@ setClass(
 #' @importFrom methods new
 #' @importFrom utils read.csv
 #'
-#' @export create_ecoda_object
+#' @export ecoda
 #'
 #' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calculate_pseudobulk}},
 #'   \code{\link{get_celltype_counts}}, \code{\link{get_sample_metadata}}
@@ -112,7 +112,7 @@ setClass(
 #' @examples
 #' \dontrun{
 #' # Example using a Seurat object (assuming object 'pbmc' is loaded)
-#' ecoda_obj <- create_ecoda_object(
+#' ecoda_obj <- ecoda(
 #'   data = pbmc,
 #'   sample_col = "orig.ident",
 #'   celltype_col = "cell_type",
@@ -121,14 +121,16 @@ setClass(
 #'
 #' # Example using a pre-calculated count matrix
 #' # counts_df <- read.csv("cell_counts.csv", row.names = 1)
-#' # ecoda_obj <- create_ecoda_object(data = counts_df)
+#' # ecoda_obj <- ecoda(data = counts_df)
 #' }
-create_ecoda_object <- function(data = NULL,
-                                sample_col = NULL,
-                                celltype_col = NULL,
-                                get_pb = TRUE,
-                                variance_explained = 0.5,
-                                top_n_hvcs = NULL) {
+ecoda <- function(data = NULL,
+                  freq = NULL,
+                  metadata = NULL,
+                  sample_col = NULL,
+                  celltype_col = NULL,
+                  get_pb = FALSE,
+                  variance_explained = 0.5,
+                  top_n_hvcs = NULL) {
   # --- A) Handle input from a Seurat or SingleCellExperiment object ---
   if (inherits(data, "Seurat") | inherits(data, "SingleCellExperiment")) {
     if (is.null(sample_col) || is.null(celltype_col)) {
@@ -171,15 +173,18 @@ create_ecoda_object <- function(data = NULL,
         }
       }
     }
+
+    counts <- get_celltype_counts(cell_data_df, sample_col, celltype_col)
+    metadata <- get_sample_metadata(cell_data_df, sample_col)
   } else {
-    cell_data_df <- data
+    if (is.null(metadata)) {
+      stop("Please provide metadata")
+    }
   }
 
-  counts <- get_celltype_counts(cell_data_df, sample_col, celltype_col)
-  metadata <- get_sample_metadata(cell_data_df, sample_col)
-
-  ecoda_object <- create_ecoda_object_helper(
+  ecoda_object <- ecoda_helper(
     counts = counts,
+    freq = freq,
     metadata = metadata,
     variance_explained = variance_explained,
     top_n_hvcs = top_n_hvcs
@@ -228,8 +233,6 @@ create_ecoda_object <- function(data = NULL,
 #' @importFrom dplyr %>%
 #' @importFrom stats dist
 #'
-#' @export create_ecoda_object_helper
-#'
 #' @seealso \link[=ECODA-class]{ECODA}, \code{\link{calc_freq}},
 #'   \code{\link{clr}}, \code{\link{find_hvcs}}
 #'
@@ -243,7 +246,7 @@ create_ecoda_object <- function(data = NULL,
 #'   row.names = c("S1", "S2"), Group = c("Treated", "Control")
 #' )
 #'
-#' ecoda_obj <- create_ecoda_object_helper(
+#' ecoda_obj <- ecoda_helper(
 #'   counts = counts_df,
 #'   metadata = meta_df,
 #'   top_n_hvcs = 2
@@ -251,11 +254,11 @@ create_ecoda_object <- function(data = NULL,
 #' # ecoda_obj@counts will contain the original counts
 #' # ecoda_obj@clr will contain the CLR transformed data
 #' }
-create_ecoda_object_helper <- function(counts = NULL,
-                                       freq = NULL,
-                                       metadata = NULL,
-                                       variance_explained = 0.5,
-                                       top_n_hvcs = NULL) {
+ecoda_helper <- function(counts = NULL,
+                         freq = NULL,
+                         metadata = NULL,
+                         variance_explained = 0.5,
+                         top_n_hvcs = NULL) {
   # Initialize the object with default values
   ecoda_object <- new("ECODA")
 
