@@ -4,7 +4,7 @@
 \alias{calc_modularity}
 \title{Calculate Adjusted Modularity Score}
 \usage{
-calc_modularity(feat_mat, labels, digits = 3, knn_k = NULL)
+calc_modularity(feat_mat, labels, digits = 3, knn_k = 3)
 }
 \arguments{
 \item{feat_mat}{Numeric matrix or data frame. The feature matrix used to

@@ -28,7 +28,7 @@ where each cell is a row.
 \examples{
 # Create example data frame
 cell_data_df <- data.frame(
-  Cell_ID = paste0("C", 1:10),
+  Cell_ID = paste0("C", seq(10)),
   Sample_Name = c(rep("S1", 5), rep("S2", 5)),
   Cluster_Annotation = factor(c(
     "B_Cell", "T_Cell", "B_Cell", NA, "T_Cell",

@@ -36,7 +36,7 @@ excluded from the output.
 \dontrun{
 # Assuming you have a data frame 'cell_df'
 cell_df <- data.frame(
-  Cell_ID = paste0("C", 1:10),
+  Cell_ID = paste0("C", seq(10)),
   Sample_ID = c(rep("S1", 5), rep("S2", 5)),
   Age = c(rep(30, 5), rep(45, 5)),
   Gender = c(rep("M", 5), rep("F", 5)),
