@@ -223,7 +223,7 @@ ecoda_helper <- function(data = NULL,
   if (!is.null(counts)) {
     counts_imp <- counts
     if (any(counts == 0)) {
-      counts_imp <- counts_imp + 1
+      counts_imp <- counts_imp + (2 / 3)
     }
     freq <- calc_freq(counts)
     freq_imp <- calc_freq(counts_imp)
@@ -263,10 +263,10 @@ ecoda_helper <- function(data = NULL,
       warning(
         paste0(
           "freq contains zeros.",
-          "Zeros were imputed with the smallest value in freq."
+          "Zeros were imputed with the (2/3) * smallest value in freq."
         )
       )
-      freq_imp <- freq_imp + min(freq_imp[freq_imp > 0])
+      freq_imp <- freq_imp + min(freq_imp[freq_imp > 0]) * (2 / 3)
     }
     clr_df <- clr(freq_imp)
 
