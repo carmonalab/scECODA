@@ -206,7 +206,7 @@ ecoda <- function(data = NULL,
 #'
 #' @export ecoda_helper
 ecoda_helper <- function(data = NULL,
-                         data_is_freq = NULL,
+                         data_is_freq,
                          variance_explained = 0.5,
                          top_n_hvcs = NULL) {
   # Initialize the object with default values
@@ -223,7 +223,7 @@ ecoda_helper <- function(data = NULL,
   if (!is.null(counts)) {
     counts_imp <- counts
     if (any(counts == 0)) {
-      counts_imp <- counts_imp + (2 / 3)
+      counts_imp[counts_imp == 0] <- counts_imp[counts_imp == 0] + (2 / 3)
     }
     freq <- calc_freq(counts)
     freq_imp <- calc_freq(counts_imp)
@@ -266,7 +266,8 @@ ecoda_helper <- function(data = NULL,
           "Zeros were imputed with the (2/3) * smallest value in freq."
         )
       )
-      freq_imp <- freq_imp + min(freq_imp[freq_imp > 0]) * (2 / 3)
+      freq_imp[freq_imp == 0] <-
+        freq_imp[freq_imp == 0] + min(freq_imp[freq_imp > 0]) * (2 / 3)
     }
     clr_df <- clr(freq_imp)
 
