@@ -6,7 +6,7 @@
 \usage{
 ecoda_helper(
   data = NULL,
-  data_is_freq = NULL,
+  data_is_freq,
   variance_explained = 0.5,
   top_n_hvcs = NULL
 )
