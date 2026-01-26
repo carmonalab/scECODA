@@ -255,7 +255,7 @@ plot_pca <- function(ecoda_object,
 #'
 #' @details ANOSIM compares the mean of rank dissimilarities between groups to
 #' the mean of rank dissimilarities within groups. The R-statistic ranges from
-#' \$-1\$ to \$1\$:
+#' -1 to 1:
 #' \itemize{
 #'   \item An R value close to **1** indicates clear separation of groups.
 #'   \item An R value close to **0** indicates that the separation is
