@@ -2,7 +2,6 @@
 .DS_Store
 **/.DS_Store
 .Rproj
-.gitignore
 .Rbuildignore
 .Rhistory
 scECODA.Rproj
