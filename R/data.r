@@ -11,7 +11,7 @@
 #'    \item \code{metadata}: Data frame of sample-level metadata (samples as rows).
 #'    \item \code{main_biologicalcondition_columnname}: Character string, indicating the main biological condition column name in the metadata.
 #' }
-#'
+#' @usage data(example_data)
 #' @source Data originally derived from multiple public single-cell datasets and re-processed
 #'         as described in the accompanying scECODA manuscript (Halter et al., *in preparation*).
 "example_data"
