@@ -19,7 +19,7 @@ Data originally derived from multiple public single-cell datasets and re-process
 as described in the accompanying scECODA manuscript (Halter et al., \emph{in preparation}).
 }
 \usage{
-example_data
+data(example_data)
 }
 \description{
 A collection of single-cell compositional data from multiple studies,

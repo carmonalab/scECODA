@@ -45,7 +45,7 @@ based on the multivariate distances among samples in the feature space
 \details{
 ANOSIM compares the mean of rank dissimilarities between groups to
 the mean of rank dissimilarities within groups. The R-statistic ranges from
-\$-1\$ to \$1\$:
+-1 to 1:
 \itemize{
 \item An R value close to \strong{1} indicates clear separation of groups.
 \item An R value close to \strong{0} indicates that the separation is
