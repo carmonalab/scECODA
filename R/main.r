@@ -941,10 +941,10 @@ plot_varmean <- function(ecoda_object,
 #'   the unique sample IDs, and the rows correspond to the genes.
 #' @export calculate_pseudobulk
 #' @examples
-#' mat <- matrix(rpois(100, lambda = 5), nrow = 10, ncol = 10)
-#' rownames(mat) <- paste0("Gene", 1:10)
-#' colnames(mat) <- paste0("Cell", 1:10)
-#' ids <- rep(c("Sample1", "Sample2"), each = 5)
+#' mat <- matrix(rpois(100, lambda = 5), nrow = 100, ncol = 100)
+#' rownames(mat) <- paste0("Gene", 1:100)
+#' colnames(mat) <- paste0("Cell", 1:100)
+#' ids <- rep(c("Sample1", "Sample2"), each = 50)
 #'
 #' pb <- calculate_pseudobulk(count_matrix = mat, sample_ids = ids)
 calculate_pseudobulk <- function(count_matrix,

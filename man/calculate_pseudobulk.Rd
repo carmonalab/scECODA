@@ -30,10 +30,10 @@ robust to both dense and sparse count matrices. It also includes filtering
 logic to exclude samples that do not meet a minimum cell count threshold.
 }
 \examples{
-mat <- matrix(rpois(100, lambda = 5), nrow = 10, ncol = 10)
-rownames(mat) <- paste0("Gene", 1:10)
-colnames(mat) <- paste0("Cell", 1:10)
-ids <- rep(c("Sample1", "Sample2"), each = 5)
+mat <- matrix(rpois(100, lambda = 5), nrow = 100, ncol = 100)
+rownames(mat) <- paste0("Gene", 1:100)
+colnames(mat) <- paste0("Cell", 1:100)
+ids <- rep(c("Sample1", "Sample2"), each = 50)
 
 pb <- calculate_pseudobulk(count_matrix = mat, sample_ids = ids)
 }
