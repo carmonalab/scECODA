@@ -1,6 +1,6 @@
 Package: scECODA
 Title: Single-Cell Exploratory Compositional Data Analysis
-Version: 0.9.1
+Version: 0.99.1
 Authors@R: c(
     person("Christian", "Halter",
       email = "Christian.Halter@unil.ch",
@@ -25,6 +25,8 @@ Description: The scECODA R package provides a complete workflow for the
     metrics like the Adjusted Rand Index (ARI) and Modularity to quantify 
     sample grouping quality, and generating high-quality visualizations like 
     heatmaps and scatter plots.
+biocViews: Software, SingleCell, Normalization, Preprocessing, Visualization,
+  Clustering, DimensionReduction, FeatureExtraction, DifferentialExpression
 License:GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
