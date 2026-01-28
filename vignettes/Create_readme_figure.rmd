@@ -42,7 +42,10 @@ ecoda_object <- ecoda(
 p <- plot_pca(
   ecoda_object,
   label_col = "age_cmv",
-  title = "PCA - Population-scale sample representation\nBased on cell type composition",
+  title = paste0(
+    "PCA - Population-scale sample representation\n",
+    "Based on cell type composition"
+  ),
   n_hv_feat_show = 9,
   pointsize = 1.75,
   labelsize = 3,
