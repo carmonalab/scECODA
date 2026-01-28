@@ -215,65 +215,62 @@ ecoda_helper <- function(data = NULL,
   if (data_is_freq) {
     counts <- NULL
     freq <- data
+
+    if (any(freq == 0)) {
+      warning(
+        paste0(
+          "Frequencies contain zeros.",
+          "Zeros were imputed with the (2/3) * smallest value."
+        )
+      )
+      freq_imp <- impute_zeros(freq, is_freq = data_is_freq)
+    }
   } else {
     counts <- data
     freq <- NULL
   }
 
   if (!is.null(counts)) {
-    counts_imp <- counts
     if (any(counts == 0)) {
-      counts_imp[counts_imp == 0] <- counts_imp[counts_imp == 0] + (2 / 3)
+      warning(
+        paste0(
+          "Counts contains zeros.",
+          "Zeros were imputed with 2/3 counts."
+        )
+      )
+      counts_imp <- impute_zeros(counts)
     }
     freq <- calc_freq(counts)
     freq_imp <- calc_freq(counts_imp)
-    clr_df <- clr(counts_imp)
 
     ecoda_object@counts <- counts
     ecoda_object@counts_imp <- counts_imp
-    ecoda_object@freq <- freq
-    ecoda_object@freq_imp <- freq_imp
   }
 
-  if (!is.null(freq)) {
-    row_sums <- rowSums(freq)
-
-    # Check if all row sums are close to 100
-    # (using a tolerance for floating point numbers)
-    # If they are intended to be percentages
-    if (!all(abs(row_sums - 100) < 1e-6)) {
-      # Check if they are close to 1 and should be scaled to 100
-      if (all(abs(row_sums - 1) < 1e-6)) {
-        warning("Frequencies sum close to 1. Rescaling all rows to sum to 100.")
-        # Scale by 100
-        freq <- freq * 100
-      } else {
-        # If they sum to neither 1 nor 100, warn and scale them to 100
-        warning(paste(
-          "Frequencies do not sum to 100 (or 1).",
-          "Each row will be scaled so the new row sum is 100."
-        ))
-        # Re-scale each row so it sums to 100: (freq / row_sum) * 100
-        freq <- (freq / row_sums) * 100
-      }
+  # Check if all row sums are close to 100
+  # (using a tolerance for floating point numbers)
+  # If they are intended to be percentages
+  row_sums <- rowSums(freq)
+  if (!all(abs(row_sums - 100) < 1e-6)) {
+    # Check if they are close to 1 and should be scaled to 100
+    if (all(abs(row_sums - 1) < 1e-6)) {
+      warning("Frequencies sum close to 1. Rescaling all rows to sum to 100.")
+      # Scale by 100
+      freq <- freq * 100
+    } else {
+      # If they sum to neither 1 nor 100, warn and scale them to 100
+      warning(paste(
+        "Frequencies do not sum to 100 (or 1).",
+        "Each row will be scaled so the new row sum is 100."
+      ))
+      # Re-scale each row so it sums to 100: (freq / row_sum) * 100
+      freq <- (freq / row_sums) * 100
     }
-
-    freq_imp <- freq
-    if (any(freq == 0)) {
-      warning(
-        paste0(
-          "freq contains zeros.",
-          "Zeros were imputed with the (2/3) * smallest value in freq."
-        )
-      )
-      freq_imp[freq_imp == 0] <-
-        freq_imp[freq_imp == 0] + min(freq_imp[freq_imp > 0]) * (2 / 3)
-    }
-    clr_df <- clr(freq_imp)
-
-    ecoda_object@freq <- freq
-    ecoda_object@freq_imp <- freq_imp
   }
+
+  clr_df <- clr(freq_imp)
+  ecoda_object@freq <- freq
+  ecoda_object@freq_imp <- freq_imp
 
   ecoda_object@asin_sqrt <- freq %>%
     mutate(across(everything(), ~ . / 100)) %>%
@@ -343,6 +340,66 @@ clr <- function(df) {
     as.data.frame()
 
   return(clr_df)
+}
+
+
+
+#' Impute zero values in count or frequency data
+#'
+#' This function replaces zero values in a data frame or matrix to facilitate
+#' downstream transformations that require strictly positive values, such as the
+#' Centered Log-Ratio (CLR) transformation. It employs a simple multiplicative
+#' replacement strategy for both raw counts and relative frequencies.
+#'
+#' @details
+#' The imputation logic differs based on the type of data:
+#' \itemize{
+#'   \item \strong{Counts:} Zeros are replaced by a fraction of a minimum count
+#'   (typically 1). Formula: \code{0 + counts_min * xmin_factor}.
+#'   \item \strong{Frequencies:} Zeros are replaced by a fraction of the
+#'   smallest observed non-zero value in the dataset.
+#'   Formula: \code{0 + min(non_zero_values) * xmin_factor}.
+#' }
+#'
+#' @param df A data frame or matrix where zeros need to be imputed.
+#'   Rows are typically samples and columns are cell types.
+#' @param is_freq Logical (default: \code{FALSE}). If \code{TRUE}, the function
+#'   treats the input as relative frequencies and uses the minimum observed
+#'   non-zero value for imputation. If \code{FALSE}, it treats the input as
+#'   raw counts.
+#' @param counts_min Numeric (default: 1). The base value used for count
+#'   imputation. Only used if \code{is_freq = FALSE}.
+#' @param xmin_factor Numeric (default: 2/3). The multiplier applied to the
+#'   minimum value (\code{counts_min} for counts or the observed minimum for
+#'   frequencies) to determine the imputation value.
+#'
+#' @return A data frame or matrix of the same dimensions as \code{df} with all
+#'   zero values replaced by the calculated imputation value.
+#'
+#' @export impute_zeros
+#'
+#' @examples
+#' # Impute zeros in a count matrix
+#' counts_df <- data.frame(A = c(10, 0, 5), B = c(20, 10, 0))
+#' impute_zeros(counts_df, is_freq = FALSE)
+#'
+#' # Impute zeros in a frequency matrix
+#' freq_df <- data.frame(A = c(0.5, 0, 0.2), B = c(0.5, 1.0, 0.8))
+#' impute_zeros(freq_df, is_freq = TRUE)
+impute_zeros <- function(df,
+                         is_freq = FALSE,
+                         counts_min = 1,
+                         xmin_factor = 2 / 3) {
+  zero_idx <- df == 0
+  if (is_freq) {
+    # Frequencies
+    df[zero_idx] <- min(df[df > 0], na.rm = TRUE) * xmin_factor
+  } else {
+    # Counts
+    df[zero_idx] <- counts_min * xmin_factor
+  }
+
+  return(df)
 }
 
 
