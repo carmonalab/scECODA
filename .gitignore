@@ -1,7 +1,7 @@
 .Rproj.user
 .DS_Store
 **/.DS_Store
-.Rproj
+*.Rproj
 .Rbuildignore
 .Rhistory
-scECODA.Rproj
+.gitignore
