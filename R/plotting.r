@@ -679,24 +679,6 @@ calc_sil <- function(feat_mat, labels, digits = 3) {
 #' @importFrom rlang sym
 #'
 #' @seealso \link[=ECODA-class]{ECODA}
-#'
-#' @examples
-#' data(example_data)
-#' ecoda_object <- ecoda(
-#'   data = example_data$Zhang$cell_counts_lowresolution,
-#'   metadata = example_data$Zhang$metadata,
-#' )
-#'
-#' # 1. Create long data with CLR abundance only
-#' long_clr <- create_long_data(ecoda_obj, data_slot = "clr")
-#'
-#' # 2. Create long data with relative abundance
-#' # and merge the 'Tissue' metadata column
-#' long_freq_labeled <- create_long_data(
-#'   ecoda_obj,
-#'   data_slot = "freq",
-#'   label_col = "Tissue"
-#' )
 create_long_data <- function(ecoda_object,
                              data_slot,
                              label_col = NULL) {
