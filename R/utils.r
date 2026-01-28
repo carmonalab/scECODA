@@ -139,7 +139,7 @@ seurat_multiply_cells_in_condition <- function(
   original_counts_to_copy <- multiplied_counts[, cells_to_copy_names]
   original_metadata_to_copy <- multiplied_metadata[cells_to_copy_names, ]
 
-  for (i in 1:(multiplier - 1)) {
+  for (i in seq_len(multiplier - 1)) {
     suffix <- paste0("_", i)
 
     # --- Counts Duplication ---
