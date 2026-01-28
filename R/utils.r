@@ -37,26 +37,22 @@
 #'
 #' @examples
 #' \donttest{
-#' # ---------------------------------------------------------------------
-#' # Example: Simulating differential cell abundance using the function
-#' # ---------------------------------------------------------------------
-#'
 #' # 1. Install and load necessary data (requires the SeuratData package)
 #' # Note: SeuratData needs to be installed, but it is not a direct dependency
 #' # of your current function, so it's placed in the example.
-#' library(SeuratData)
-#' # InstallData("pbmc3k") # Uncomment to install the dataset if necessary
-#' data("pbmc3k")
+#' if (requireNamespace("SeuratData", quietly = TRUE)) {
+#'   # InstallData("pbmc3k") # Uncomment to install the dataset if necessary
+#'   data("pbmc3k")
 #'
-#' # Ensure the object is updated to the latest Seurat standard
-#' pbmc3k <- Seurat::UpdateSeuratObject(pbmc3k)
-#' head(pbmc3k@meta.data)
+#'   # Ensure the object is updated to the latest Seurat standard
+#'   pbmc3k <- Seurat::UpdateSeuratObject(pbmc3k)
+#'   head(slot(pbmc3k, "meta.data"))
 #'
-#' # 2. Prepare the object: Create dummy 'sample_id' and 'condition_id' metadata
-#' n_samples <- 40
-#' n_groups <- 2
+#'   # 2. Prepare the object: Create dummy 'sample_id' and 'condition_id' metadata
+#'   n_samples <- 40
+#'   n_groups <- 2
 #'
-#' pbmc3k$sample_id <- ""
+#'   pbmc3k$sample_id <- ""
 #' }
 #' pbmc3k$sample_id <- rep(
 #'   x = paste0("sample", seq(n_samples)),
@@ -83,13 +79,16 @@
 #' # 4. Verification (Optional):
 #' # Check the cell counts before the multiplication
 #' # (uses original 'condition' column)
-#' table(pbmc3k@meta.data$condition, pbmc3k@meta.data$seurat_annotation)
+#' table(
+#'   slot(pbmc3k, "meta.data")$condition,
+#'   slot(pbmc3k, "meta.data")$seurat_annotation
+#' )
 #' # Check the cell counts after (uses the newly created 'condition_id' column)
 #' table(
-#'   pbmc3k_DiffAbu@meta.data$condition_id,
-#'   pbmc3k_DiffAbu@meta.data$seurat_annotations
+#'   slot(pbmc3k_DiffAbu, "meta.data")$condition_id,
+#'   slot(pbmc3k_DiffAbu, "meta.data")$seurat_annotations
 #' )
-#'
+#' }
 seurat_multiply_cells_in_condition <- function(
   seurat_object,
   condition_column,
