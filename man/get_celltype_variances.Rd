@@ -4,32 +4,11 @@
 \alias{get_celltype_variances}
 \title{Calculates the variance of cell types across samples.}
 \usage{
-get_celltype_variances(
-  ecoda_object,
-  show_plot = TRUE,
-  label_points = TRUE,
-  plot_title = "",
-  smooth_method = "lm",
-  descending = TRUE
-)
+get_celltype_variances(ecoda_object, descending = TRUE)
 }
 \arguments{
 \item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object
 containing CLR-transformed data in the \code{clr} slot.}
-
-\item{show_plot}{Logical (default: \code{TRUE}). If \code{TRUE}, a
-mean-variance plot is generated using the internal \code{plot_varmean}
-function.}
-
-\item{label_points}{Logical (default: \code{TRUE}). If \code{TRUE}, the
-points on the plot will be labeled with cell type names.}
-
-\item{plot_title}{Character string (default: ""). Title for the generated
-plot.}
-
-\item{smooth_method}{Character string (default: "lm"). Smoothing method to
-use for the regression line in the mean-variance plot (e.g., "lm",
-"loess").}
 
 \item{descending}{Logical (default: \code{TRUE}). If \code{TRUE}, the
 returned data frame is sorted by variance in descending order.}
@@ -51,9 +30,8 @@ explained cumulatively.
 \description{
 This function takes the Centered Log-Ratio (CLR) transformed cell type
 abundance data from an \link[=ECODA-class]{ECODA} object, calculates the mean
-CLR abundance and variance for each cell type, and optionally generates a
-mean-variance plot. It also calculates the cumulative variance explained by
-the cell types when ranked by variance.
+CLR abundance and variance for each cell type. It also calculates the
+cumulative variance explained by the cell types when ranked by variance.
 }
 \examples{
 data(example_data)
@@ -68,7 +46,7 @@ df_var <- get_celltype_variances(ecoda_obj)
 # Calculate variances without plotting, sorted by ascending variance
 df_var_asc <- get_celltype_variances(
   ecoda_obj,
-  show_plot = FALSE, descending = FALSE
+  descending = FALSE
 )
 }
 \seealso{

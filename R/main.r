@@ -588,10 +588,7 @@ get_sample_metadata <- function(cell_data_df,
 find_hvcs <- function(ecoda_object,
                       variance_explained = 0.5,
                       top_n_hvcs = NULL) {
-  df_var <- get_celltype_variances(
-    ecoda_object,
-    show_plot = FALSE
-  )
+  df_var <- get_celltype_variances(ecoda_object)
 
   hvcs <- get_hvcs(
     df_var,
@@ -616,22 +613,11 @@ find_hvcs <- function(ecoda_object,
 #'
 #' This function takes the Centered Log-Ratio (CLR) transformed cell type
 #' abundance data from an \link[=ECODA-class]{ECODA} object, calculates the mean
-#' CLR abundance and variance for each cell type, and optionally generates a
-#' mean-variance plot. It also calculates the cumulative variance explained by
-#' the cell types when ranked by variance.
+#' CLR abundance and variance for each cell type. It also calculates the
+#' cumulative variance explained by the cell types when ranked by variance.
 #'
 #' @param ecoda_object An initialized \link[=ECODA-class]{ECODA} object
 #'   containing CLR-transformed data in the \code{clr} slot.
-#' @param show_plot Logical (default: \code{TRUE}). If \code{TRUE}, a
-#'   mean-variance plot is generated using the internal \code{plot_varmean}
-#'   function.
-#' @param label_points Logical (default: \code{TRUE}). If \code{TRUE}, the
-#'   points on the plot will be labeled with cell type names.
-#' @param plot_title Character string (default: ""). Title for the generated
-#'   plot.
-#' @param smooth_method Character string (default: "lm"). Smoothing method to
-#'   use for the regression line in the mean-variance plot (e.g., "lm",
-#'   "loess").
 #' @param descending Logical (default: \code{TRUE}). If \code{TRUE}, the
 #'   returned data frame is sorted by variance in descending order.
 #'
@@ -669,14 +655,9 @@ find_hvcs <- function(ecoda_object,
 #' # Calculate variances without plotting, sorted by ascending variance
 #' df_var_asc <- get_celltype_variances(
 #'   ecoda_obj,
-#'   show_plot = FALSE, descending = FALSE
+#'   descending = FALSE
 #' )
-get_celltype_variances <- function(ecoda_object,
-                                   show_plot = TRUE,
-                                   label_points = TRUE,
-                                   plot_title = "",
-                                   smooth_method = "lm",
-                                   descending = TRUE) {
+get_celltype_variances <- function(ecoda_object, descending = TRUE) {
   df_var <- ecoda_object@clr %>%
     pivot_longer(
       cols = everything(),
@@ -690,11 +671,9 @@ get_celltype_variances <- function(ecoda_object,
     )
 
   if (descending) {
-    df_var <- df_var %>%
-      arrange(desc(Variance))
+    df_var <- arrange(df_var, desc(Variance))
   } else {
-    df_var <- df_var %>%
-      arrange(Variance)
+    df_var <- arrange(df_var, Variance)
   }
 
   total_variance <- sum(df_var$Variance)
@@ -704,16 +683,6 @@ get_celltype_variances <- function(ecoda_object,
       cumulative_variance = cumsum(Variance),
       variance_exp = (cumulative_variance / total_variance)
     )
-
-  if (show_plot) {
-    p <- plot_varmean(
-      ecoda_object,
-      plot_title,
-      smooth_method,
-      label_points
-    )
-    print(p)
-  }
 
   return(as.data.frame(df_var))
 }
