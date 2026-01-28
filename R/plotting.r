@@ -4,8 +4,8 @@
 #'
 #' @description Performs Principal Component Analysis (PCA) on a selected data
 #'   matrix from the \code{ECODA} object (default: CLR-transformed abundances,
-#'   \code{clr}) and visualizes the results in 2D or 3D. It can also calculate
-#'   and display several metrics to evaluate the separation of groups defined by
+#'   \code{clr}) and visualizes the results. It can also calculate and display
+#'   several metrics to evaluate the separation of groups defined by
 #'   \code{label_col}.
 #'
 #' @details The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
@@ -26,10 +26,6 @@
 #'   in the plot, and for calculating clustering scores.
 #' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
 #'   variables should be scaled to have unit variance before the PCA.
-#' @param pca_dims Integer (optional, default: \code{NULL}). The number of
-#'   principal components (dimensions) to retain for the PCA calculation and
-#'   downstream clustering score calculations. If \code{NULL}, all dimensions
-#'   are retained.
 #' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
 #'   neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN) graph
 #'   construction, required for Modularity score calculation. If \code{NULL}, it
@@ -64,6 +60,9 @@
 #'   permutations to use when calculating the ANOSIM statistic.
 #' @param anosim_parallel Integer (default: \code{detectCores()}). The number of
 #'   parallel processes/cores to use for the ANOSIM calculation.
+#' @param ari_nclusts Integer (optional, default: \code{NULL}). The target
+#'   number of clusters (\code{k}) to use for \code{hclust} and \code{pam}. If
+#'   \code{NULL}, it defaults to the number of unique levels in \code{labels}.
 #' @param pointsize Numeric (default: \code{3}). Size of the points in the plot.
 #' @param labelsize Numeric (default: \code{4}). Size of the variable labels in
 #'   the plot.
@@ -71,11 +70,8 @@
 #'   aspect ratio of the plot to be equal.
 #' @param axes Numeric vector (default: \code{c(1, 2)}). The principal
 #'   components to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).
-#' @param plotly_3d Logical (default: \code{FALSE}). If \code{TRUE}, generates
-#'   an interactive 3D scatter plot using \code{plotly} (requires \code{pca_dims
-#'   >= 3}).
 #' @param invisible Character vector (default: \code{c("var", "quali")}).
-#'   Elements to hide in the 2D plot. Can include "var" (variables/cell types),
+#'   Elements to hide. Can include "var" (variables/cell types),
 #'   "ind" (samples), or "quali" (group centroids).
 #' @param geom Character string or vector (default: \code{"point"}). The
 #'   geometry to be used for the plot. Allowed values are combinations of:
@@ -91,12 +87,11 @@
 #' @param repel Logical (default: \code{TRUE}). Whether to use \code{ggrepel} to
 #'   prevent label overlap for variable names.
 #'
-#' @return A \code{ggplot} object (2D, via \code{factoextra}) or a \code{plotly}
-#'   object (3D) visualizing the PCA results.
+#' @return A \code{ggplot} object via \code{factoextra} visualizing the PCA
+#'   results.
 #'
-#' @importFrom stats prcomp dist hclust cutree
+#' @importFrom stats prcomp
 #' @importFrom factoextra fviz_pca
-#' @importFrom plotly plot_ly add_markers add_paths group2NA
 #' @importFrom dplyr bind_rows
 #' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal
 #'   scale_color_discrete
@@ -133,8 +128,6 @@ plot_pca <- function(ecoda_object,
                      ),
                      label_col = NULL,
                      scale. = FALSE,
-                     pca_dims = NULL,
-                     knn_k = NULL,
                      title = NULL,
                      title_show_n_features = TRUE,
                      legend_title = "Group",
@@ -147,11 +140,12 @@ plot_pca <- function(ecoda_object,
                      anosim_distance = "euclidian",
                      anosim_permutations = 99,
                      anosim_parallel = detectCores(),
+                     ari_nclusts = NULL,
+                     knn_k = 3,
                      pointsize = 3,
                      labelsize = 4,
                      coord_equal = TRUE,
                      axes = c(1, 2),
-                     plotly_3d = FALSE,
                      invisible = c("var", "quali"),
                      geom = "point",
                      n_hv_feat_show = Inf,
@@ -159,7 +153,7 @@ plot_pca <- function(ecoda_object,
   slot <- match.arg(slot)
   feat_mat <- slot(ecoda_object, slot)
 
-  res.pca <- prcomp(feat_mat, scale. = scale., rank. = pca_dims)
+  res.pca <- prcomp(feat_mat, scale. = scale.)
 
 
   if (!is.null(label_col)) {
@@ -174,21 +168,14 @@ plot_pca <- function(ecoda_object,
           round(ecoda_object@variance_explained, score_digits)
         )
       } else if (slot == "pb") {
-        title <- paste0(
-          title,
-          "\nNumber of genes: ", ncol(feat_mat)
-        )
+        title <- paste0(title, "\nNumber of genes: ", ncol(feat_mat))
       } else {
-        title <- paste0(
-          title,
-          "\nNumber of cell types: ", ncol(feat_mat)
-        )
+        title <- paste0(title, "\nNumber of cell types: ", ncol(feat_mat))
       }
     }
     if (anosim_score) {
       anosim_score <- calc_anosim(
-        feat_mat,
-        labels,
+        feat_mat, labels,
         distance = anosim_distance,
         permutations = anosim_permutations,
         parallel = anosim_parallel,
@@ -197,7 +184,10 @@ plot_pca <- function(ecoda_object,
       title <- paste0(title, "\nANOSIM score: ", anosim_score)
     }
     if (cluster_score) {
-      cluster_score <- calc_ari(feat_mat, labels, digits = score_digits)
+      cluster_score <- calc_ari(
+        feat_mat, labels,
+        nclusts = ari_nclusts, digits = score_digits
+      )
       title <- paste0(title, "\nARI: ", cluster_score)
     }
     if (mod_score) {
@@ -215,55 +205,111 @@ plot_pca <- function(ecoda_object,
     labels <- "none"
   }
 
-  if (plotly_3d) {
-    df <- as.data.frame(res.pca$x)
-    df$id <- seq_len(nrow(df))
-    df$vs <- factor(labels)
-    ms <- replicate(2, df, simplify = FALSE)
-    ms[[2]]$PC3 <- min(df$PC3)
-    m <- ms %>%
-      bind_rows() %>%
-      group2NA("id", "vs")
-    # Plotting with plotly
-    p <- plot_ly(color = ~vs) %>%
-      add_markers(data = df, x = ~PC1, y = ~PC2, z = ~PC3) %>%
-      add_paths(data = m, x = ~PC1, y = ~PC2, z = ~PC3, opacity = 0.2)
-  } else {
-    if (!is.infinite(n_hv_feat_show) & all(invisible %in% c("var", "quali"))) {
-      invisible <- "quali"
-    }
+  if (!is.infinite(n_hv_feat_show) & all(invisible %in% c("var", "quali"))) {
+    invisible <- "quali"
+  }
 
-    if (show_label_samples) {
-      if (!"text" %in% geom) {
-        geom <- c(geom, "text")
-      }
-    }
-
-    p <- fviz_pca(
-      res.pca,
-      axes = axes,
-      habillage = labels,
-      pointsize = pointsize,
-      labelsize = labelsize,
-      invisible = invisible,
-      select.var = list(contrib = n_hv_feat_show),
-      repel = repel,
-      geom = geom
-    ) +
-      ggtitle(title) +
-      scale_color_discrete(name = legend_title)
-
-    if (!is.null(label_col)) {
-      p <- p + scale_shape_manual(
-        values = rep(19, length(unique(labels))),
-        name = legend_title
-      )
-    }
-
-    if (coord_equal) {
-      p <- p + coord_equal()
+  if (show_label_samples) {
+    if (!"text" %in% geom) {
+      geom <- c(geom, "text")
     }
   }
+
+  p <- fviz_pca(
+    res.pca,
+    axes = axes,
+    habillage = labels,
+    pointsize = pointsize,
+    labelsize = labelsize,
+    invisible = invisible,
+    select.var = list(contrib = n_hv_feat_show),
+    repel = repel,
+    geom = geom
+  ) +
+    ggtitle(title) +
+    scale_color_discrete(name = legend_title)
+
+  if (!is.null(label_col)) {
+    p <- p + scale_shape_manual(
+      values = rep(19, length(unique(labels))),
+      name = legend_title
+    )
+  }
+
+  if (coord_equal) {
+    p <- p + coord_equal()
+  }
+
+  return(p)
+}
+
+
+#' @title Plot 3-dimensional interactive Principal Component Analysis plot
+#'
+#' @description Performs Principal Component Analysis (PCA) on a selected data
+#'   matrix from the \code{ECODA} object (default: CLR-transformed abundances,
+#'   \code{clr}) and visualizes the results in 3D colored by \code{label_col}.
+#'
+#' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
+#' @param slot Character string (default: \code{"clr"}). The name of the data
+#'   matrix slot in the \code{ECODA} object to use for PCA. Must be one of:
+#'   \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+#'   (CLR-transformed abundances of only the most highly variable cell types
+#'   (HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
+#'   counts), \code{"counts_imp"} (imputed counts), \code{"freq"} (relative
+#'   frequencies), \code{"freq_imp"} (imputed frequencies), or
+#'   \code{"asin_sqrt"} (arcsin-square root transformed data).
+#' @param label_col Character string (optional, default: \code{NULL}). The name
+#'   of a column in \code{ecoda_object@metadata} used to color and group samples
+#'   in the plot, and for calculating clustering scores.
+#' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
+#'   variables should be scaled to have unit variance before the PCA.
+#'
+#' @return An interactive 3D \code{plotly} object visualizing the PCA results.
+#'
+#' @importFrom stats prcomp
+#' @importFrom plotly plot_ly add_markers add_paths group2NA
+#'
+#' @export plot_pca3d
+#'
+#' @examples
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$Zhang$cell_counts_lowresolution,
+#'   metadata = example_data$Zhang$metadata,
+#' )
+#'
+#' plot_pca3d(ecoda_object, label_col = "Tissue")
+plot_pca3d <- function(ecoda_object,
+                       slot = c(
+                         "clr", "clr_hvc", "counts", "counts_imp",
+                         "freq", "freq_imp", "asin_sqrt", "pb"
+                       ),
+                       label_col = NULL,
+                       scale. = FALSE) {
+  slot <- match.arg(slot)
+  feat_mat <- slot(ecoda_object, slot)
+
+  res.pca <- prcomp(feat_mat, scale. = scale.)
+
+  if (!is.null(label_col)) {
+    labels <- ecoda_object@metadata[[label_col]]
+  } else {
+    labels <- "none"
+  }
+
+  df <- as.data.frame(res.pca$x)
+  df$id <- seq_len(nrow(df))
+  df$vs <- factor(labels)
+  ms <- replicate(2, df, simplify = FALSE)
+  ms[[2]]$PC3 <- min(df$PC3)
+  m <- ms %>%
+    bind_rows() %>%
+    group2NA("id", "vs")
+
+  p <- plot_ly(color = ~vs) %>%
+    add_markers(data = df, x = ~PC1, y = ~PC2, z = ~PC3) %>%
+    add_paths(data = m, x = ~PC1, y = ~PC2, z = ~PC3, opacity = 0.2)
 
   return(p)
 }
@@ -459,10 +505,7 @@ calc_ari <- function(feat_mat,
 #'
 #' # Run the calculation
 #' calc_modularity(feat_mat, labels)
-calc_modularity <- function(feat_mat,
-                            labels,
-                            digits = 3,
-                            knn_k = 3) {
+calc_modularity <- function(feat_mat, labels, knn_k = 3, digits = 3) {
   ngroups <- length(unique(labels))
 
   if (is.null(knn_k)) {
@@ -588,9 +631,7 @@ compute_snn_graph <- function(feat_mat,
 #'
 #' # Run the calculation
 #' calc_sil(feat_mat, labels)
-calc_sil <- function(feat_mat,
-                     labels,
-                     digits = 3) {
+calc_sil <- function(feat_mat, labels, digits = 3) {
   sils <- silhouette(
     x = as.numeric(factor(labels)),
     dist = dist(feat_mat)
@@ -599,6 +640,7 @@ calc_sil <- function(feat_mat,
   score <- mean(sils[["sil_width"]])
   return(round(score, digits))
 }
+
 
 
 # Box and bar plots ---------------------------

@@ -10,8 +10,6 @@ plot_pca(
     "pb"),
   label_col = NULL,
   scale. = FALSE,
-  pca_dims = NULL,
-  knn_k = NULL,
   title = NULL,
   title_show_n_features = TRUE,
   legend_title = "Group",
@@ -24,11 +22,12 @@ plot_pca(
   anosim_distance = "euclidian",
   anosim_permutations = 99,
   anosim_parallel = detectCores(),
+  ari_nclusts = NULL,
+  knn_k = 3,
   pointsize = 3,
   labelsize = 4,
   coord_equal = TRUE,
   axes = c(1, 2),
-  plotly_3d = FALSE,
   invisible = c("var", "quali"),
   geom = "point",
   n_hv_feat_show = Inf,
@@ -53,17 +52,6 @@ in the plot, and for calculating clustering scores.}
 
 \item{scale.}{Logical (default: \code{FALSE}). A value indicating whether the
 variables should be scaled to have unit variance before the PCA.}
-
-\item{pca_dims}{Integer (optional, default: \code{NULL}). The number of
-principal components (dimensions) to retain for the PCA calculation and
-downstream clustering score calculations. If \code{NULL}, all dimensions
-are retained.}
-
-\item{knn_k}{Integer (optional, default: \code{NULL}). The number of nearest
-neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN) graph
-construction, required for Modularity score calculation. If \code{NULL}, it
-defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is the number of
-samples.}
 
 \item{title}{Character string (optional, default: \code{NULL}). The main
 title for the plot. If clustering scores are calculated, they are appended
@@ -106,6 +94,16 @@ permutations to use when calculating the ANOSIM statistic.}
 \item{anosim_parallel}{Integer (default: \code{detectCores()}). The number of
 parallel processes/cores to use for the ANOSIM calculation.}
 
+\item{ari_nclusts}{Integer (optional, default: \code{NULL}). The target
+number of clusters (\code{k}) to use for \code{hclust} and \code{pam}. If
+\code{NULL}, it defaults to the number of unique levels in \code{labels}.}
+
+\item{knn_k}{Integer (optional, default: \code{NULL}). The number of nearest
+neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN) graph
+construction, required for Modularity score calculation. If \code{NULL}, it
+defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is the number of
+samples.}
+
 \item{pointsize}{Numeric (default: \code{3}). Size of the points in the plot.}
 
 \item{labelsize}{Numeric (default: \code{4}). Size of the variable labels in
@@ -117,12 +115,8 @@ aspect ratio of the plot to be equal.}
 \item{axes}{Numeric vector (default: \code{c(1, 2)}). The principal
 components to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).}
 
-\item{plotly_3d}{Logical (default: \code{FALSE}). If \code{TRUE}, generates
-an interactive 3D scatter plot using \code{plotly} (requires \code{pca_dims
-  >= 3}).}
-
 \item{invisible}{Character vector (default: \code{c("var", "quali")}).
-Elements to hide in the 2D plot. Can include "var" (variables/cell types),
+Elements to hide. Can include "var" (variables/cell types),
 "ind" (samples), or "quali" (group centroids).}
 
 \item{geom}{Character string or vector (default: \code{"point"}). The
@@ -142,20 +136,20 @@ variable features to show based on their contribution to the selected axes.}
 prevent label overlap for variable names.}
 }
 \value{
-A \code{ggplot} object (2D, via \code{factoextra}) or a \code{plotly}
-object (3D) visualizing the PCA results.
+A \code{ggplot} object via \code{factoextra} visualizing the PCA
+results.
 }
 \description{
 Performs Principal Component Analysis (PCA) on a selected data
 matrix from the \code{ECODA} object (default: CLR-transformed abundances,
-\code{clr}) and visualizes the results in 2D or 3D. It can also calculate and
-display several metrics to evaluate the separation of groups defined by
+\code{clr}) and visualizes the results. It can also calculate and display
+several metrics to evaluate the separation of groups defined by
 \code{label_col}.
 }
 \details{
 The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
-how well the sample groupings (\code{labels}) align with the underlying data
-structure in the feature space defined by the PCA.
+how well the sample groupings (\code{labels}) align with the underlying
+data structure in the feature space defined by the PCA.
 }
 \examples{
 data(example_data)
@@ -177,6 +171,6 @@ plot_pca(
   slot = "clr_hvc",
   label_col = "Tissue",
   title = "PCA based on highly variable cell types",
-  n_hv_feat_show = ncol(ecoda_object@clr_hvc)
+  n_hv_feat_show = ncol(slot(ecoda_object, "clr_hvc"))
 )
 }
