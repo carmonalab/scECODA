@@ -661,10 +661,8 @@ create_long_data <- function(ecoda_object,
   # Ensure the data_slot is valid (freq or clr)
   if (!(data_slot %in% c("freq", "clr"))) {
     stop(
-      paste0(
-        "Invalid data_slot. Must be 'freq' (Relative Abundance)",
-        "or 'clr' (CLR Abundance)."
-      )
+      "Invalid data_slot. Must be 'freq' (Relative Abundance) ",
+      "or 'clr' (CLR Abundance)."
     )
   }
 
@@ -693,22 +691,15 @@ create_long_data <- function(ecoda_object,
     if (!("metadata" %in% slotNames(ecoda_object)) ||
       is.null(ecoda_object@metadata)) {
       stop(
-        paste0(
-          "label_col was provided but ecoda_object@metadata slot",
-          " is missing or NULL."
-        )
+        "label_col was provided but ecoda_object@metadata slot ",
+        "is missing or NULL."
       )
     }
 
     # --- Check 2: Ensure label_col exists in metadata ---
     meta_colnames <- colnames(ecoda_object@metadata)
     if (!(label_col %in% meta_colnames)) {
-      stop(
-        paste0(
-          "label_col '", label_col,
-          "' not found in ecoda_object@metadata."
-        )
-      )
+      stop("label_col '", label_col, "' not found in ecoda_object@metadata.")
     }
 
     metadata_df <- as.data.frame(ecoda_object@metadata)
@@ -981,10 +972,8 @@ plot_boxplot <- function(ecoda_object,
   if (!is.null(selected_celltypes)) {
     if (!all(selected_celltypes %in% unique(plot_data$celltype))) {
       stop(
-        paste0(
-          "Not all selected_celltypes found in ecoda_object. ",
-          "Please check colnames(ecoda_object@clr)."
-        )
+        "Not all selected_celltypes found in ecoda_object. ",
+        "Please check colnames(ecoda_object@clr)."
       )
     }
 

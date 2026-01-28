@@ -229,10 +229,8 @@ ecoda_helper <- function(data = NULL,
 
     if (any(freq == 0)) {
       warning(
-        paste0(
-          "Frequencies contain zeros.",
-          "Zeros were imputed with the (2/3) * smallest value."
-        )
+        "Frequencies contain zeros. ",
+        "Zeros were imputed with the (2/3) * smallest value."
       )
       freq_imp <- impute_zeros(freq, is_freq = data_is_freq)
     }
@@ -243,12 +241,7 @@ ecoda_helper <- function(data = NULL,
 
   if (!is.null(counts)) {
     if (any(counts == 0)) {
-      warning(
-        paste0(
-          "Counts contains zeros.",
-          "Zeros were imputed with 2/3 counts."
-        )
-      )
+      warning("Counts contain zeros. Zeros were imputed with 2/3 counts.")
       counts_imp <- impute_zeros(counts)
     }
     freq <- calc_freq(counts)
@@ -270,10 +263,10 @@ ecoda_helper <- function(data = NULL,
       freq <- freq * 100
     } else {
       # If they sum to neither 1 nor 100, warn and scale them to 100
-      warning(paste(
-        "Frequencies do not sum to 100 (or 1).",
+      warning(
+        "Frequencies do not sum to 100 (or 1). ",
         "Each row will be scaled so the new row sum is 100."
-      ))
+      )
       # Re-scale each row so it sums to 100: (freq / row_sum) * 100
       freq <- (freq / row_sums) * 100
     }
@@ -798,10 +791,8 @@ get_hvcs <- function(df_var,
 
     if (length(last_hvc_index) == 0 || last_hvc_index == 0) {
       warning(
-        paste0(
-          "Variance threshold was not met for any cell type ",
-          "(or data is empty). Returning top 2."
-        )
+        "Variance threshold was not met for any cell type ",
+        "(or data is empty). Returning top 2."
       )
       return(df_var$celltype[seq_len(min(2, nrow(df_var)))])
     }
@@ -1001,19 +992,13 @@ calculate_pseudobulk <- function(count_matrix,
   # Input validation
   if (ncol(count_matrix) != length(sample_ids)) {
     stop(
-      paste0(
-        "Length of sample_ids must equal the number of columns ",
-        "in count_matrix"
-      )
+      "Length of sample_ids must equal the number of columns in count_matrix"
     )
   }
 
   if (any(is.na(sample_ids))) {
     stop(
-      paste0(
-        "sample_ids contains NA values. ",
-        "Please remove or impute missing values."
-      )
+      "sample_ids contains NA values. Please remove or impute missing values."
     )
   }
 
@@ -1028,7 +1013,7 @@ calculate_pseudobulk <- function(count_matrix,
     valid_samples <- names(cells_per_sample)[cells_per_sample >= min_cells]
 
     if (length(valid_samples) == 0) {
-      stop(paste("No samples have >=", min_cells, "cells"))
+      stop("No samples have >= ", min_cells, "cells")
     }
 
     # Subset to valid samples
@@ -1159,21 +1144,14 @@ deseq2_normalize <- function(pb,
   # Select highly variable genes
   if (!is.null(hvg)) {
     # Use user-provided HVGs
-    message(
-      paste(
-        "Using", length(hvg), "user-provided highly variable genes"
-      )
-    )
+    message("Using", length(hvg), "user-provided highly variable genes")
 
     hvg_available <- hvg[hvg %in% rownames(pb_norm)]
     hvg_missing <- setdiff(hvg, hvg_available)
 
     if (length(hvg_missing) > 0) {
       warning(
-        paste(
-          length(hvg_missing),
-          "genes not found in the data and will be excluded"
-        )
+        length(hvg_missing), " genes not found in the data and will be excluded"
       )
     }
 
@@ -1190,7 +1168,7 @@ deseq2_normalize <- function(pb,
     select <- rownames(pb_norm)[select]
     pb_norm <- pb_norm[select, , drop = FALSE]
 
-    message(paste("Selected top", nrow(pb_norm), "highly variable genes"))
+    message("Selected top ", nrow(pb_norm), " highly variable genes")
   }
 
   # Current format: Genes x Samples (pb_norm)

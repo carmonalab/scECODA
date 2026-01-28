@@ -112,20 +112,16 @@ seurat_multiply_cells_in_condition <- function(
   # --- Input Validation ---
   if (!(condition_column %in% names(seurat_object@meta.data))) {
     stop(
-      paste(
-        "Condition column '",
-        condition_column,
-        "' not found in Seurat metadata."
-      )
+      "Condition column '",
+      condition_column,
+      "' not found in Seurat metadata."
     )
   }
   if (!(celltype_column %in% names(seurat_object@meta.data))) {
     stop(
-      paste(
-        "Cell type column '",
-        celltype_column,
-        "' not found in Seurat metadata."
-      )
+      "Cell type column '",
+      celltype_column,
+      "' not found in Seurat metadata."
     )
   }
 
@@ -145,10 +141,10 @@ seurat_multiply_cells_in_condition <- function(
 
 
   if (length(cells_to_copy_names) == 0) {
-    warning(paste0(
+    warning(
       "No cells found matching both '", target_condition,
       "' and any of the specified cell types."
-    ))
+    )
     return(seurat_object)
   }
 
