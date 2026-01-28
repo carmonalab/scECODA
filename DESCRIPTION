@@ -36,6 +36,7 @@ Depends: R (>= 4.4)
 VignetteBuilder: knitr
 Suggests: 
     Seurat (>= 5.0.0),
+    SeuratData,
     knitr,
     rmarkdown,
     BiocStyle
