@@ -33,7 +33,6 @@ row represents a unique sample. Columns that vary within any sample are
 excluded from the output.
 }
 \examples{
-\dontrun{
 # Assuming you have a data frame 'cell_df'
 cell_df <- data.frame(
   Cell_ID = paste0("C", seq(10)),
@@ -50,5 +49,4 @@ sample_meta <- get_sample_metadata(cell_df, "Sample_ID")
 print(sample_meta)
 # Output will have 'Age' and 'Gender' as columns,
 # with row names 'S1' and 'S2'.
-}
 }

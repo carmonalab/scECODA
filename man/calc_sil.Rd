@@ -26,3 +26,17 @@ Calculates the average silhouette width for a given feature matrix, using
 pre-defined cluster assignments (\code{labels}). This metric assesses the
 quality of the clustering.
 }
+\examples{
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
+
+# Extract necessary components
+feat_mat <- ecoda_object@clr
+labels <- ecoda_object@metadata$subject.cmv
+
+# Run the calculation
+calc_sil(feat_mat, labels)
+}

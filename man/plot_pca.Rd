@@ -157,3 +157,26 @@ The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
 how well the sample groupings (\code{labels}) align with the underlying data
 structure in the feature space defined by the PCA.
 }
+\examples{
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$Zhang$cell_counts_lowresolution,
+  metadata = example_data$Zhang$metadata,
+)
+
+plot_pca(
+  ecoda_object,
+  label_col = "Tissue",
+  title = "PCA based on cell type composition",
+  n_hv_feat_show = 5 # Shows the most highly variable features (cell types)
+)
+
+# Using only the most highly variable cell types
+plot_pca(
+  ecoda_object,
+  slot = "clr_hvc",
+  label_col = "Tissue",
+  title = "PCA based on highly variable cell types",
+  n_hv_feat_show = ncol(ecoda_object@clr_hvc)
+)
+}

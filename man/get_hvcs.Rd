@@ -38,17 +38,23 @@ the cumulative variance to be explained or by specifying a fixed number of
 cell types.
 }
 \examples{
-\dontrun{
-# 'df_variance' is a variance data frame sorted descendingly by variance.
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
+
+# Calculate variances and show the plot
+df_var <- get_celltype_variances(ecoda_obj)
+
 # Select cell types explaining at least 60\% of variance:
-hvcs_60 <- get_hvcs(df_variance, variance_explained = 0.6)
+hvcs_60 <- get_hvcs(df_var, variance_explained = 0.6)
 
 # Select the top 10 cell types:
-hvcs_top10 <- get_hvcs(df_variance, top_n_hvcs = 10)
+hvcs_top10 <- get_hvcs(df_var, top_n_hvcs = 10)
 
 # Select the top 5\% of cell types:
-hvcs_prop <- get_hvcs(df_variance, top_n_hvcs = 0.05)
-}
+hvcs_prop <- get_hvcs(df_var, top_n_hvcs = 0.05)
 }
 \seealso{
 \code{\link{find_hvcs}}, \code{\link{get_celltype_variances}}

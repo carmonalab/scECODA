@@ -31,3 +31,17 @@ on a Shared Nearest Neighbor (SNN) graph constructed from the feature matrix
 modularity for the number of groups to always be between
 -0.5 (poor clustering) and +1 (excellent clustering)).
 }
+\examples{
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
+
+# Extract necessary components
+feat_mat <- ecoda_object@clr
+labels <- ecoda_object@metadata$subject.cmv
+
+# Run the calculation
+calc_modularity(feat_mat, labels)
+}

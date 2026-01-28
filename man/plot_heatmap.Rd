@@ -68,26 +68,46 @@ supports optional filtering to only Highly Variable Cell Types (HVCs) and
 includes a sample annotation sidebar based on a specified metadata column.
 }
 \examples{
-\dontrun{
-# Assuming 'ecoda_obj' is a created ECODA object with metadata
-
-# 1. Heatmap using CLR data, clustered, and annotated by 'Condition':
-p1 <- plot_heatmap(
-  ecoda_obj,
-  label_col = "Condition",
-  main = "CLR Abundance Heatmap",
-  fontsize = 8
+# Example for a simple dataset:
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$Zhang$cell_counts_lowresolution,
+  metadata = example_data$Zhang$metadata,
 )
 
-# 2. Heatmap using Relative Frequency data (clr_hvc), filtered to only HVCs,
-#    and without clustering the samples:
-p2 <- plot_heatmap(
-  ecoda_obj,
+plot_heatmap(ecoda_object, label_col = c("Clinical.efficacy.", "Tissue"))
+
+plot_heatmap(
+  ecoda_object,
+  label_col = c("Clinical.efficacy.", "Tissue"),
+  # Additional arguments for pheatmap:
+  cutree_rows = 3,
+  cutree_cols = 3
+)
+
+# Example of a large cohort with 868 samples and 69 cell types
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
+
+plot_heatmap(
+  ecoda_object,
+  label_col = c("subject.cmv", "age_group"),
+  cutree_rows = 3,
+  cutree_cols = 5,
+  show_colnames = FALSE
+)
+
+# Using only the most highly variable cell types (HVCs)
+plot_heatmap(
+  ecoda_object,
   slot = "clr_hvc",
-  label_col = "Batch",
-  cluster_cols = FALSE
+  label_col = c("subject.cmv", "age_group"),
+  cutree_rows = 3,
+  cutree_cols = 4,
+  show_colnames = FALSE
 )
-}
 }
 \seealso{
 \link[=ECODA-class]{ECODA}, \code{\link{pheatmap}}

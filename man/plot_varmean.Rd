@@ -49,8 +49,11 @@ identified and stored in the \code{ecoda_object@highly_variable_celltypes}
 slot will be highlighted in red on the plot.
 }
 \examples{
-\dontrun{
-# Assuming 'ecoda_obj' is a created ECODA object with calculated HVCs:
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
 
 # 1. Generate the plot, highlighting HVCs (default)
 plot_varmean(ecoda_obj, plot_title = "HVCs on Mean-Variance Plot")
@@ -61,7 +64,6 @@ plot_varmean(ecoda_obj,
   plot_fit_line = TRUE,
   smooth_method = "loess"
 )
-}
 }
 \seealso{
 \link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}

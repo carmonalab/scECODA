@@ -30,7 +30,7 @@ robust to both dense and sparse count matrices. It also includes filtering
 logic to exclude samples that do not meet a minimum cell count threshold.
 }
 \examples{
-\dontrun{
+\donttest{
 # Assuming seurat is a loaded Seurat object
 pb_seurat <- calculate_pseudobulk(
   count_matrix = seurat[["RNA"]]$counts,

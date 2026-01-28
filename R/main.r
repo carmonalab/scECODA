@@ -104,6 +104,17 @@ setClass(
 #' @importFrom gtools mixedsort
 #'
 #' @export ecoda
+#'
+#' @examples
+#' data(example_data)
+#' Zhang <- example_data$Zhang
+#' counts <- Zhang$cell_counts_lowresolution
+#' freq <- calc_freq(counts)
+#' metadata <- Zhang$metadata
+#'
+#' ecoda_object <- ecoda(data = counts, metadata = metadata)
+#'
+#' ecoda_object <- ecoda(data = freq, metadata = metadata)
 ecoda <- function(data = NULL,
                   data_is_freq = FALSE,
                   metadata = NULL,
@@ -487,7 +498,6 @@ get_celltype_counts <- function(cell_data_df,
 #' @importFrom rlang sym
 #' @export get_sample_metadata
 #' @examples
-#' \dontrun{
 #' # Assuming you have a data frame 'cell_df'
 #' cell_df <- data.frame(
 #'   Cell_ID = paste0("C", seq(10)),
@@ -504,7 +514,6 @@ get_celltype_counts <- function(cell_data_df,
 #' print(sample_meta)
 #' # Output will have 'Age' and 'Gender' as columns,
 #' # with row names 'S1' and 'S2'.
-#' }
 get_sample_metadata <- function(cell_data_df,
                                 sample_col) {
   # Step 1: Group the data by `sample_col` and check for uniqueness
@@ -573,15 +582,17 @@ get_sample_metadata <- function(cell_data_df,
 #'   \code{\link{get_hvcs}}
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a previously created ECODA object:
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
 #'
 #' # Select HVCs that explain 75% of the total variance
 #' ecoda_obj <- find_hvcs(ecoda_obj, variance_explained = 0.75)
 #'
 #' # Select exactly the top 5 most variable cell types
 #' ecoda_obj <- find_hvcs(ecoda_obj, top_n_hvcs = 5)
-#' }
 find_hvcs <- function(ecoda_object,
                       variance_explained = 0.5,
                       top_n_hvcs = NULL) {
@@ -654,8 +665,11 @@ find_hvcs <- function(ecoda_object,
 #' @seealso \link[=ECODA-class]{ECODA}, \code{\link{plot_varmean}}
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
 #'
 #' # Calculate variances and show the plot
 #' df_var <- get_celltype_variances(ecoda_obj)
@@ -665,7 +679,6 @@ find_hvcs <- function(ecoda_object,
 #'   ecoda_obj,
 #'   show_plot = FALSE, descending = FALSE
 #' )
-#' }
 get_celltype_variances <- function(ecoda_object,
                                    show_plot = TRUE,
                                    label_points = TRUE,
@@ -750,17 +763,23 @@ get_celltype_variances <- function(ecoda_object,
 #' @seealso \code{\link{find_hvcs}}, \code{\link{get_celltype_variances}}
 #'
 #' @examples
-#' \dontrun{
-#' # 'df_variance' is a variance data frame sorted descendingly by variance.
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
+#'
+#' # Calculate variances and show the plot
+#' df_var <- get_celltype_variances(ecoda_obj)
+#'
 #' # Select cell types explaining at least 60% of variance:
-#' hvcs_60 <- get_hvcs(df_variance, variance_explained = 0.6)
+#' hvcs_60 <- get_hvcs(df_var, variance_explained = 0.6)
 #'
 #' # Select the top 10 cell types:
-#' hvcs_top10 <- get_hvcs(df_variance, top_n_hvcs = 10)
+#' hvcs_top10 <- get_hvcs(df_var, top_n_hvcs = 10)
 #'
 #' # Select the top 5% of cell types:
-#' hvcs_prop <- get_hvcs(df_variance, top_n_hvcs = 0.05)
-#' }
+#' hvcs_prop <- get_hvcs(df_var, top_n_hvcs = 0.05)
 get_hvcs <- function(df_var,
                      variance_explained = 0.5,
                      top_n_hvcs = NULL) {
@@ -843,8 +862,11 @@ get_hvcs <- function(df_var,
 #' @seealso \link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object with calculated HVCs:
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
 #'
 #' # 1. Generate the plot, highlighting HVCs (default)
 #' plot_varmean(ecoda_obj, plot_title = "HVCs on Mean-Variance Plot")
@@ -855,7 +877,6 @@ get_hvcs <- function(df_var,
 #'   plot_fit_line = TRUE,
 #'   smooth_method = "loess"
 #' )
-#' }
 plot_varmean <- function(ecoda_object,
                          plot_title = "",
                          highlight_hvcs = TRUE,
@@ -961,7 +982,7 @@ plot_varmean <- function(ecoda_object,
 #'   the unique sample IDs, and the rows correspond to the genes.
 #' @export calculate_pseudobulk
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Assuming seurat is a loaded Seurat object
 #' pb_seurat <- calculate_pseudobulk(
 #'   count_matrix = seurat[["RNA"]]$counts,
@@ -1073,7 +1094,7 @@ calculate_pseudobulk <- function(count_matrix,
 #' @importFrom BiocGenerics counts
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # 1. Auto-select top 2000 most variable genes after VST
 #' pb_norm_auto <- deseq2_normalize(pb, metadata)
 #'
@@ -1119,63 +1140,59 @@ deseq2_normalize <- function(pb,
     deseq2_design <- formula(paste("~ 1"))
   }
 
-  suppressMessages({
-    suppressWarnings({
-      # Create DESeq2 dataset (metadata is guaranteed to exist here)
-      dds <- DESeqDataSetFromMatrix(
-        countData = pb,
-        colData = metadata,
-        design = deseq2_design
+  # Create DESeq2 dataset (metadata is guaranteed to exist here)
+  dds <- DESeqDataSetFromMatrix(
+    countData = pb,
+    colData = metadata,
+    design = deseq2_design
+  )
+
+  # Estimate size factors
+  dds <- estimateSizeFactors(dds)
+
+  # Set minimum number of counts per gene for VST
+  nsub <- min(1000, sum(rowMeans(counts(dds, normalized = TRUE)) > 10))
+
+  # Transform counts using variance stabilizing transformation (VST)
+  dds <- vst(dds, blind = FALSE, nsub = nsub)
+  pb_norm <- SummarizedExperiment::assay(dds) # Genes x Samples format
+
+  # Select highly variable genes
+  if (!is.null(hvg)) {
+    # Use user-provided HVGs
+    message(
+      paste(
+        "Using", length(hvg), "user-provided highly variable genes"
       )
+    )
 
-      # Estimate size factors
-      dds <- estimateSizeFactors(dds)
+    hvg_available <- hvg[hvg %in% rownames(pb_norm)]
+    hvg_missing <- setdiff(hvg, hvg_available)
 
-      # Set minimum number of counts per gene for VST
-      nsub <- min(1000, sum(rowMeans(counts(dds, normalized = TRUE)) > 10))
-
-      # Transform counts using variance stabilizing transformation (VST)
-      dds <- vst(dds, blind = FALSE, nsub = nsub)
-      pb_norm <- SummarizedExperiment::assay(dds) # Genes x Samples format
-
-      # Select highly variable genes
-      if (!is.null(hvg)) {
-        # Use user-provided HVGs
-        message(
-          paste(
-            "Using", length(hvg), "user-provided highly variable genes"
-          )
+    if (length(hvg_missing) > 0) {
+      warning(
+        paste(
+          length(hvg_missing),
+          "genes not found in the data and will be excluded"
         )
+      )
+    }
 
-        hvg_available <- hvg[hvg %in% rownames(pb_norm)]
-        hvg_missing <- setdiff(hvg, hvg_available)
+    if (length(hvg_available) == 0) {
+      stop("None of the provided HVGs are found in the data")
+    }
 
-        if (length(hvg_missing) > 0) {
-          warning(
-            paste(
-              length(hvg_missing),
-              "genes not found in the data and will be excluded"
-            )
-          )
-        }
+    pb_norm <- pb_norm[hvg_available, , drop = FALSE]
+  } else {
+    # Auto-select top variable genes
+    rv <- apply(pb_norm, 1, var)
+    n_genes_to_select <- min(nvar_genes, length(rv))
+    select <- order(rv, decreasing = TRUE)[seq_len(n_genes_to_select)]
+    select <- rownames(pb_norm)[select]
+    pb_norm <- pb_norm[select, , drop = FALSE]
 
-        if (length(hvg_available) == 0) {
-          stop("None of the provided HVGs are found in the data")
-        }
-
-        pb_norm <- pb_norm[hvg_available, , drop = FALSE]
-      } else {
-        # Auto-select top variable genes
-        rv <- apply(pb_norm, 1, var)
-        n_genes_to_select <- min(nvar_genes, length(rv))
-        select <- order(rv, decreasing = TRUE)[seq_len(n_genes_to_select)]
-        select <- rownames(pb_norm)[select]
-        pb_norm <- pb_norm[select, , drop = FALSE]
-
-        message(paste("Selected top", nrow(pb_norm), "highly variable genes"))
-      }
-    })
-  })
+    message(paste("Selected top", nrow(pb_norm), "highly variable genes"))
+  }
 
   # Current format: Genes x Samples (pb_norm)
   pb_norm <- t(pb_norm) # New format: Samples x Genes

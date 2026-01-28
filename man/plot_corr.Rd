@@ -55,3 +55,12 @@ The function uses the CLR matrix, where high correlation between two
 cell types suggests they vary together across samples, indicating potential
 co-occurrence or co-regulation.
 }
+\examples{
+data(example_data)
+# Example of a large cohort with 868 samples and 69 cell types
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
+plot_corr(ecoda_object)
+}

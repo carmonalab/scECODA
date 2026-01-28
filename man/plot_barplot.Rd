@@ -47,23 +47,29 @@ across samples or across aggregated groups. It automatically handles data
 preparation and ordering based on the provided parameters.
 }
 \examples{
-\dontrun{
-# Assuming 'ecoda_obj' is a created ECODA object with metadata
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$Zhang$cell_counts_lowresolution,
+  metadata = example_data$Zhang$metadata,
+)
 
-# 1. Plot frequency for every sample, ordered by sample ID:
-p1 <- plot_barplot(ecoda_obj)
+plot_barplot(ecoda_obj)
 
-# 2. Plot frequency for every sample,
-# faceted and ordered by 'Treatment' column:
-p2 <- plot_barplot(ecoda_obj, label_col = "Treatment", plot_by = "sample")
+# Plotting average cell type abundance by experimental group
+plot_barplot(
+  ecoda_object,
+  label_col = "Tissue",
+  plot_by = "group",
+  title = "Mean Relative Abundance by Condition"
+)
 
-# 3. Plot average frequency aggregated by 'Treatment' group:
-p3 <- plot_barplot(ecoda_obj, label_col = "Treatment", plot_by = "group")
-
-# 4. Plot with a custom order:
-custom_order <- c("S2", "S1", "S4", "S3")
-p4 <- plot_barplot(ecoda_obj, custom_sample_order = custom_order)
-}
+# Plotting cell type abundance for each sample separately
+plot_barplot(
+  ecoda_object,
+  label_col = "Tissue",
+  plot_by = "sample",
+  title = "Relative Abundance for Each Sample"
+)
 }
 \seealso{
 \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}

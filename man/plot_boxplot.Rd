@@ -68,20 +68,22 @@ for the comparison across all groups.
 }
 }
 \examples{
-\dontrun{
-# Assuming 'ecoda_obj' is a created ECODA object with metadata
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$Zhang$cell_counts_lowresolution,
+  metadata = example_data$Zhang$metadata,
+)
 
 # 1. Boxplots for CLR abundance without grouping (no stats calculated):
-p1 <- plot_boxplot(ecoda_obj)
+plot_boxplot(ecoda_obj)
 
 # 2. Boxplots grouped by 'Treatment' (2 groups) and applying Wilcoxon test:
-p2 <- plot_boxplot(
+plot_boxplot(
   ecoda_obj,
-  label_col = "Treatment",
+  label_col = "Tissue",
   stat_method = "wilcox.test",
-  title = "CLR Abundance by Treatment Group"
+  title = "CLR Abundance by Tissue (with Wilcoxon Test)"
 )
-}
 }
 \seealso{
 \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}

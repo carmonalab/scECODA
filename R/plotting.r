@@ -103,6 +103,29 @@
 #' @importFrom parallel detectCores
 #'
 #' @export plot_pca
+#'
+#' @examples
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$Zhang$cell_counts_lowresolution,
+#'   metadata = example_data$Zhang$metadata,
+#' )
+#'
+#' plot_pca(
+#'   ecoda_object,
+#'   label_col = "Tissue",
+#'   title = "PCA based on cell type composition",
+#'   n_hv_feat_show = 5 # Shows the most highly variable features (cell types)
+#' )
+#'
+#' # Using only the most highly variable cell types
+#' plot_pca(
+#'   ecoda_object,
+#'   slot = "clr_hvc",
+#'   label_col = "Tissue",
+#'   title = "PCA based on highly variable cell types",
+#'   n_hv_feat_show = ncol(ecoda_object@clr_hvc)
+#' )
 plot_pca <- function(ecoda_object,
                      slot = c(
                        "clr", "clr_hvc", "counts", "counts_imp",
@@ -196,7 +219,7 @@ plot_pca <- function(ecoda_object,
     df <- as.data.frame(res.pca$x)
     df$id <- seq_len(nrow(df))
     df$vs <- factor(labels)
-    ms <- replicate(2, df, simplify = F)
+    ms <- replicate(2, df, simplify = FALSE)
     ms[[2]]$PC3 <- min(df$PC3)
     m <- ms %>%
       bind_rows() %>%
@@ -284,6 +307,20 @@ plot_pca <- function(ecoda_object,
 #' @importFrom vegan anosim
 #'
 #' @export calc_anosim
+#'
+#' @examples
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
+#'
+#' # Extract necessary components
+#' feat_mat <- ecoda_object@clr
+#' labels <- ecoda_object@metadata$subject.cmv
+#'
+#' # Run the calculation
+#' calc_anosim(feat_mat, labels)
 calc_anosim <- function(feat_mat,
                         labels,
                         distance = "euclidean",
@@ -331,6 +368,20 @@ calc_anosim <- function(feat_mat,
 #' @importFrom mclust adjustedRandIndex
 #'
 #' @export calc_ari
+#'
+#' @examples
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
+#'
+#' # Extract necessary components
+#' feat_mat <- ecoda_object@clr
+#' labels <- ecoda_object@metadata$subject.cmv
+#'
+#' # Run the calculation
+#' calc_ari(feat_mat, labels)
 calc_ari <- function(feat_mat,
                      labels,
                      nclusts = NULL,
@@ -394,6 +445,20 @@ calc_ari <- function(feat_mat,
 #' @importFrom igraph modularity
 #'
 #' @export calc_modularity
+#'
+#' @examples
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
+#'
+#' # Extract necessary components
+#' feat_mat <- ecoda_object@clr
+#' labels <- ecoda_object@metadata$subject.cmv
+#'
+#' # Run the calculation
+#' calc_modularity(feat_mat, labels)
 calc_modularity <- function(feat_mat,
                             labels,
                             digits = 3,
@@ -509,6 +574,20 @@ compute_snn_graph <- function(feat_mat,
 #' @importFrom stats dist
 #'
 #' @export calc_sil
+#'
+#' @examples
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
+#'
+#' # Extract necessary components
+#' feat_mat <- ecoda_object@clr
+#' labels <- ecoda_object@metadata$subject.cmv
+#'
+#' # Run the calculation
+#' calc_sil(feat_mat, labels)
 calc_sil <- function(feat_mat,
                      labels,
                      digits = 3) {
@@ -560,20 +639,22 @@ calc_sil <- function(feat_mat,
 #' @seealso \link[=ECODA-class]{ECODA}
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$Zhang$cell_counts_lowresolution,
+#'   metadata = example_data$Zhang$metadata,
+#' )
 #'
 #' # 1. Create long data with CLR abundance only
 #' long_clr <- create_long_data(ecoda_obj, data_slot = "clr")
 #'
 #' # 2. Create long data with relative abundance
-#' # and merge the 'Treatment' metadata column
+#' # and merge the 'Tissue' metadata column
 #' long_freq_labeled <- create_long_data(
 #'   ecoda_obj,
 #'   data_slot = "freq",
-#'   label_col = "Treatment"
+#'   label_col = "Tissue"
 #' )
-#' }
 create_long_data <- function(ecoda_object,
                              data_slot,
                              label_col = NULL) {
@@ -688,23 +769,29 @@ create_long_data <- function(ecoda_object,
 #' @seealso \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object with metadata
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$Zhang$cell_counts_lowresolution,
+#'   metadata = example_data$Zhang$metadata,
+#' )
 #'
-#' # 1. Plot frequency for every sample, ordered by sample ID:
-#' p1 <- plot_barplot(ecoda_obj)
+#' plot_barplot(ecoda_obj)
 #'
-#' # 2. Plot frequency for every sample,
-#' # faceted and ordered by 'Treatment' column:
-#' p2 <- plot_barplot(ecoda_obj, label_col = "Treatment", plot_by = "sample")
+#' # Plotting average cell type abundance by experimental group
+#' plot_barplot(
+#'   ecoda_object,
+#'   label_col = "Tissue",
+#'   plot_by = "group",
+#'   title = "Mean Relative Abundance by Condition"
+#' )
 #'
-#' # 3. Plot average frequency aggregated by 'Treatment' group:
-#' p3 <- plot_barplot(ecoda_obj, label_col = "Treatment", plot_by = "group")
-#'
-#' # 4. Plot with a custom order:
-#' custom_order <- c("S2", "S1", "S4", "S3")
-#' p4 <- plot_barplot(ecoda_obj, custom_sample_order = custom_order)
-#' }
+#' # Plotting cell type abundance for each sample separately
+#' plot_barplot(
+#'   ecoda_object,
+#'   label_col = "Tissue",
+#'   plot_by = "sample",
+#'   title = "Relative Abundance for Each Sample"
+#' )
 plot_barplot <- function(ecoda_object,
                          label_col = NULL,
                          plot_by = c("sample", "group"),
@@ -861,20 +948,22 @@ plot_barplot <- function(ecoda_object,
 #' @seealso \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object with metadata
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$Zhang$cell_counts_lowresolution,
+#'   metadata = example_data$Zhang$metadata,
+#' )
 #'
 #' # 1. Boxplots for CLR abundance without grouping (no stats calculated):
-#' p1 <- plot_boxplot(ecoda_obj)
+#' plot_boxplot(ecoda_obj)
 #'
 #' # 2. Boxplots grouped by 'Treatment' (2 groups) and applying Wilcoxon test:
-#' p2 <- plot_boxplot(
+#' plot_boxplot(
 #'   ecoda_obj,
-#'   label_col = "Treatment",
+#'   label_col = "Tissue",
 #'   stat_method = "wilcox.test",
-#'   title = "CLR Abundance by Treatment Group"
+#'   title = "CLR Abundance by Tissue (with Wilcoxon Test)"
 #' )
-#' }
 plot_boxplot <- function(ecoda_object,
                          label_col = NULL,
                          selected_celltypes = NULL,
@@ -1051,26 +1140,46 @@ plot_boxplot <- function(ecoda_object,
 #' @seealso \link[=ECODA-class]{ECODA}, \code{\link{pheatmap}}
 #'
 #' @examples
-#' \dontrun{
-#' # Assuming 'ecoda_obj' is a created ECODA object with metadata
-#'
-#' # 1. Heatmap using CLR data, clustered, and annotated by 'Condition':
-#' p1 <- plot_heatmap(
-#'   ecoda_obj,
-#'   label_col = "Condition",
-#'   main = "CLR Abundance Heatmap",
-#'   fontsize = 8
+#' # Example for a simple dataset:
+#' data(example_data)
+#' ecoda_object <- ecoda(
+#'   data = example_data$Zhang$cell_counts_lowresolution,
+#'   metadata = example_data$Zhang$metadata,
 #' )
 #'
-#' # 2. Heatmap using Relative Frequency data (clr_hvc), filtered to only HVCs,
-#' #    and without clustering the samples:
-#' p2 <- plot_heatmap(
-#'   ecoda_obj,
+#' plot_heatmap(ecoda_object, label_col = c("Clinical.efficacy.", "Tissue"))
+#'
+#' plot_heatmap(
+#'   ecoda_object,
+#'   label_col = c("Clinical.efficacy.", "Tissue"),
+#'   # Additional arguments for pheatmap:
+#'   cutree_rows = 3,
+#'   cutree_cols = 3
+#' )
+#'
+#' # Example of a large cohort with 868 samples and 69 cell types
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
+#'
+#' plot_heatmap(
+#'   ecoda_object,
+#'   label_col = c("subject.cmv", "age_group"),
+#'   cutree_rows = 3,
+#'   cutree_cols = 5,
+#'   show_colnames = FALSE
+#' )
+#'
+#' # Using only the most highly variable cell types (HVCs)
+#' plot_heatmap(
+#'   ecoda_object,
 #'   slot = "clr_hvc",
-#'   label_col = "Batch",
-#'   cluster_cols = FALSE
+#'   label_col = c("subject.cmv", "age_group"),
+#'   cutree_rows = 3,
+#'   cutree_cols = 4,
+#'   show_colnames = FALSE
 #' )
-#' }
 plot_heatmap <- function(ecoda_object,
                          slot = c(
                            "clr", "clr_hvc", "counts", "counts_imp",
@@ -1151,6 +1260,15 @@ plot_heatmap <- function(ecoda_object,
 #' @importFrom corrplot corrplot
 #'
 #' @export plot_corr
+#'
+#' @examples
+#' data(example_data)
+#' # Example of a large cohort with 868 samples and 69 cell types
+#' ecoda_object <- ecoda(
+#'   data = example_data$GongSharma_full$cell_counts_highresolution,
+#'   metadata = example_data$GongSharma_full$metadata
+#' )
+#' plot_corr(ecoda_object)
 plot_corr <- function(ecoda_object,
                       slot = c(
                         "clr", "clr_hvc", "counts", "counts_imp",

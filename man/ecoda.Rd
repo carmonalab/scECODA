@@ -56,3 +56,14 @@ objects (\code{Seurat} or \code{SingleCellExperiment}) or raw data frames to
 extract cell type counts, calculate sample metadata, and optionally generate
 DESeq2-normalized pseudobulk data.
 }
+\examples{
+data(example_data)
+Zhang <- example_data$Zhang
+counts <- Zhang$cell_counts_lowresolution
+freq <- calc_freq(counts)
+metadata <- Zhang$metadata
+
+ecoda_object <- ecoda(data = counts, metadata = metadata)
+
+ecoda_object <- ecoda(data = freq, metadata = metadata)
+}

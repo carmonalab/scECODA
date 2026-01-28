@@ -56,8 +56,11 @@ mean-variance plot. It also calculates the cumulative variance explained by
 the cell types when ranked by variance.
 }
 \examples{
-\dontrun{
-# Assuming 'ecoda_obj' is a created ECODA object
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
 
 # Calculate variances and show the plot
 df_var <- get_celltype_variances(ecoda_obj)
@@ -67,7 +70,6 @@ df_var_asc <- get_celltype_variances(
   ecoda_obj,
   show_plot = FALSE, descending = FALSE
 )
-}
 }
 \seealso{
 \link[=ECODA-class]{ECODA}, \code{\link{plot_varmean}}

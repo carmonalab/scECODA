@@ -38,15 +38,17 @@ specified proportion of the total variance, or a fixed number of top cell
 types.
 }
 \examples{
-\dontrun{
-# Assuming 'ecoda_obj' is a previously created ECODA object:
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
 
 # Select HVCs that explain 75\% of the total variance
 ecoda_obj <- find_hvcs(ecoda_obj, variance_explained = 0.75)
 
 # Select exactly the top 5 most variable cell types
 ecoda_obj <- find_hvcs(ecoda_obj, top_n_hvcs = 5)
-}
 }
 \seealso{
 \link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}},

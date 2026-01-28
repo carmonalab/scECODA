@@ -35,3 +35,17 @@ known cluster assignments (\code{labels}) and the cluster assignments derived
 from two unsupervised clustering methods: Hierarchical Clustering
 (\code{hclust}) and Partitioning Around Medoids (\code{pam}).
 }
+\examples{
+data(example_data)
+ecoda_object <- ecoda(
+  data = example_data$GongSharma_full$cell_counts_highresolution,
+  metadata = example_data$GongSharma_full$metadata
+)
+
+# Extract necessary components
+feat_mat <- ecoda_object@clr
+labels <- ecoda_object@metadata$subject.cmv
+
+# Run the calculation
+calc_ari(feat_mat, labels)
+}

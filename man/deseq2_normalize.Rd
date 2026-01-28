@@ -50,7 +50,7 @@ specified by the user or automatically selected based on variance.
 minimal design formula (\code{~ 1}) for size factor and variance estimation.
 }
 \examples{
-\dontrun{
+\donttest{
 # 1. Auto-select top 2000 most variable genes after VST
 pb_norm_auto <- deseq2_normalize(pb, metadata)
 
