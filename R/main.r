@@ -91,12 +91,12 @@ setClass(
 #'   Required if \code{data} is a single-cell object.
 #' @param celltype_col The metadata column name defining cell type annotations.
 #'   Required if \code{data} is a single-cell object.
-#' @param get_pb Logical (default: \code{FALSE}). If \code{TRUE}, calculates
-#'   and stores DESeq2-normalized pseudobulk data in the \code{pb} slot.
-#' @param variance_explained Numeric (default: 0.5). Proportion of variance
-#'   used to determine the number of highly variable cell types (HVCs).
-#' @param top_n_hvcs Integer (optional). If provided, specifies the exact
-#'   number of top HVCs to select, overriding \code{variance_explained}.
+#' @param get_pb Logical (default: \code{FALSE}). If \code{TRUE}, calculates and
+#'   stores DESeq2-normalized pseudobulk data in the \code{pb} slot.
+#' @param variance_explained Numeric (default: 0.5). Proportion of variance used
+#'   to determine the number of highly variable cell types (HVCs).
+#' @param top_n_hvcs Integer (optional). If provided, specifies the exact number
+#'   of top HVCs to select, overriding \code{variance_explained}.
 #'
 #' @return A new \link[=ECODA-class]{ECODA} object.
 #'
@@ -198,9 +198,9 @@ ecoda <- function(data = NULL,
 #' Core constructor for ECODA objects from count/frequency matrices
 #'
 #' This is the internal engine that initializes an \link[=ECODA-class]{ECODA}
-#' object. It performs zero-imputation, Centered Log-Ratio (CLR)
-#' transformation, calculates sample distances, and identifies highly variable
-#' cell types (HVCs).
+#' object. It performs zero-imputation, Centered Log-Ratio (CLR) transformation,
+#' calculates sample distances, and identifies highly variable cell types
+#' (HVCs).
 #'
 #' @param data A matrix or data frame where **rows are samples** and
 #'   **columns are cell types**.
@@ -362,8 +362,7 @@ clr <- function(df) {
 #' Centered Log-Ratio (CLR) transformation. It employs a simple multiplicative
 #' replacement strategy for both raw counts and relative frequencies.
 #'
-#' @details
-#' The imputation logic differs based on the type of data:
+#' @details The imputation logic differs based on the type of data:
 #' \itemize{
 #'   \item \strong{Counts:} Zeros are replaced by a fraction of a minimum count
 #'   (typically 1). Formula: \code{0 + counts_min * xmin_factor}.
@@ -372,12 +371,12 @@ clr <- function(df) {
 #'   Formula: \code{0 + min(non_zero_values) * xmin_factor}.
 #' }
 #'
-#' @param df A data frame or matrix where zeros need to be imputed.
-#'   Rows are typically samples and columns are cell types.
+#' @param df A data frame or matrix where zeros need to be imputed. Rows are
+#'   typically samples and columns are cell types.
 #' @param is_freq Logical (default: \code{FALSE}). If \code{TRUE}, the function
 #'   treats the input as relative frequencies and uses the minimum observed
-#'   non-zero value for imputation. If \code{FALSE}, it treats the input as
-#'   raw counts.
+#'   non-zero value for imputation. If \code{FALSE}, it treats the input as raw
+#'   counts.
 #' @param counts_min Numeric (default: 1). The base value used for count
 #'   imputation. Only used if \code{is_freq = FALSE}.
 #' @param xmin_factor Numeric (default: 2/3). The multiplier applied to the
@@ -827,12 +826,12 @@ get_hvcs <- function(df_var,
 #' @title Generates a Mean-Variance Plot for CLR-transformed Cell Type Data.
 #'
 #' @description This function visualizes the relationship between the mean
-#' abundance (CLR) and the variance (CLR) for each cell type, which is typically
-#' used to identify Highly Variable Cell Types (HVCs).
+#'   abundance (CLR) and the variance (CLR) for each cell type, which is
+#'   typically used to identify Highly Variable Cell Types (HVCs).
 #'
 #' @details If \code{highlight_hvcs} is \code{TRUE}, cell types previously
-#' identified and stored in the \code{ecoda_object@highly_variable_celltypes}
-#' slot will be highlighted in red on the plot.
+#'   identified and stored in the \code{ecoda_object@highly_variable_celltypes}
+#'   slot will be highlighted in red on the plot.
 #'
 #' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing
 #'   pre-calculated cell type variances in the \code{celltype_variances} slot

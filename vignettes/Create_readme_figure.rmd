@@ -24,8 +24,9 @@ data(example_data)
 ```
 
 
-It is also possible to create an ECODA object from counts or frequency. Optionally, metadata can be added.
-It is important to make sure that the counts/frequency and the metadata data frames have the same row names.
+It is also possible to create an ECODA object from counts or frequency.
+Optionally, metadata can be added. It is important to make sure that the
+counts/frequency and the metadata data frames have the same row names.
 
 ```{r fig.height=7, fig.width=9}
 ds <- example_data$GongSharma_full

@@ -3,14 +3,14 @@
 #' @title Plot Principal Component Analysis and Calculate Clustering Scores
 #'
 #' @description Performs Principal Component Analysis (PCA) on a selected data
-#' matrix from the \code{ECODA} object (default: CLR-transformed abundances,
-#' \code{clr}) and visualizes the results in 2D or 3D. It can also calculate and
-#' display several metrics to evaluate the separation of groups defined by
-#' \code{label_col}.
+#'   matrix from the \code{ECODA} object (default: CLR-transformed abundances,
+#'   \code{clr}) and visualizes the results in 2D or 3D. It can also calculate
+#'   and display several metrics to evaluate the separation of groups defined by
+#'   \code{label_col}.
 #'
 #' @details The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
-#' how well the sample groupings (\code{labels}) align with the underlying data
-#' structure in the feature space defined by the PCA.
+#'   how well the sample groupings (\code{labels}) align with the underlying
+#'   data structure in the feature space defined by the PCA.
 #'
 #' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
 #' @param slot Character string (default: \code{"clr"}). The name of the data
@@ -124,7 +124,7 @@
 #'   slot = "clr_hvc",
 #'   label_col = "Tissue",
 #'   title = "PCA based on highly variable cell types",
-#'   n_hv_feat_show = ncol(ecoda_object@clr_hvc)
+#'   n_hv_feat_show = ncol(slot(ecoda_object, "clr_hvc"))
 #' )
 plot_pca <- function(ecoda_object,
                      slot = c(
@@ -272,12 +272,12 @@ plot_pca <- function(ecoda_object,
 #' Analysis of Similarities (ANOSIM) R score
 #'
 #' @description Calculates the ANOSIM R-statistic to test whether there is
-#' significant separation between two or more groups (defined by \code{labels})
-#' based on the multivariate distances among samples in the feature space
-#' (\code{feat_mat}).
+#'   significant separation between two or more groups (defined by
+#'   \code{labels}) based on the multivariate distances among samples in the
+#'   feature space (\code{feat_mat}).
 #'
 #' @details ANOSIM compares the mean of rank dissimilarities between groups to
-#' the mean of rank dissimilarities within groups. The R-statistic ranges from
+#'   the mean of rank dissimilarities within groups. The R-statistic ranges from
 #' -1 to 1:
 #' \itemize{
 #'   \item An R value close to **1** indicates clear separation of groups.
@@ -316,8 +316,8 @@ plot_pca <- function(ecoda_object,
 #' )
 #'
 #' # Extract necessary components
-#' feat_mat <- ecoda_object@clr
-#' labels <- ecoda_object@metadata$subject.cmv
+#' feat_mat <- slot(ecoda_object, "clr")
+#' labels <- slot(ecoda_object, "metadata")$subject.cmv
 #'
 #' # Run the calculation
 #' calc_anosim(feat_mat, labels)
@@ -377,8 +377,8 @@ calc_anosim <- function(feat_mat,
 #' )
 #'
 #' # Extract necessary components
-#' feat_mat <- ecoda_object@clr
-#' labels <- ecoda_object@metadata$subject.cmv
+#' feat_mat <- slot(ecoda_object, "clr")
+#' labels <- slot(ecoda_object, "metadata")$subject.cmv
 #'
 #' # Run the calculation
 #' calc_ari(feat_mat, labels)
@@ -454,8 +454,8 @@ calc_ari <- function(feat_mat,
 #' )
 #'
 #' # Extract necessary components
-#' feat_mat <- ecoda_object@clr
-#' labels <- ecoda_object@metadata$subject.cmv
+#' feat_mat <- slot(ecoda_object, "clr")
+#' labels <- slot(ecoda_object, "metadata")$subject.cmv
 #'
 #' # Run the calculation
 #' calc_modularity(feat_mat, labels)
@@ -583,8 +583,8 @@ compute_snn_graph <- function(feat_mat,
 #' )
 #'
 #' # Extract necessary components
-#' feat_mat <- ecoda_object@clr
-#' labels <- ecoda_object@metadata$subject.cmv
+#' feat_mat <- slot(ecoda_object, "clr")
+#' labels <- slot(ecoda_object, "metadata")$subject.cmv
 #'
 #' # Run the calculation
 #' calc_sil(feat_mat, labels)
@@ -1223,13 +1223,13 @@ plot_heatmap <- function(ecoda_object,
 #' @title Plot Cell Type Correlation Matrix
 #'
 #' @description Calculates the pairwise Pearson correlation matrix for all cell
-#' types (columns) using the Centered Log-Ratio (CLR) transformed abundances
-#' stored in \code{ecoda_object@clr}. It then visualizes this matrix as a
-#' heatmap using \code{corrplot::corrplot}.
+#'   types (columns) using the Centered Log-Ratio (CLR) transformed abundances
+#'   stored in \code{ecoda_object@clr}. It then visualizes this matrix as a
+#'   heatmap using \code{corrplot::corrplot}.
 #'
 #' @details The function uses the CLR matrix, where high correlation between two
-#' cell types suggests they vary together across samples, indicating potential
-#' co-occurrence or co-regulation.
+#'   cell types suggests they vary together across samples, indicating potential
+#'   co-occurrence or co-regulation.
 #'
 #' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
 #' @param slot Character string (default: \code{"clr"}). The name of the data
