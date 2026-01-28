@@ -972,20 +972,12 @@ plot_varmean <- function(ecoda_object,
 #'   the unique sample IDs, and the rows correspond to the genes.
 #' @export calculate_pseudobulk
 #' @examples
-#' \donttest{
-#' # Assuming seurat is a loaded Seurat object
-#' pb_seurat <- calculate_pseudobulk(
-#'   count_matrix = seurat[["RNA"]]$counts,
-#'   sample_ids = seurat$sample_id
-#' )
+#' mat <- matrix(rpois(100, lambda = 5), nrow = 10, ncol = 10)
+#' rownames(mat) <- paste0("Gene", 1:10)
+#' colnames(mat) <- paste0("Cell", 1:10)
+#' ids <- rep(c("Sample1", "Sample2"), each = 5)
 #'
-#' # Assuming sce is a loaded SingleCellExperiment object
-#' pb_sce <- calculate_pseudobulk(
-#'   count_matrix = SummarizedExperiment::assay(sce, "counts"),
-#'   sample_ids = SummarizedExperiment::colData(sce)$sample_id,
-#'   min_cells = 5 # Example of filtering samples with < 5 cells
-#' )
-#' }
+#' pb <- calculate_pseudobulk(count_matrix = mat, sample_ids = ids)
 calculate_pseudobulk <- function(count_matrix,
                                  sample_ids,
                                  min_cells = 10) {
