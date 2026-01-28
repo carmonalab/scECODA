@@ -3,7 +3,7 @@ Title: Single-Cell Exploratory Compositional Data Analysis
 Version: 0.99.1
 Authors@R: c(
     person("Christian", "Halter",
-      email = "Christian.Halter@unil.ch",
+      email = "scecoda.dev@gmail.com",
       role = c("aut", "cre")),
     person("Massimo", "Andreatta",
       email = "Massimo.Andreatta@unige.ch",
@@ -27,6 +27,7 @@ Description: The scECODA R package provides a complete workflow for the
     heatmaps and scatter plots.
 biocViews: Software, SingleCell, Normalization, Preprocessing, Visualization,
   Clustering, DimensionReduction, FeatureExtraction, DifferentialExpression
+BugReports: https://github.com/carmonalab/scECODA/issues
 License:GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
