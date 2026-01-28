@@ -38,9 +38,9 @@ A numeric value representing the \strong{ANOSIM R-statistic}.
 }
 \description{
 Calculates the ANOSIM R-statistic to test whether there is
-significant separation between two or more groups (defined by \code{labels})
-based on the multivariate distances among samples in the feature space
-(\code{feat_mat}).
+significant separation between two or more groups (defined by
+\code{labels}) based on the multivariate distances among samples in the
+feature space (\code{feat_mat}).
 }
 \details{
 ANOSIM compares the mean of rank dissimilarities between groups to
@@ -63,8 +63,8 @@ ecoda_object <- ecoda(
 )
 
 # Extract necessary components
-feat_mat <- ecoda_object@clr
-labels <- ecoda_object@metadata$subject.cmv
+feat_mat <- slot(ecoda_object, "clr")
+labels <- slot(ecoda_object, "metadata")$subject.cmv
 
 # Run the calculation
 calc_anosim(feat_mat, labels)

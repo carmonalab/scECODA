@@ -43,8 +43,8 @@ ecoda_object <- ecoda(
 )
 
 # Extract necessary components
-feat_mat <- ecoda_object@clr
-labels <- ecoda_object@metadata$subject.cmv
+feat_mat <- slot(ecoda_object, "clr")
+labels <- slot(ecoda_object, "metadata")$subject.cmv
 
 # Run the calculation
 calc_ari(feat_mat, labels)

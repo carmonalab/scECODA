@@ -7,13 +7,13 @@
 impute_zeros(df, is_freq = FALSE, counts_min = 1, xmin_factor = 2/3)
 }
 \arguments{
-\item{df}{A data frame or matrix where zeros need to be imputed.
-Rows are typically samples and columns are cell types.}
+\item{df}{A data frame or matrix where zeros need to be imputed. Rows are
+typically samples and columns are cell types.}
 
 \item{is_freq}{Logical (default: \code{FALSE}). If \code{TRUE}, the function
 treats the input as relative frequencies and uses the minimum observed
-non-zero value for imputation. If \code{FALSE}, it treats the input as
-raw counts.}
+non-zero value for imputation. If \code{FALSE}, it treats the input as raw
+counts.}
 
 \item{counts_min}{Numeric (default: 1). The base value used for count
 imputation. Only used if \code{is_freq = FALSE}.}

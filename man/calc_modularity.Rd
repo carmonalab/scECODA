@@ -4,7 +4,7 @@
 \alias{calc_modularity}
 \title{Calculate Adjusted Modularity Score}
 \usage{
-calc_modularity(feat_mat, labels, digits = 3, knn_k = 3)
+calc_modularity(feat_mat, labels, knn_k = 3, digits = 3)
 }
 \arguments{
 \item{feat_mat}{Numeric matrix or data frame. The feature matrix used to
@@ -13,13 +13,13 @@ compute the SNN graph (e.g., CLR abundances).}
 \item{labels}{Vector of factors or character strings. The cluster assignments
 for each row in \code{feat_mat}.}
 
-\item{digits}{Integer (default: \code{3}). The number of decimal places to
-round the final adjusted score.}
-
 \item{knn_k}{Integer (optional, default: \code{NULL}). The number of nearest
 neighbors (\code{k}) used for SNN graph construction. If \code{NULL}, it
 defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is the number of
 samples.}
+
+\item{digits}{Integer (default: \code{3}). The number of decimal places to
+round the final adjusted score.}
 }
 \value{
 A numeric value representing the adjusted modularity score.
@@ -39,8 +39,8 @@ ecoda_object <- ecoda(
 )
 
 # Extract necessary components
-feat_mat <- ecoda_object@clr
-labels <- ecoda_object@metadata$subject.cmv
+feat_mat <- slot(ecoda_object, "clr")
+labels <- slot(ecoda_object, "metadata")$subject.cmv
 
 # Run the calculation
 calc_modularity(feat_mat, labels)

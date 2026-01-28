@@ -40,8 +40,8 @@ A \code{ggplot} object representing the mean-variance plot.
 }
 \description{
 This function visualizes the relationship between the mean
-abundance (CLR) and the variance (CLR) for each cell type, which is typically
-used to identify Highly Variable Cell Types (HVCs).
+abundance (CLR) and the variance (CLR) for each cell type, which is
+typically used to identify Highly Variable Cell Types (HVCs).
 }
 \details{
 If \code{highlight_hvcs} is \code{TRUE}, cell types previously

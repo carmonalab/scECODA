@@ -27,7 +27,7 @@ A fully initialized \link[=ECODA-class]{ECODA} object.
 }
 \description{
 This is the internal engine that initializes an \link[=ECODA-class]{ECODA}
-object. It performs zero-imputation, Centered Log-Ratio (CLR)
-transformation, calculates sample distances, and identifies highly variable
-cell types (HVCs).
+object. It performs zero-imputation, Centered Log-Ratio (CLR) transformation,
+calculates sample distances, and identifies highly variable cell types
+(HVCs).
 }

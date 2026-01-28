@@ -37,14 +37,14 @@ Required if \code{data} is a single-cell object.}
 \item{celltype_col}{The metadata column name defining cell type annotations.
 Required if \code{data} is a single-cell object.}
 
-\item{get_pb}{Logical (default: \code{FALSE}). If \code{TRUE}, calculates
-and stores DESeq2-normalized pseudobulk data in the \code{pb} slot.}
+\item{get_pb}{Logical (default: \code{FALSE}). If \code{TRUE}, calculates and
+stores DESeq2-normalized pseudobulk data in the \code{pb} slot.}
 
-\item{variance_explained}{Numeric (default: 0.5). Proportion of variance
-used to determine the number of highly variable cell types (HVCs).}
+\item{variance_explained}{Numeric (default: 0.5). Proportion of variance used
+to determine the number of highly variable cell types (HVCs).}
 
-\item{top_n_hvcs}{Integer (optional). If provided, specifies the exact
-number of top HVCs to select, overriding \code{variance_explained}.}
+\item{top_n_hvcs}{Integer (optional). If provided, specifies the exact number
+of top HVCs to select, overriding \code{variance_explained}.}
 }
 \value{
 A new \link[=ECODA-class]{ECODA} object.
