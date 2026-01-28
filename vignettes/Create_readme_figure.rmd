@@ -55,12 +55,17 @@ p <- plot_pca(
   )
 print(p)
 
-out_dir <- file.path(".", "man", "figures")
-if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
-ggsave(
-  filename = file.path(out_dir, "GongSharma.png"),
-  plot = p,
-  height = 7,
-  width = 9
-)
+# out_dir <- file.path(".", "man", "figures")
+# if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+# ggsave(
+#   filename = file.path(out_dir, "GongSharma.png"),
+#   plot = p,
+#   height = 7,
+#   width = 9
+# )
 ```
+
+```{r}
+sessionInfo()
+```
+
