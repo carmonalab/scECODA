@@ -1017,10 +1017,7 @@ calculate_pseudobulk <- function(count_matrix,
     n_filtered <- length(cells_per_sample) - length(valid_samples)
     if (n_filtered > 0) {
       message(
-        paste(
-          "Filtered out", n_filtered, "sample(s) with <",
-          min_cells, "cells"
-        )
+        "Filtered out ", n_filtered, "sample(s) with < ", min_cells, "cells"
       )
     }
   }
