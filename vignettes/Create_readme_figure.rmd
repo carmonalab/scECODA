@@ -1,0 +1,75 @@
+---
+title: "scECODA tutorial"
+author: "Christian Halter"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc_float: true
+  BiocStyle::pdf_document: default
+vignette: >
+  %\VignetteIndexEntry{scECODA tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+
+```{r Load libraries}
+library(scECODA)
+library(ggplot2)
+
+# Load example datasets
+data(example_data)
+```
+
+
+It is also possible to create an ECODA object from counts or frequency.
+Optionally, metadata can be added. It is important to make sure that the
+counts/frequency and the metadata data frames have the same row names.
+
+```{r  Example, fig.height=7, fig.width=9}
+ds <- example_data$GongSharma_full
+counts <- ds$cell_counts_highresolution
+metadata <- ds$metadata
+metadata$age_cmv <- paste0(metadata$age_group, " CMV-", metadata$subject.cmv)
+
+ecoda_object <- ecoda(
+    data = counts,
+    metadata = metadata
+)
+
+p <- plot_pca(
+    ecoda_object,
+    label_col = "age_cmv",
+    title = paste0(
+        "PCA - Population-scale sample representation\n",
+        "Based on cell type composition"
+    ),
+    n_hv_feat_show = 9,
+    pointsize = 1.75,
+    labelsize = 3,
+    cluster_score = FALSE, mod_score = FALSE, anosim_score = FALSE
+) +
+    guides(shape = guide_legend(override.aes = list(size = 3.3))) +
+    theme(
+        # axis.text=element_text(size=14),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)
+    )
+print(p)
+
+# out_dir <- file.path(".", "man", "figures")
+# if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+# ggsave(
+#   filename = file.path(out_dir, "GongSharma.png"),
+#   plot = p,
+#   height = 7,
+#   width = 9
+# )
+```
+
+```{r Session Info}
+sessionInfo()
+```
+
