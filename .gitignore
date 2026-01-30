@@ -1,4 +1,6 @@
-.Rproj.user
+.DS_Store
+.git/.DS_Store
+*.Rproj
 .Rhistory
 .RData
-.Ruserdata
+.Rproj.user/
