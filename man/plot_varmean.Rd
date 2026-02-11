@@ -8,7 +8,7 @@ plot_varmean(
   ecoda_object,
   plot_title = "",
   highlight_hvcs = TRUE,
-  label_points = FALSE,
+  labels = c("only_hvc", "all", "none"),
   plot_fit_line = FALSE,
   smooth_method = "lm"
 )
@@ -24,9 +24,9 @@ and the HVC list in the \code{highly_variable_celltypes} slot.}
 points corresponding to the Highly Variable Cell Types (HVCs) stored in the
 ECODA object are colored red.}
 
-\item{label_points}{Logical (default: \code{FALSE}). If \code{TRUE}, cell
-type names are added to the points using \code{ggrepel::geom_text_repel} to
-minimize overlap.}
+\item{labels}{Character (default: "only_hvc"). Options: "all" (label every
+point), "none" (no labels), or "only_hvc" (label only the highly variable
+cell types).}
 
 \item{plot_fit_line}{Logical (default: \code{FALSE}). If \code{TRUE}, a
 smoothing regression line is added to the plot.}

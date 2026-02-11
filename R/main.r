@@ -806,9 +806,9 @@ get_hvcs <- function(df_var,
 #' @param highlight_hvcs Logical (default: \code{TRUE}). If \code{TRUE}, the
 #'   points corresponding to the Highly Variable Cell Types (HVCs) stored in the
 #'   ECODA object are colored red.
-#' @param label_points Logical (default: \code{FALSE}). If \code{TRUE}, cell
-#'   type names are added to the points using \code{ggrepel::geom_text_repel} to
-#'   minimize overlap.
+#' @param labels Character (default: "only_hvc"). Options: "all" (label every
+#'   point), "none" (no labels), or "only_hvc" (label only the highly variable
+#'   cell types).
 #' @param plot_fit_line Logical (default: \code{FALSE}). If \code{TRUE}, a
 #'   smoothing regression line is added to the plot.
 #' @param smooth_method Character string (default: "lm"). The smoothing method
@@ -845,15 +845,15 @@ get_hvcs <- function(df_var,
 plot_varmean <- function(ecoda_object,
                          plot_title = "",
                          highlight_hvcs = TRUE,
-                         label_points = FALSE,
+                         labels = c("only_hvc", "all", "none"),
                          plot_fit_line = FALSE,
                          smooth_method = "lm") {
+    labels <- match.arg(labels)
     df_var <- ecoda_object@celltype_variances
+    highlight_celltypes <- ecoda_object@hvcs
 
     # --- 1. Create a highlighting factor column ---
     if (highlight_hvcs) {
-        highlight_celltypes <- ecoda_object@hvcs
-
         df_var <- df_var %>%
             dplyr::mutate(
                 is_highlighted = dplyr::if_else(
@@ -899,20 +899,28 @@ plot_varmean <- function(ecoda_object,
         p <- p + ggplot2::theme(legend.position = "none")
     }
 
-    if (label_points) {
+    if (labels != "none") {
+        # Filter data for labeling based on user choice
+        label_df <- df_var
+        if (labels == "only_hvc") {
+            label_df <- df_var %>%
+                dplyr::filter(.data$celltype %in% highlight_celltypes)
+        }
+
         # Use the color aesthetic inside ggrepel so
         # highlighted labels match the point color
         if (highlight_hvcs) {
             p <- p +
                 ggrepel::geom_text_repel(
-                    data = df_var,
+                    data = label_df,
                     aes(label = celltype, color = is_highlighted),
-                    size = 3
+                    size = 3,
+                    show.legend = FALSE
                 )
         } else {
             p <- p +
                 ggrepel::geom_text_repel(
-                    data = df_var,
+                    data = label_df,
                     aes(label = celltype),
                     size = 3,
                     color = "black"
