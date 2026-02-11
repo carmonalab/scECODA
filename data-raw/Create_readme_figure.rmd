@@ -12,8 +12,6 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-# Introduction
-
 
 ```{r Load libraries}
 library(scECODA)
@@ -23,10 +21,6 @@ library(ggplot2)
 data(example_data)
 ```
 
-
-It is also possible to create an ECODA object from counts or frequency.
-Optionally, metadata can be added. It is important to make sure that the
-counts/frequency and the metadata data frames have the same row names.
 
 ```{r  Example, fig.height=7, fig.width=9}
 ds <- example_data$GongSharma_full
@@ -59,14 +53,14 @@ p <- plot_pca(
     )
 print(p)
 
-# out_dir <- file.path(".", "man", "figures")
-# if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
-# ggsave(
-#   filename = file.path(out_dir, "GongSharma.png"),
-#   plot = p,
-#   height = 7,
-#   width = 9
-# )
+out_dir <- file.path(".", "man", "figures")
+if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+ggsave(
+  filename = file.path(out_dir, "GongSharma.png"),
+  plot = p,
+  height = 7,
+  width = 9
+)
 ```
 
 ```{r Session Info}
