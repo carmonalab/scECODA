@@ -131,7 +131,7 @@ ecoda <- function(data = NULL,
 
         # Get cell metadata from the object
         if (inherits(data, "Seurat")) {
-            cell_data_df <- as.data.frame(data@meta.data)
+            cell_data_df <- as.data.frame(slot(data, "meta.data"))
             if (get_pb) {
                 if (!is.null(data[["RNA"]]$counts)) {
                     pb <- calculate_pseudobulk(
@@ -191,12 +191,12 @@ ecoda <- function(data = NULL,
         variance_explained = variance_explained,
         top_n_hvcs = top_n_hvcs
     )
-    ecoda_object@metadata <- metadata
+    slot(ecoda_object, "metadata") <- metadata
 
     if (get_pb && exists("pb")) {
         pb <- deseq2_normalize(pb)
         pb <- pb[mixedsort(rownames(pb)), ]
-        ecoda_object@pb <- pb
+        slot(ecoda_object, "pb") <- pb
     }
 
     return(ecoda_object)
@@ -255,8 +255,8 @@ ecoda_helper <- function(data = NULL,
         freq <- calc_freq(counts)
         freq_imp <- calc_freq(counts_imp)
 
-        ecoda_object@counts <- counts
-        ecoda_object@counts_imp <- counts_imp
+        slot(ecoda_object, "counts") <- counts
+        slot(ecoda_object, "counts_imp") <- counts_imp
     }
 
     # Check if all row sums are close to 100
@@ -283,10 +283,10 @@ ecoda_helper <- function(data = NULL,
     }
 
     clr_df <- clr(freq_imp)
-    ecoda_object@freq <- freq
-    ecoda_object@freq_imp <- freq_imp
+    slot(ecoda_object, "freq") <- freq
+    slot(ecoda_object, "freq_imp") <- freq_imp
 
-    ecoda_object@asin_sqrt <- freq %>%
+    slot(ecoda_object, "asin_sqrt") <- freq %>%
         mutate(across(everything(), ~ . / 100)) %>%
         sqrt() %>%
         asin()
@@ -296,8 +296,8 @@ ecoda_helper <- function(data = NULL,
         as.matrix() %>%
         as.data.frame()
 
-    ecoda_object@clr <- clr_df
-    ecoda_object@sample_distances <- sdist
+    slot(ecoda_object, "clr") <- clr_df
+    slot(ecoda_object, "sample_distances") <- sdist
 
     ecoda_object <- find_hvcs(
         ecoda_object,
@@ -305,7 +305,8 @@ ecoda_helper <- function(data = NULL,
         top_n_hvcs
     )
 
-    ecoda_object@clr_hvc <- clr(freq_imp[, ecoda_object@hvcs, drop = FALSE])
+    slot(ecoda_object, "clr_hvc") <-
+        clr(freq_imp[, slot(ecoda_object, "hvcs"), drop = FALSE])
 
     return(ecoda_object)
 }
@@ -608,10 +609,10 @@ find_hvcs <- function(ecoda_object,
     variance_explained <- (sum(df_var$Variance[seq_along(hvcs)]) /
         sum(df_var$Variance))
 
-    ecoda_object@celltype_variances <- df_var
-    ecoda_object@variance_explained <- variance_explained
-    ecoda_object@top_n_hvcs <- length(hvcs)
-    ecoda_object@hvcs <- hvcs
+    slot(ecoda_object, "celltype_variances") <- df_var
+    slot(ecoda_object, "variance_explained") <- variance_explained
+    slot(ecoda_object, "top_n_hvcs") <- length(hvcs)
+    slot(ecoda_object, "hvcs") <- hvcs
 
 
     return(ecoda_object)
@@ -664,7 +665,7 @@ find_hvcs <- function(ecoda_object,
 #'     descending = FALSE
 #' )
 get_celltype_variances <- function(ecoda_object, descending = TRUE) {
-    df_var <- ecoda_object@clr %>%
+    df_var <- slot(ecoda_object, "clr") %>%
         pivot_longer(
             cols = everything(),
             names_to = "celltype",
@@ -796,12 +797,12 @@ get_hvcs <- function(df_var,
 #'   typically used to identify Highly Variable Cell Types (HVCs).
 #'
 #' @details If \code{highlight_hvcs} is \code{TRUE}, cell types previously
-#'   identified and stored in the \code{ecoda_object@highly_variable_celltypes}
+#'   identified and stored in the \code{slot(ecoda_object, "hvcs")}
 #'   slot will be highlighted in red on the plot.
 #'
 #' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing
 #'   pre-calculated cell type variances in the \code{celltype_variances} slot
-#'   and the HVC list in the \code{highly_variable_celltypes} slot.
+#'   and the HVC list in the \code{hvcs} slot.
 #' @param plot_title Character string (default: ""). The title for the plot.
 #' @param highlight_hvcs Logical (default: \code{TRUE}). If \code{TRUE}, the
 #'   points corresponding to the Highly Variable Cell Types (HVCs) stored in the
@@ -849,8 +850,8 @@ plot_varmean <- function(ecoda_object,
                          plot_fit_line = FALSE,
                          smooth_method = "lm") {
     labels <- match.arg(labels)
-    df_var <- ecoda_object@celltype_variances
-    highlight_celltypes <- ecoda_object@hvcs
+    df_var <- slot(ecoda_object, "celltype_variances")
+    highlight_celltypes <- slot(ecoda_object, "hvcs")
 
     # --- 1. Create a highlighting factor column ---
     if (highlight_hvcs) {

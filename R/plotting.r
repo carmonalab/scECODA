@@ -22,8 +22,8 @@
 #'   frequencies), \code{"freq_imp"} (imputed frequencies), or
 #'   \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{ecoda_object@metadata} used to color and group samples
-#'   in the plot, and for calculating clustering scores.
+#'   of a column in \code{slot(ecoda_object, "metadata")} used to color and
+#'   group samples in the plot, and for calculating clustering scores.
 #' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
 #'   variables should be scaled to have unit variance before the PCA.
 #' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
@@ -159,15 +159,18 @@ plot_pca <- function(ecoda_object,
 
 
     if (!is.null(label_col)) {
-        labels <- ecoda_object@metadata[[label_col]]
+        labels <- slot(ecoda_object, "metadata")[[label_col]]
 
         if (title_show_n_features) {
             if (slot == "clr_hvc") {
                 title <- paste0(
                     title,
-                    "\nHVCs: ", ecoda_object@top_n_hvcs,
+                    "\nHVCs: ", slot(ecoda_object, "top_n_hvcs"),
                     " Variance explained: ",
-                    round(ecoda_object@variance_explained, score_digits)
+                    round(
+                        slot(ecoda_object, "variance_explained"),
+                        score_digits
+                    )
                 )
             } else if (slot == "pb") {
                 title <- paste0(title, "\nNumber of genes: ", ncol(feat_mat))
@@ -264,8 +267,8 @@ plot_pca <- function(ecoda_object,
 #'   frequencies), \code{"freq_imp"} (imputed frequencies), or
 #'   \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{ecoda_object@metadata} used to color and group samples
-#'   in the plot, and for calculating clustering scores.
+#'   of a column in \code{slot(ecoda_object, "metadata")} used to color and
+#'   group samples in the plot, and for calculating clustering scores.
 #' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
 #'   variables should be scaled to have unit variance before the PCA.
 #'
@@ -297,7 +300,7 @@ plot_pca3d <- function(ecoda_object,
     res.pca <- prcomp(feat_mat, scale. = scale.)
 
     if (!is.null(label_col)) {
-        labels <- ecoda_object@metadata[[label_col]]
+        labels <- slot(ecoda_object, "metadata")[[label_col]]
     } else {
         labels <- "none"
     }
@@ -661,9 +664,9 @@ calc_sil <- function(feat_mat, labels, digits = 3) {
 #'   either \code{"freq"} (for relative abundance) or \code{"clr"} (for
 #'   CLR-transformed abundance).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in the \code{ecoda_object@metadata} slot to merge into the long
-#'   data frame (e.g., "Disease_State" or "Batch"). If \code{NULL}, only the
-#'   abundance data and sample/celltype IDs are returned.
+#'   of a column in the \code{slot(ecoda_object, "metadata")} slot to merge into
+#'   the long data frame (e.g., "Disease_State" or "Batch"). If \code{NULL},
+#'   only the abundance data and sample/celltype IDs are returned.
 #'
 #' @return A tidy, long format data frame with columns:
 #'         \itemize{
@@ -716,7 +719,7 @@ create_long_data <- function(ecoda_object,
     if (!is.null(label_col)) {
         # --- Check 1: Ensure metadata exists ---
         if (!("metadata" %in% slotNames(ecoda_object)) ||
-            is.null(ecoda_object@metadata)) {
+            is.null(slot(ecoda_object, "metadata"))) {
             stop(
                 "label_col was provided but ecoda_object@metadata slot ",
                 "is missing or NULL."
@@ -724,7 +727,7 @@ create_long_data <- function(ecoda_object,
         }
 
         # --- Check 2: Ensure label_col exists in metadata ---
-        meta_colnames <- colnames(ecoda_object@metadata)
+        meta_colnames <- colnames(slot(ecoda_object, "metadata"))
         if (!(label_col %in% meta_colnames)) {
             stop(
                 "label_col '", label_col,
@@ -732,7 +735,7 @@ create_long_data <- function(ecoda_object,
             )
         }
 
-        metadata_df <- as.data.frame(ecoda_object@metadata)
+        metadata_df <- as.data.frame(slot(ecoda_object, "metadata"))
         metadata_df <- data.frame(
             sample_id = rownames(metadata_df),
             metadata_df
@@ -760,8 +763,8 @@ create_long_data <- function(ecoda_object,
 #' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing cell type
 #'   relative frequencies in the \code{freq} slot.
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{ecoda_object@metadata} used to define grouping or
-#'   groups (required if \code{plot_by = "group"}).
+#'   of a column in \code{slot(ecoda_object, "metadata")} used to define
+#'   grouping or groups (required if \code{plot_by = "group"}).
 #' @param plot_by Character string (default: \code{"sample"}). Specifies whether
 #'   to plot the relative abundance for each individual sample (\code{"sample"})
 #'   or the average relative abundance aggregated by a group (\code{"group"})
@@ -940,8 +943,9 @@ plot_barplot <- function(ecoda_object,
 #' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the
 #'   CLR-transformed abundances in the \code{clr} slot.
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{ecoda_object@metadata} used to define groups for
-#'   comparison. If \code{NULL}, a single boxplot is generated per cell type.
+#'   of a column in \code{slot(ecoda_object, "metadata")} used to define groups
+#'   for comparison. If \code{NULL}, a single boxplot is generated per cell
+#'   type.
 #' @param selected_celltypes Specify selected celltypes you want to plot instead
 #'   of plotting boxplots for all.
 #' @param title Character string (default: \code{""}). The main title for the
@@ -1133,8 +1137,8 @@ plot_boxplot <- function(ecoda_object,
 #'   frequencies), \code{"freq_imp"} (imputed frequencies), or
 #'   \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string. The name of the column in
-#'   \code{ecoda_object@metadata} to use for annotating the samples (columns) of
-#'   the heatmap.
+#'   \code{slot(ecoda_object, "metadata")} to use for annotating the samples
+#'   (columns) of the heatmap.
 #' @param cluster_rows Logical (default: \code{TRUE}). Whether to apply
 #'   hierarchical clustering to the cell types (rows).
 #' @param cluster_cols Logical (default: \code{TRUE}). Whether to apply
@@ -1225,7 +1229,7 @@ plot_heatmap <- function(ecoda_object,
         t() %>%
         as.data.frame()
 
-    metadata <- ecoda_object@metadata[, label_col, drop = FALSE]
+    metadata <- slot(ecoda_object, "metadata")[, label_col, drop = FALSE]
     metadata[] <- lapply(metadata, as.factor)
 
     heatmap <- pheatmap(
@@ -1249,8 +1253,8 @@ plot_heatmap <- function(ecoda_object,
 #'
 #' @description Calculates the pairwise Pearson correlation matrix for all cell
 #'   types (columns) using the Centered Log-Ratio (CLR) transformed abundances
-#'   stored in \code{ecoda_object@clr}. It then visualizes this matrix as a
-#'   heatmap using \code{corrplot::corrplot}.
+#'   stored in \code{slot(ecoda_object, "clr")}. It then visualizes this matrix
+#'   as a heatmap using \code{corrplot::corrplot}.
 #'
 #' @details The function uses the CLR matrix, where high correlation between two
 #'   cell types suggests they vary together across samples, indicating potential

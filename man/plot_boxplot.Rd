@@ -20,8 +20,9 @@ plot_boxplot(
 CLR-transformed abundances in the \code{clr} slot.}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in \code{ecoda_object@metadata} used to define groups for
-comparison. If \code{NULL}, a single boxplot is generated per cell type.}
+of a column in \code{slot(ecoda_object, "metadata")} used to define groups
+for comparison. If \code{NULL}, a single boxplot is generated per cell
+type.}
 
 \item{selected_celltypes}{Specify selected celltypes you want to plot instead
 of plotting boxplots for all.}

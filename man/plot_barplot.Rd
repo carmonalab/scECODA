@@ -18,8 +18,8 @@ plot_barplot(
 relative frequencies in the \code{freq} slot.}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in \code{ecoda_object@metadata} used to define grouping or
-groups (required if \code{plot_by = "group"}).}
+of a column in \code{slot(ecoda_object, "metadata")} used to define
+grouping or groups (required if \code{plot_by = "group"}).}
 
 \item{plot_by}{Character string (default: \code{"sample"}). Specifies whether
 to plot the relative abundance for each individual sample (\code{"sample"})

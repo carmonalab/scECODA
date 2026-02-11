@@ -16,7 +16,7 @@ plot_varmean(
 \arguments{
 \item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing
 pre-calculated cell type variances in the \code{celltype_variances} slot
-and the HVC list in the \code{highly_variable_celltypes} slot.}
+and the HVC list in the \code{hvcs} slot.}
 
 \item{plot_title}{Character string (default: ""). The title for the plot.}
 
@@ -45,7 +45,7 @@ typically used to identify Highly Variable Cell Types (HVCs).
 }
 \details{
 If \code{highlight_hvcs} is \code{TRUE}, cell types previously
-identified and stored in the \code{ecoda_object@highly_variable_celltypes}
+identified and stored in the \code{slot(ecoda_object, "hvcs")}
 slot will be highlighted in red on the plot.
 }
 \examples{

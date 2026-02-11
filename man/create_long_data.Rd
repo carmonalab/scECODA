@@ -14,9 +14,9 @@ either \code{"freq"} (for relative abundance) or \code{"clr"} (for
 CLR-transformed abundance).}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in the \code{ecoda_object@metadata} slot to merge into the long
-data frame (e.g., "Disease_State" or "Batch"). If \code{NULL}, only the
-abundance data and sample/celltype IDs are returned.}
+of a column in the \code{slot(ecoda_object, "metadata")} slot to merge into
+the long data frame (e.g., "Disease_State" or "Batch"). If \code{NULL},
+only the abundance data and sample/celltype IDs are returned.}
 }
 \value{
 A tidy, long format data frame with columns:

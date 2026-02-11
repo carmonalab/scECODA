@@ -47,8 +47,8 @@ R plot or a grid object depending on the \code{corrplot} version and options.
 \description{
 Calculates the pairwise Pearson correlation matrix for all cell
 types (columns) using the Centered Log-Ratio (CLR) transformed abundances
-stored in \code{ecoda_object@clr}. It then visualizes this matrix as a
-heatmap using \code{corrplot::corrplot}.
+stored in \code{slot(ecoda_object, "clr")}. It then visualizes this matrix
+as a heatmap using \code{corrplot::corrplot}.
 }
 \details{
 The function uses the CLR matrix, where high correlation between two

@@ -25,8 +25,8 @@ frequencies), \code{"freq_imp"} (imputed frequencies), or
 \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in \code{ecoda_object@metadata} used to color and group samples
-in the plot, and for calculating clustering scores.}
+of a column in \code{slot(ecoda_object, "metadata")} used to color and
+group samples in the plot, and for calculating clustering scores.}
 
 \item{scale.}{Logical (default: \code{FALSE}). A value indicating whether the
 variables should be scaled to have unit variance before the PCA.}

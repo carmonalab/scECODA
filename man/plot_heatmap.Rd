@@ -30,8 +30,8 @@ frequencies), \code{"freq_imp"} (imputed frequencies), or
 \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{label_col}{Character string. The name of the column in
-\code{ecoda_object@metadata} to use for annotating the samples (columns) of
-the heatmap.}
+\code{slot(ecoda_object, "metadata")} to use for annotating the samples
+(columns) of the heatmap.}
 
 \item{cluster_rows}{Logical (default: \code{TRUE}). Whether to apply
 hierarchical clustering to the cell types (rows).}
