@@ -8,22 +8,6 @@ This R package faciliates ***Exploratory COmpositional Data Analysis (ECODA)*** 
 
 It enables intuitive exploration of multi-sample datasets –such as large patient cohorts– and supports the unsupervised identification of samples with similar cell type compositional profiles, e.g. patient clustering. In addition, scECODA provides metrics to quantify the degree of separation between groups of samples, e.g. biological conditions, and to pinpoint the cell types or states whose change in abundance drives these differences.
 
-### Example
-The following example uses 868 scRNA-seq samples from the blood of healthy donors (data from [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/)) with previously annotated cell types. It illustrates how samples naturally separate in an unsupervised manner by donor age and CMV infection status, and highlights the top cell types whose changes in abundance drive inter-sample variation.
-
-```r
-ecoda_object <- create_ecoda_object(
-  seurat_object, # or SCE_object or count data (see create_ecoda_object_helper)
-  sample_col = "sample_id", # sample column
-  celltype_col = "seurat_annotations" # cell type annotations
-)
-ecoda_object <- create_ecoda_object(Seurat_Object) # or SCE_object or count data
-plot_pca(ecoda_object)
-```
-
-<img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/aa8b34ba-722c-495d-a9f7-3aea92842652" />
-
-
 ### Package Installation
 
 To install `scECODA` directly from the GitHub repository, run the following code from within R or RStudio:
@@ -34,6 +18,23 @@ library(remotes)
 
 remotes::install_github("carmonalab/scECODA")
 ```
+
+### Example
+The following example uses 868 scRNA-seq samples from the blood of healthy donors (data from [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/)) with previously annotated cell types. It illustrates how samples naturally separate in an unsupervised manner by donor age and CMV infection status, and highlights the top cell types whose changes in abundance drive inter-sample variation.
+
+```r
+ecoda_object <- ecoda(
+  seurat_object, # or SingleCellExperiment object or count data
+  sample_col = "sample_id", # Metadata column containing sample annotation for each cell
+  celltype_col = "celltype_annotations" # Metadata column containing cell type annotations
+)
+plot_pca(ecoda_object)
+```
+See also the [Tutorial](https://github.com/carmonalab/scECODA/tree/main?tab=readme-ov-file#tutorial) below.
+
+<img width="2700" height="2100" alt="GongSharma" src="https://github.com/user-attachments/assets/aa8b34ba-722c-495d-a9f7-3aea92842652" />
+
+Code to reproduce this figure: [https://github.com/carmonalab/scECODA/blob/main/data-raw/Create_readme_figure.rmd](https://github.com/carmonalab/scECODA/blob/main/data-raw/Create_readme_figure.rmd)
 
 
 ### Tutorial
