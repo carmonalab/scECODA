@@ -110,43 +110,21 @@ ecoda_object <- ecoda(
 
 ## From Seurat object
 
-```{r message=FALSE, warning=FALSE, eval = requireNamespace("SeuratData", quietly = TRUE)}
-# Loading an example Seurat dataset
+```{r}
 library(Seurat)
-# install.packages("devtools")
-# devtools::install_github('satijalab/seurat-data')
-library(SeuratData)
-InstallData("pbmc3k")
-data("pbmc3k")
-seurat_object <- UpdateSeuratObject(pbmc3k)
-```
 
-The cells of this example dataset are annotated but not assigned to samples or
-biological conditions. Let us artificially assign them by creating a sample and
-condition column in the metadata.
+counts <- counts(sce_object)
+metadata <- as.data.frame(SummarizedExperiment::colData(sce_object))
 
-```{r, eval = requireNamespace("SeuratData", quietly = TRUE)}
-n_samples <- 40
-n_groups <- 2
+seurat_object <- CreateSeuratObject(counts = counts, meta.data = metadata)
 
-seurat_object$sample_id <- ""
-seurat_object$sample_id <- rep(
-  x = paste0("sample", seq(n_samples)),
-  length.out = length(seurat_object$sample_id)
-)
-seurat_object$condition_id <- ""
-seurat_object$condition_id <- c(rep("condition1", n_samples/n_groups),
-                      rep("condition2", n_samples/n_groups))
-```
-
-```{r, eval = requireNamespace("SeuratData", quietly = TRUE)}
-# Create ECODA object
 ecoda_object <- ecoda(
   seurat_object,
-  sample_col = "sample_id",
-  celltype_col = "seurat_annotations"
+  sample_col = "sample",
+  celltype_col = "cluster"
 )
 ```
+
 
 ## From counts or frequency data frame
 
