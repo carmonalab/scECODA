@@ -110,7 +110,7 @@ ecoda_object <- ecoda(
 
 ## From Seurat object
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, eval = requireNamespace("SeuratData", quietly = TRUE)}
 # Loading an example Seurat dataset
 library(Seurat)
 # install.packages("devtools")
@@ -125,7 +125,7 @@ The cells of this example dataset are annotated but not assigned to samples or
 biological conditions. Let us artificially assign them by creating a sample and
 condition column in the metadata.
 
-```{r}
+```{r, eval = requireNamespace("SeuratData", quietly = TRUE)}
 n_samples <- 40
 n_groups <- 2
 
@@ -139,7 +139,7 @@ seurat_object$condition_id <- c(rep("condition1", n_samples/n_groups),
                       rep("condition2", n_samples/n_groups))
 ```
 
-```{r}
+```{r, eval = requireNamespace("SeuratData", quietly = TRUE)}
 # Create ECODA object
 ecoda_object <- ecoda(
   seurat_object,
