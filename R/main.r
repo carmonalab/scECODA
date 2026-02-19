@@ -10,7 +10,7 @@
 #'
 #' @slot counts Original cell count data (samples as rows, cell types as
 #'   columns).
-#' @slot counts_imp Imputed cell count data, typically used to handle zero
+#' @slot counts_imp Replaced cell count data, typically used to handle zero
 #'   counts.
 #' @slot freq Relative frequency (percentage) of cell types derived from
 #'   `counts`.
@@ -236,9 +236,9 @@ ecoda_helper <- function(data = NULL,
         if (any(freq == 0)) {
             message(
                 "Frequencies contain zeros. ",
-                "Zeros were imputed with the (2/3) * smallest value."
+                "Zeros were replaced with the (2/3) * smallest value."
             )
-            freq_imp <- impute_zeros(freq, is_freq = data_is_freq)
+            freq_imp <- replace_zeros(freq, is_freq = data_is_freq)
         }
     } else {
         counts <- data
@@ -247,8 +247,11 @@ ecoda_helper <- function(data = NULL,
 
     if (!is.null(counts)) {
         if (any(counts == 0)) {
-            message("Counts contain zeros. Zeros were imputed with 0.67.")
-            counts_imp <- impute_zeros(counts)
+            message(
+                "Counts contain zeros. ",
+                "A pseudo count of +0.5 was added to all counts."
+            )
+            counts_imp <- replace_zeros(counts)
         } else {
             counts_imp <- counts
         }
@@ -358,7 +361,7 @@ clr <- function(df) {
 }
 
 
-#' Impute zero values in count or frequency data
+#' Replace zero values in count or frequency data
 #'
 #' This function replaces zero values in a data frame or matrix to facilitate
 #' downstream transformations that require strictly positive values, such as the
@@ -374,7 +377,7 @@ clr <- function(df) {
 #'   Formula: \code{0 + min(non_zero_values) * xmin_factor}.
 #' }
 #'
-#' @param df A data frame or matrix where zeros need to be imputed. Rows are
+#' @param df A data frame or matrix where zeros need to be replaced. Rows are
 #'   typically samples and columns are cell types.
 #' @param is_freq Logical (default: \code{FALSE}). If \code{TRUE}, the function
 #'   treats the input as relative frequencies and uses the minimum observed
@@ -382,34 +385,33 @@ clr <- function(df) {
 #'   counts.
 #' @param counts_min Numeric (default: 1). The base value used for count
 #'   imputation. Only used if \code{is_freq = FALSE}.
-#' @param xmin_factor Numeric (default: 2/3). The multiplier applied to the
-#'   minimum value (\code{counts_min} for counts or the observed minimum for
-#'   frequencies) to determine the imputation value.
+#' @param xmin_factor Numeric (default: 2/3). If the input was frequencies,
+#'   replaces zeros with xmin_factor times the observed minimum.
 #'
 #' @return A data frame or matrix of the same dimensions as \code{df} with all
 #'   zero values replaced by the calculated imputation value.
 #'
-#' @export impute_zeros
+#' @export replace_zeros
 #'
 #' @examples
-#' # Impute zeros in a count matrix
+#' # Replace zeros in a count matrix
 #' counts_df <- data.frame(A = c(10, 0, 5), B = c(20, 10, 0))
-#' impute_zeros(counts_df, is_freq = FALSE)
+#' replace_zeros(counts_df, is_freq = FALSE)
 #'
-#' # Impute zeros in a frequency matrix
+#' # Replace zeros in a frequency matrix
 #' freq_df <- data.frame(A = c(0.5, 0, 0.2), B = c(0.5, 1.0, 0.8))
-#' impute_zeros(freq_df, is_freq = TRUE)
-impute_zeros <- function(df,
-                         is_freq = FALSE,
-                         counts_min = 1,
-                         xmin_factor = 2 / 3) {
+#' replace_zeros(freq_df, is_freq = TRUE)
+replace_zeros <- function(df,
+                          is_freq = FALSE,
+                          counts_min = 0.5,
+                          xmin_factor = 2 / 3) {
     zero_idx <- df == 0
     if (is_freq) {
         # Frequencies
         df[zero_idx] <- min(df[df > 0], na.rm = TRUE) * xmin_factor
     } else {
         # Counts
-        df[zero_idx] <- counts_min * xmin_factor
+        df <- df + counts_min
     }
 
     return(df)
@@ -978,7 +980,7 @@ calculate_pseudobulk <- function(count_matrix,
     if (any(is.na(sample_ids))) {
         stop(
             "sample_ids contains NA values. ",
-            "Please remove or impute missing values."
+            "Please remove or replace missing values."
         )
     }
 

@@ -77,9 +77,9 @@ Additionally, it will calculate useful metrics, such as:
 
 **NOTE:** To calculate CLR-transformed cell type abundances, zero counts or
 relative abundances are not allowed (log of zero is not defined). For this
-reason, zeros are imputed by adding a pseudocount of + (2/3) (to not distort
-ratios) or 2/3 times the smallest value [@martín-fernández2003] in case the
-ECODA object was created from a data frame of relative abundances.
+reason, zeros are replaced by adding a small pseudocount of + 0.5 to all values
+(to not distort ratios) or 2/3 times the smallest value [@martín-fernández2003]
+in case the ECODA object was created from a data frame of relative abundances.
 
 
 ## From SingleCellExperiment object
