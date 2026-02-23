@@ -15,7 +15,7 @@ metadata, transformation results, and variability analysis outcomes.
 \item{\code{counts}}{Original cell count data (samples as rows, cell types as
 columns).}
 
-\item{\code{counts_imp}}{Imputed cell count data, typically used to handle zero
+\item{\code{counts_imp}}{Replaced cell count data, typically used to handle zero
 counts.}
 
 \item{\code{freq}}{Relative frequency (percentage) of cell types derived from

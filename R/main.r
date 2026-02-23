@@ -10,7 +10,7 @@
 #'
 #' @slot counts Original cell count data (samples as rows, cell types as
 #'   columns).
-#' @slot counts_imp Replaced cell count data, typically used to handle zero
+#' @slot counts_imp Zero imputed cell count data, typically used to handle zero
 #'   counts.
 #' @slot freq Relative frequency (percentage) of cell types derived from
 #'   `counts`.
