@@ -19,7 +19,6 @@ plot_pca(
   mod_score = TRUE,
   sil_score = FALSE,
   anosim_score = TRUE,
-  anosim_distance = "euclidian",
   anosim_permutations = 99,
   anosim_parallel = detectCores(),
   ari_nclusts = NULL,
@@ -83,10 +82,6 @@ the average Silhouette width using \code{\link{calc_sil}}.}
 
 \item{anosim_score}{Logical (default: \code{TRUE}). If \code{TRUE},
 calculates the ANOSIM statistic (R) using \code{vegan::anosim}.}
-
-\item{anosim_distance}{Character string (default: \code{"euclidian"}). The
-distance method used for the ANOSIM calculation (e.g., "euclidean",
-"manhattan").}
 
 \item{anosim_permutations}{Integer (default: \code{99}). The number of
 permutations to use when calculating the ANOSIM statistic.}

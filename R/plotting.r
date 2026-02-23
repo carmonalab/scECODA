@@ -53,9 +53,6 @@
 #'   the average Silhouette width using \code{\link{calc_sil}}.
 #' @param anosim_score Logical (default: \code{TRUE}). If \code{TRUE},
 #'   calculates the ANOSIM statistic (R) using \code{vegan::anosim}.
-#' @param anosim_distance Character string (default: \code{"euclidian"}). The
-#'   distance method used for the ANOSIM calculation (e.g., "euclidean",
-#'   "manhattan").
 #' @param anosim_permutations Integer (default: \code{99}). The number of
 #'   permutations to use when calculating the ANOSIM statistic.
 #' @param anosim_parallel Integer (default: \code{detectCores()}). The number of
@@ -139,7 +136,6 @@ plot_pca <- function(ecoda_object,
                      mod_score = TRUE,
                      sil_score = FALSE,
                      anosim_score = TRUE,
-                     anosim_distance = "euclidian",
                      anosim_permutations = 99,
                      anosim_parallel = detectCores(),
                      ari_nclusts = NULL,
@@ -183,7 +179,6 @@ plot_pca <- function(ecoda_object,
         if (anosim_score) {
             anosim_score <- calc_anosim(
                 feat_mat, labels,
-                distance = anosim_distance,
                 permutations = anosim_permutations,
                 parallel = anosim_parallel,
                 digits = score_digits
