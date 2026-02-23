@@ -345,9 +345,6 @@ plot_pca3d <- function(ecoda_object,
 #'   abundances, with samples as rows and features as columns).
 #' @param labels Vector of factors or character strings. The grouping variable
 #'   (the known cluster assignments) for each row in the matrix.
-#' @param distance Character string (default: \code{"euclidean"}). The distance
-#'   method to use for calculating dissimilarities. Passed to the
-#'   \code{distance} argument of \code{vegan::anosim}.
 #' @param permutations Integer (default: \code{999}). The number of permutations
 #'   to use when calculating the ANOSIM R-statistic and p-value.
 #' @param parallel Integer (optional, default: \code{detectCores()}). The number
@@ -376,14 +373,12 @@ plot_pca3d <- function(ecoda_object,
 #' calc_anosim(feat_mat, labels, parallel = 1)
 calc_anosim <- function(feat_mat,
                         labels,
-                        distance = "euclidean",
                         permutations = 99,
                         parallel = 1,
                         digits = 3) {
     score <- anosim(
-        x = feat_mat,
+        x = dist(feat_mat),
         grouping = labels,
-        distance = distance,
         permutations = permutations,
         parallel = parallel
     )[["statistic"]]
@@ -455,7 +450,7 @@ calc_ari <- function(feat_mat,
     )
 
     # Perform PAM clustering
-    clust_labels <- pam(feat_mat, k = nclusts)$cluster
+    clust_labels <- pam(dist_mat, k = nclusts)$cluster
     results[["pamclust_accuracy"]] <- adjustedRandIndex(
         as.numeric(as.factor(labels)), clust_labels
     )
@@ -477,23 +472,28 @@ calc_ari <- function(feat_mat,
 #' Calculate Adjusted Modularity Score
 #'
 #' Calculates the Modularity score for a given clustering (\code{labels}) based
-#' on a Shared Nearest Neighbor (SNN) graph constructed from the feature matrix
-#' (\code{feat_mat}). The score is adjusted by the theoretical maximum
-#' modularity for the number of groups to always be between
+#' on a Shared Nearest Neighbor (SNN) graph.The score is adjusted by the
+#' theoretical maximum modularity for the number of groups to always be between
 #' -0.5 (poor clustering) and +1 (excellent clustering)).
 #'
 #' @param feat_mat Numeric matrix or data frame. The feature matrix used to
-#'   compute the SNN graph (e.g., CLR abundances).
+#'   compute distances (e.g., CLR abundances).
 #' @param labels Vector of factors or character strings. The cluster assignments
 #'   for each row in \code{feat_mat}.
-#' @param digits Integer (default: \code{3}). The number of decimal places to
-#'   round the final adjusted score.
 #' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
 #'   neighbors (\code{k}) used for SNN graph construction. If \code{NULL}, it
 #'   defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is the number of
 #'   samples.
+#' @param digits Integer (default: \code{3}). The number of decimal places to
+#'   round the final adjusted score.
 #'
-#' @return A numeric value representing the adjusted modularity score.
+#' @return A numeric value representing the adjusted modularity score,
+#'   ranging from -0.5 to 1.0.
+#'
+#' @references
+#' Brandes, Ulrik, et al.
+#' "On finding graph clusterings with maximum modularity."
+#' European Symposium on Algorithms. Springer, Berlin, Heidelberg, 2007.
 #'
 #' @importFrom igraph modularity
 #'
@@ -520,7 +520,9 @@ calc_modularity <- function(feat_mat, labels, knn_k = 3, digits = 3) {
     }
 
     # Create a graph object
-    g <- compute_snn_graph(feat_mat = feat_mat, knn_k = knn_k)
+    dist_mat <- dist(feat_mat)
+    knn <- compute_KNN_from_dist(dist_mat, knn_k)
+    g <- compute_snn_graph(knn)
 
     # Compute modularity
     modularity_score <- modularity(g, membership = as.numeric(factor(labels)))
@@ -539,50 +541,50 @@ calc_modularity <- function(feat_mat, labels, knn_k = 3, digits = 3) {
 }
 
 
-#' Compute K-Nearest Neighbors (KNN)
+#' Compute K-Nearest Neighbors (KNN) from Distance Matrix
 #'
-#' Calculates the indices of the K-nearest neighbors for each sample (row) in a
-#' feature matrix using the \code{RANN} package.
+#' Identifies the indices of the K-nearest neighbors for each sample based on a
+#' pre-computed distance matrix.
 #'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR
-#'   abundances).
-#' @param knn_k Integer. The number of neighbors (\code{k}) to return.
+#' @param dist_mat A square distance matrix or an object of class \code{dist}.
+#' @param knn_k Integer. The number of neighbors (\code{k}) to return for each
+#'   sample.
 #'
-#' @return A matrix where each row corresponds to a sample and contains the
-#'   indices of its \code{k} nearest neighbors.
+#' @return A matrix with \code{nrow(dist_mat)} rows and \code{knn_k} columns,
+#'   where each row contains the indices of the nearest neighbors.
 #'
 #' @importFrom RANN nn2
-compute_KNN <- function(feat_mat, knn_k) {
-    # Compute KNN
-    knn <- nn2(as.matrix(feat_mat), k = knn_k + 1)$nn.idx
-    knn <- knn[, -1] # Remove self-neighbor
+compute_KNN_from_dist <- function(dist_mat, knn_k) {
+    # dist_mat should be a square matrix or 'dist' object
+    dist_mat <- as.matrix(dist_mat)
+    n <- nrow(dist_mat)
+    knn <- matrix(0, nrow = n, ncol = knn_k)
+
+    for (i in 1:n) {
+        # Sort distances in row i, get indices of the 2nd to (k+1)th closest
+        # (index 1 is always the node itself)
+        knn[i, ] <- order(dist_mat[i, ])[2:(knn_k + 1)]
+    }
     return(knn)
 }
 
 
 #' Compute Shared Nearest Neighbor (SNN) Graph
 #'
-#' Constructs a graph where nodes are samples and edges are weighted by the
-#' number of shared nearest neighbors (SNN) between them. This graph is used for
-#' community detection or, in this context, modularity calculation.
+#' Constructs a graph where nodes represent samples and edges are weighted
+#' by the number of shared nearest neighbors (SNN) between them.
 #'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR
-#'   abundances).
-#' @param knn_k Integer. The number of nearest neighbors (\code{k}) used for SNN
-#'   calculation.
+#' @param knn A matrix of nearest neighbor indices, typically generated by
+#'   \code{compute_KNN_from_dist}.
 #'
-#' @return An \code{igraph} graph object where edge weights represent shared
-#'   neighbors.
+#' @return An \code{igraph} graph object where edge weights correspond to the
+#'   count of shared neighbors between nodes.
 #'
 #' @importFrom igraph graph_from_adjacency_matrix
-compute_snn_graph <- function(feat_mat,
-                              knn_k) {
-    knn <- compute_KNN(feat_mat = feat_mat, knn_k = knn_k)
-
+compute_snn_graph <- function(knn) {
     # Initialize adjacency matrix
-    n <- nrow(as.matrix(feat_mat))
+    n <- nrow(knn)
     adj_matrix <- matrix(0, n, n)
-
     # Count shared neighbors
     for (i in seq_len(n)) {
         for (j in knn[i, ]) {
@@ -591,14 +593,12 @@ compute_snn_graph <- function(feat_mat,
             adj_matrix[j, i] <- shared_neighbors # Ensure symmetry
         }
     }
-
     # Create graph object
-    g <- graph_from_adjacency_matrix(adj_matrix,
+    g <- igraph::graph_from_adjacency_matrix(adj_matrix,
         mode = "undirected",
         weighted = TRUE,
         diag = FALSE
     )
-
     return(g)
 }
 

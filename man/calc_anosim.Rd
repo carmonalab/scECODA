@@ -4,14 +4,7 @@
 \alias{calc_anosim}
 \title{Analysis of Similarities (ANOSIM) R score}
 \usage{
-calc_anosim(
-  feat_mat,
-  labels,
-  distance = "euclidean",
-  permutations = 99,
-  parallel = 1,
-  digits = 3
-)
+calc_anosim(feat_mat, labels, permutations = 99, parallel = 1, digits = 3)
 }
 \arguments{
 \item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR
@@ -19,10 +12,6 @@ abundances, with samples as rows and features as columns).}
 
 \item{labels}{Vector of factors or character strings. The grouping variable
 (the known cluster assignments) for each row in the matrix.}
-
-\item{distance}{Character string (default: \code{"euclidean"}). The distance
-method to use for calculating dissimilarities. Passed to the
-\code{distance} argument of \code{vegan::anosim}.}
 
 \item{permutations}{Integer (default: \code{999}). The number of permutations
 to use when calculating the ANOSIM R-statistic and p-value.}

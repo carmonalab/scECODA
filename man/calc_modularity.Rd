@@ -8,7 +8,7 @@ calc_modularity(feat_mat, labels, knn_k = 3, digits = 3)
 }
 \arguments{
 \item{feat_mat}{Numeric matrix or data frame. The feature matrix used to
-compute the SNN graph (e.g., CLR abundances).}
+compute distances (e.g., CLR abundances).}
 
 \item{labels}{Vector of factors or character strings. The cluster assignments
 for each row in \code{feat_mat}.}
@@ -22,13 +22,13 @@ samples.}
 round the final adjusted score.}
 }
 \value{
-A numeric value representing the adjusted modularity score.
+A numeric value representing the adjusted modularity score,
+ranging from -0.5 to 1.0.
 }
 \description{
 Calculates the Modularity score for a given clustering (\code{labels}) based
-on a Shared Nearest Neighbor (SNN) graph constructed from the feature matrix
-(\code{feat_mat}). The score is adjusted by the theoretical maximum
-modularity for the number of groups to always be between
+on a Shared Nearest Neighbor (SNN) graph.The score is adjusted by the
+theoretical maximum modularity for the number of groups to always be between
 -0.5 (poor clustering) and +1 (excellent clustering)).
 }
 \examples{
@@ -44,4 +44,9 @@ labels <- slot(ecoda_object, "metadata")$subject.cmv
 
 # Run the calculation
 calc_modularity(feat_mat, labels)
+}
+\references{
+Brandes, Ulrik, et al.
+"On finding graph clusterings with maximum modularity."
+European Symposium on Algorithms. Springer, Berlin, Heidelberg, 2007.
 }
