@@ -4,11 +4,10 @@
 \alias{calc_ari}
 \title{Calculate Adjusted Rand Index (ARI)}
 \usage{
-calc_ari(feat_mat, labels, nclusts = NULL, digits = 3, return_mean = TRUE)
+calc_ari(dist_mat, labels, nclusts = NULL, digits = 3, return_mean = TRUE)
 }
 \arguments{
-\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR
-abundances).}
+\item{dist_mat}{Sample distance matrix.}
 
 \item{labels}{Vector of factors or character strings. The true or known
 cluster assignments for each row in the matrix.}
@@ -43,9 +42,9 @@ ecoda_object <- ecoda(
 )
 
 # Extract necessary components
-feat_mat <- slot(ecoda_object, "clr")
+dist_mat <- dist(slot(ecoda_object, "clr"))
 labels <- slot(ecoda_object, "metadata")$subject.cmv
 
 # Run the calculation
-calc_ari(feat_mat, labels)
+calc_ari(dist_mat, labels)
 }

@@ -150,6 +150,9 @@ plot_pca <- function(ecoda_object,
                      repel = TRUE) {
     slot <- match.arg(slot)
     feat_mat <- slot(ecoda_object, slot)
+    if (any(cluster_score, mod_score, sil_score, anosim_score)) {
+        dist_mat <- dist(feat_mat)
+    }
 
     res.pca <- prcomp(feat_mat, scale. = scale.)
 
@@ -178,7 +181,7 @@ plot_pca <- function(ecoda_object,
         }
         if (anosim_score) {
             anosim_score <- calc_anosim(
-                feat_mat, labels,
+                dist_mat, labels,
                 permutations = anosim_permutations,
                 parallel = anosim_parallel,
                 digits = score_digits
@@ -187,20 +190,20 @@ plot_pca <- function(ecoda_object,
         }
         if (cluster_score) {
             cluster_score <- calc_ari(
-                feat_mat, labels,
+                dist_mat, labels,
                 nclusts = ari_nclusts, digits = score_digits
             )
             title <- paste0(title, "\nARI: ", cluster_score)
         }
         if (mod_score) {
             mod_score <- calc_modularity(
-                feat_mat, labels, knn_k,
+                dist_mat, labels, knn_k,
                 digits = score_digits
             )
             title <- paste0(title, "\nModularity score: ", mod_score)
         }
         if (sil_score) {
-            sil_score <- calc_sil(feat_mat, labels, digits = score_digits)
+            sil_score <- calc_sil(dist_mat, labels, digits = score_digits)
             title <- paste0(title, "\nSilhouette score: ", sil_score)
         }
     } else {
@@ -321,8 +324,7 @@ plot_pca3d <- function(ecoda_object,
 #'
 #' @description Calculates the ANOSIM R-statistic to test whether there is
 #'   significant separation between two or more groups (defined by
-#'   \code{labels}) based on the multivariate distances among samples in the
-#'   feature space (\code{feat_mat}).
+#'   \code{labels}) based on the sample distance matrix (\code{dist_mat}).
 #'
 #' @details ANOSIM compares the mean of rank dissimilarities between groups to
 #'   the mean of rank dissimilarities within groups. The R-statistic ranges from
@@ -336,8 +338,7 @@ plot_pca3d <- function(ecoda_object,
 #'         (a very rare result).
 #' }
 #'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR
-#'   abundances, with samples as rows and features as columns).
+#' @param dist_mat Sample distance matrix.
 #' @param labels Vector of factors or character strings. The grouping variable
 #'   (the known cluster assignments) for each row in the matrix.
 #' @param permutations Integer (default: \code{999}). The number of permutations
@@ -361,18 +362,18 @@ plot_pca3d <- function(ecoda_object,
 #' )
 #'
 #' # Extract necessary components
-#' feat_mat <- slot(ecoda_object, "clr")
+#' dist_mat <- dist(slot(ecoda_object, "clr"))
 #' labels <- slot(ecoda_object, "metadata")$subject.cmv
 #'
 #' # Run the calculation
-#' calc_anosim(feat_mat, labels, parallel = 1)
-calc_anosim <- function(feat_mat,
+#' calc_anosim(dist_mat, labels, parallel = 1)
+calc_anosim <- function(dist_mat,
                         labels,
                         permutations = 99,
                         parallel = 1,
                         digits = 3) {
     score <- anosim(
-        x = dist(feat_mat),
+        x = dist_mat,
         grouping = labels,
         permutations = permutations,
         parallel = parallel
@@ -389,8 +390,7 @@ calc_anosim <- function(feat_mat,
 #' from two unsupervised clustering methods: Hierarchical Clustering
 #' (\code{hclust}) and Partitioning Around Medoids (\code{pam}).
 #'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g., CLR
-#'   abundances).
+#' @param dist_mat Sample distance matrix.
 #' @param labels Vector of factors or character strings. The true or known
 #'   cluster assignments for each row in the matrix.
 #' @param nclusts Integer (optional, default: \code{NULL}). The target number of
@@ -420,18 +420,17 @@ calc_anosim <- function(feat_mat,
 #' )
 #'
 #' # Extract necessary components
-#' feat_mat <- slot(ecoda_object, "clr")
+#' dist_mat <- dist(slot(ecoda_object, "clr"))
 #' labels <- slot(ecoda_object, "metadata")$subject.cmv
 #'
 #' # Run the calculation
-#' calc_ari(feat_mat, labels)
-calc_ari <- function(feat_mat,
+#' calc_ari(dist_mat, labels)
+calc_ari <- function(dist_mat,
                      labels,
                      nclusts = NULL,
                      digits = 3,
                      return_mean = TRUE) {
     results <- list()
-    dist_mat <- dist(feat_mat)
 
     if (is.null(nclusts)) {
         nclusts <- length(unique(labels))
@@ -471,10 +470,9 @@ calc_ari <- function(feat_mat,
 #' theoretical maximum modularity for the number of groups to always be between
 #' -0.5 (poor clustering) and +1 (excellent clustering)).
 #'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix used to
-#'   compute distances (e.g., CLR abundances).
+#' @param dist_mat Sample distance matrix.
 #' @param labels Vector of factors or character strings. The cluster assignments
-#'   for each row in \code{feat_mat}.
+#'   for each row in \code{dist_mat}.
 #' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
 #'   neighbors (\code{k}) used for SNN graph construction. If \code{NULL}, it
 #'   defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is the number of
@@ -502,20 +500,19 @@ calc_ari <- function(feat_mat,
 #' )
 #'
 #' # Extract necessary components
-#' feat_mat <- slot(ecoda_object, "clr")
+#' dist_mat <- dist(slot(ecoda_object, "clr"))
 #' labels <- slot(ecoda_object, "metadata")$subject.cmv
 #'
 #' # Run the calculation
-#' calc_modularity(feat_mat, labels)
-calc_modularity <- function(feat_mat, labels, knn_k = 3, digits = 3) {
+#' calc_modularity(dist_mat, labels)
+calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
     ngroups <- length(unique(labels))
 
     if (is.null(knn_k)) {
-        knn_k <- max(3, round(sqrt(nrow(feat_mat))))
+        knn_k <- max(3, round(sqrt(attr(dist_mat, "Size"))))
     }
 
     # Create a graph object
-    dist_mat <- dist(feat_mat)
     knn <- compute_KNN_from_dist(dist_mat, knn_k)
     g <- compute_snn_graph(knn)
 
@@ -604,11 +601,9 @@ compute_snn_graph <- function(knn) {
 #' pre-defined cluster assignments (\code{labels}). This metric assesses the
 #' quality of the clustering.
 #'
-#' @param feat_mat Numeric matrix or data frame. The feature matrix (e.g.,
-#'   CLR-transformed abundances or PCA scores) on which the distance calculation
-#'   is based.
+#' @param dist_mat Sample distance matrix.
 #' @param labels Vector of factors or character strings. The cluster assignments
-#'   for each row in \code{feat_mat} (i.e., the grouping variable).
+#'   for each row in \code{dist_mat} (i.e., the grouping variable).
 #' @param digits Integer (default: \code{3}). The number of decimal places to
 #'   round the final score.
 #'
@@ -628,15 +623,15 @@ compute_snn_graph <- function(knn) {
 #' )
 #'
 #' # Extract necessary components
-#' feat_mat <- slot(ecoda_object, "clr")
+#' dist_mat <- dist(slot(ecoda_object, "clr"))
 #' labels <- slot(ecoda_object, "metadata")$subject.cmv
 #'
 #' # Run the calculation
-#' calc_sil(feat_mat, labels)
-calc_sil <- function(feat_mat, labels, digits = 3) {
+#' calc_sil(dist_mat, labels)
+calc_sil <- function(dist_mat, labels, digits = 3) {
     sils <- silhouette(
         x = as.numeric(factor(labels)),
-        dist = dist(feat_mat)
+        dist = dist_mat
     ) %>%
         as.data.frame()
     score <- mean(sils[["sil_width"]])

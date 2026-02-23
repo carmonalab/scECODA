@@ -4,11 +4,10 @@
 \alias{calc_anosim}
 \title{Analysis of Similarities (ANOSIM) R score}
 \usage{
-calc_anosim(feat_mat, labels, permutations = 99, parallel = 1, digits = 3)
+calc_anosim(dist_mat, labels, permutations = 99, parallel = 1, digits = 3)
 }
 \arguments{
-\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g., CLR
-abundances, with samples as rows and features as columns).}
+\item{dist_mat}{Sample distance matrix.}
 
 \item{labels}{Vector of factors or character strings. The grouping variable
 (the known cluster assignments) for each row in the matrix.}
@@ -28,8 +27,7 @@ A numeric value representing the \strong{ANOSIM R-statistic}.
 \description{
 Calculates the ANOSIM R-statistic to test whether there is
 significant separation between two or more groups (defined by
-\code{labels}) based on the multivariate distances among samples in the
-feature space (\code{feat_mat}).
+\code{labels}) based on the sample distance matrix (\code{dist_mat}).
 }
 \details{
 ANOSIM compares the mean of rank dissimilarities between groups to
@@ -52,9 +50,9 @@ ecoda_object <- ecoda(
 )
 
 # Extract necessary components
-feat_mat <- slot(ecoda_object, "clr")
+dist_mat <- dist(slot(ecoda_object, "clr"))
 labels <- slot(ecoda_object, "metadata")$subject.cmv
 
 # Run the calculation
-calc_anosim(feat_mat, labels, parallel = 1)
+calc_anosim(dist_mat, labels, parallel = 1)
 }

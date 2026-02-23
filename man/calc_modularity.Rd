@@ -4,14 +4,13 @@
 \alias{calc_modularity}
 \title{Calculate Adjusted Modularity Score}
 \usage{
-calc_modularity(feat_mat, labels, knn_k = 3, digits = 3)
+calc_modularity(dist_mat, labels, knn_k = 3, digits = 3)
 }
 \arguments{
-\item{feat_mat}{Numeric matrix or data frame. The feature matrix used to
-compute distances (e.g., CLR abundances).}
+\item{dist_mat}{Sample distance matrix.}
 
 \item{labels}{Vector of factors or character strings. The cluster assignments
-for each row in \code{feat_mat}.}
+for each row in \code{dist_mat}.}
 
 \item{knn_k}{Integer (optional, default: \code{NULL}). The number of nearest
 neighbors (\code{k}) used for SNN graph construction. If \code{NULL}, it
@@ -39,11 +38,11 @@ ecoda_object <- ecoda(
 )
 
 # Extract necessary components
-feat_mat <- slot(ecoda_object, "clr")
+dist_mat <- dist(slot(ecoda_object, "clr"))
 labels <- slot(ecoda_object, "metadata")$subject.cmv
 
 # Run the calculation
-calc_modularity(feat_mat, labels)
+calc_modularity(dist_mat, labels)
 }
 \references{
 Brandes, Ulrik, et al.

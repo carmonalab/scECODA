@@ -4,15 +4,13 @@
 \alias{calc_sil}
 \title{Calculate Average Silhouette Width}
 \usage{
-calc_sil(feat_mat, labels, digits = 3)
+calc_sil(dist_mat, labels, digits = 3)
 }
 \arguments{
-\item{feat_mat}{Numeric matrix or data frame. The feature matrix (e.g.,
-CLR-transformed abundances or PCA scores) on which the distance calculation
-is based.}
+\item{dist_mat}{Sample distance matrix.}
 
 \item{labels}{Vector of factors or character strings. The cluster assignments
-for each row in \code{feat_mat} (i.e., the grouping variable).}
+for each row in \code{dist_mat} (i.e., the grouping variable).}
 
 \item{digits}{Integer (default: \code{3}). The number of decimal places to
 round the final score.}
@@ -34,9 +32,9 @@ ecoda_object <- ecoda(
 )
 
 # Extract necessary components
-feat_mat <- slot(ecoda_object, "clr")
+dist_mat <- dist(slot(ecoda_object, "clr"))
 labels <- slot(ecoda_object, "metadata")$subject.cmv
 
 # Run the calculation
-calc_sil(feat_mat, labels)
+calc_sil(dist_mat, labels)
 }
