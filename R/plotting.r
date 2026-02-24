@@ -154,6 +154,8 @@ plot_pca <- function(ecoda_object,
         dist_mat <- dist(feat_mat)
     }
 
+    format_str <- paste0("%.", score_digits, "f")
+
     res.pca <- prcomp(feat_mat, scale. = scale.)
 
 
@@ -186,25 +188,25 @@ plot_pca <- function(ecoda_object,
                 parallel = anosim_parallel,
                 digits = score_digits
             )
-            title <- paste0(title, "\nANOSIM score: ", anosim_score)
+            title <- paste0(title, "\nANOSIM score: ", sprintf(format_str, anosim_score))
         }
         if (cluster_score) {
             cluster_score <- calc_ari(
                 dist_mat, labels,
                 nclusts = ari_nclusts, digits = score_digits
             )
-            title <- paste0(title, "\nARI: ", cluster_score)
+            title <- paste0(title, "\nARI: ", sprintf(format_str, cluster_score))
         }
         if (mod_score) {
             mod_score <- calc_modularity(
                 dist_mat, labels, knn_k,
                 digits = score_digits
             )
-            title <- paste0(title, "\nModularity score: ", mod_score)
+            title <- paste0(title, "\nModularity score: ", sprintf(format_str, mod_score))
         }
         if (sil_score) {
             sil_score <- calc_sil(dist_mat, labels, digits = score_digits)
-            title <- paste0(title, "\nSilhouette score: ", sil_score)
+            title <- paste0(title, "\nSilhouette score: ", sprintf(format_str, sil_score))
         }
     } else {
         labels <- "none"
