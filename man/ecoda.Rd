@@ -12,7 +12,10 @@ ecoda(
   celltype_col = NULL,
   get_pb = FALSE,
   variance_explained = 0.5,
-  top_n_hvcs = NULL
+  top_n_hvcs = NULL,
+  pseudo_count = 0.5,
+  pseudo_frac_min = 2/3,
+  add_to = NULL
 )
 }
 \arguments{
@@ -45,6 +48,15 @@ to determine the number of highly variable cell types (HVCs).}
 
 \item{top_n_hvcs}{Integer (optional). If provided, specifies the exact number
 of top HVCs to select, overriding \code{variance_explained}.}
+
+\item{pseudo_count}{Numeric (default: 0.5). Used if \code{rep_method =
+"counts"}.}
+
+\item{pseudo_frac_min}{Numeric (default: 2/3). The multiplier for the minimum
+non-zero value when \code{rep_method = "frac_min"}.}
+
+\item{add_to}{Character string. Should the value be added to \code{"all"}
+cells or just the \code{"zeros"}?}
 }
 \value{
 A new \link[=ECODA-class]{ECODA} object.

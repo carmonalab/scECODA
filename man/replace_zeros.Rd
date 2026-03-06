@@ -4,49 +4,52 @@
 \alias{replace_zeros}
 \title{Replace zero values in count or frequency data}
 \usage{
-replace_zeros(df, is_freq = FALSE, counts_min = 0.5, xmin_factor = 2/3)
+replace_zeros(
+  df,
+  rep_method = c("counts", "frac_min"),
+  pseudo_count = 0.5,
+  pseudo_frac_min = 2/3,
+  add_to = NULL
+)
 }
 \arguments{
-\item{df}{A data frame or matrix where zeros need to be replaced. Rows are
-typically samples and columns are cell types.}
+\item{df}{A data frame or matrix where zeros need to be replaced.}
 
-\item{is_freq}{Logical (default: \code{FALSE}). If \code{TRUE}, the function
-treats the input as relative frequencies and uses the minimum observed
-non-zero value for imputation. If \code{FALSE}, it treats the input as raw
-counts.}
+\item{rep_method}{Character string specifying the replacement strategy. One
+of \code{"counts"}, or \code{"frac_min"}.}
 
-\item{counts_min}{Numeric (default: 1). The base value used for count
-imputation. Only used if \code{is_freq = FALSE}.}
+\item{pseudo_count}{Numeric (default: 0.5). Used if \code{rep_method =
+"counts"}.}
 
-\item{xmin_factor}{Numeric (default: 2/3). If the input was frequencies,
-replaces zeros with xmin_factor times the observed minimum.}
+\item{pseudo_frac_min}{Numeric (default: 2/3). The multiplier for the minimum
+non-zero value when \code{rep_method = "frac_min"}.}
+
+\item{add_to}{Character string. Should the value be added to \code{"all"}
+cells or just the \code{"zeros"}?}
 }
 \value{
 A data frame or matrix of the same dimensions as \code{df} with all
-zero values replaced by the calculated imputation value.
+zero values replaced by the calculated replacement value.
 }
 \description{
 This function replaces zero values in a data frame or matrix to facilitate
 downstream transformations that require strictly positive values, such as the
-Centered Log-Ratio (CLR) transformation. It employs a simple multiplicative
-replacement strategy for both raw counts and relative frequencies.
+Centered Log-Ratio (CLR) transformation.
 }
 \details{
-The imputation logic differs based on the type of data:
+The function provides two methods for handling zeros:
 \itemize{
-\item \strong{Counts:} Zeros are replaced by a fraction of a minimum count
-(typically 1). Formula: \code{0 + counts_min * xmin_factor}.
-\item \strong{Frequencies:} Zeros are replaced by a fraction of the
-smallest observed non-zero value in the dataset.
-Formula: \code{0 + min(non_zero_values) * xmin_factor}.
+\item \strong{counts:} Adds a fixed value (\code{pseudo_count}).
+\item \strong{frac_min:} Replaces zeros with a fraction (\code{pseudo_frac_min})
+of the smallest observed non-zero value in the dataset.
 }
 }
 \examples{
 # Replace zeros in a count matrix
 counts_df <- data.frame(A = c(10, 0, 5), B = c(20, 10, 0))
-replace_zeros(counts_df, is_freq = FALSE)
+replace_zeros(counts_df, rep_method = "counts", add_to = "all")
 
 # Replace zeros in a frequency matrix
 freq_df <- data.frame(A = c(0.5, 0, 0.2), B = c(0.5, 1.0, 0.8))
-replace_zeros(freq_df, is_freq = TRUE)
+replace_zeros(freq_df, rep_method = "frac_min", add_to = "zeros")
 }

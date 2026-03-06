@@ -97,6 +97,12 @@ setClass(
 #'   to determine the number of highly variable cell types (HVCs).
 #' @param top_n_hvcs Integer (optional). If provided, specifies the exact number
 #'   of top HVCs to select, overriding \code{variance_explained}.
+#' @param pseudo_count Numeric (default: 0.5). Used if \code{rep_method =
+#'   "counts"}.
+#' @param pseudo_frac_min Numeric (default: 2/3). The multiplier for the minimum
+#'   non-zero value when \code{rep_method = "frac_min"}.
+#' @param add_to Character string. Should the value be added to \code{"all"}
+#'   cells or just the \code{"zeros"}?
 #'
 #' @return A new \link[=ECODA-class]{ECODA} object.
 #'
@@ -122,7 +128,10 @@ ecoda <- function(data = NULL,
                   celltype_col = NULL,
                   get_pb = FALSE,
                   variance_explained = 0.5,
-                  top_n_hvcs = NULL) {
+                  top_n_hvcs = NULL,
+                  pseudo_count = 0.5,
+                  pseudo_frac_min = 2 / 3,
+                  add_to = NULL) {
     # --- A) Handle input from a Seurat or SingleCellExperiment object ---
     if (inherits(data, "Seurat") | inherits(data, "SingleCellExperiment")) {
         if (is.null(sample_col) || is.null(celltype_col)) {
@@ -189,7 +198,10 @@ ecoda <- function(data = NULL,
         data = data,
         data_is_freq = data_is_freq,
         variance_explained = variance_explained,
-        top_n_hvcs = top_n_hvcs
+        top_n_hvcs = top_n_hvcs,
+        pseudo_count = pseudo_count,
+        pseudo_frac_min = pseudo_frac_min,
+        add_to = add_to
     )
     slot(ecoda_object, "metadata") <- metadata
 
@@ -216,6 +228,12 @@ ecoda <- function(data = NULL,
 #'   proportions (0-1 or 0-100). If \code{FALSE}, treated as raw integer counts.
 #' @param variance_explained Numeric (default: 0.5). Target variance for HVCs.
 #' @param top_n_hvcs Integer (optional). Number of top HVCs to select.
+#' @param pseudo_count Numeric (default: 0.5). Used if \code{rep_method =
+#'   "counts"}.
+#' @param pseudo_frac_min Numeric (default: 2/3). The multiplier for the minimum
+#'   non-zero value when \code{rep_method = "frac_min"}.
+#' @param add_to Character string. Should the value be added to \code{"all"}
+#'   cells or just the \code{"zeros"}?
 #'
 #' @return A fully initialized \link[=ECODA-class]{ECODA} object.
 #'
@@ -225,41 +243,47 @@ ecoda <- function(data = NULL,
 ecoda_helper <- function(data = NULL,
                          data_is_freq,
                          variance_explained = 0.5,
-                         top_n_hvcs = NULL) {
-    # Initialize the object with default values
+                         top_n_hvcs = NULL,
+                         pseudo_count = 0.5,
+                         pseudo_frac_min = 2 / 3,
+                         add_to = NULL) {
     ecoda_object <- new("ECODA")
 
-    if (data_is_freq) {
-        counts <- NULL
-        freq <- data
+    rep_method <- ifelse(data_is_freq, "frac_min", "counts")
+    add_to <- check_add_to(add_to, rep_method)
 
-        if (any(freq == 0)) {
+    data_imp <- data
+    if (any(data == 0)) {
+        if (data_is_freq) {
             message(
-                "Frequencies contain zeros. ",
-                "Zeros were replaced with the (2/3) * smallest value."
+                "Frequencies contain zeros. Zeros were replaced with the (",
+                pseudo_frac_min, ") * smallest value."
             )
-            freq_imp <- replace_zeros(freq, is_freq = data_is_freq)
+        } else {
+            message(
+                "Counts contain zeros. A pseudo count of +", pseudo_count,
+                " was added to ", add_to, " counts."
+            )
         }
-    } else {
-        counts <- data
-        freq <- NULL
+
+        data_imp <- replace_zeros(
+            df = data,
+            rep_method = rep_method,
+            pseudo_count = pseudo_count,
+            pseudo_frac_min = pseudo_frac_min,
+            add_to = add_to
+        )
     }
 
-    if (!is.null(counts)) {
-        if (any(counts == 0)) {
-            message(
-                "Counts contain zeros. ",
-                "A pseudo count of +0.5 was added to all counts."
-            )
-            counts_imp <- replace_zeros(counts)
-        } else {
-            counts_imp <- counts
-        }
-        freq <- calc_freq(counts)
-        freq_imp <- calc_freq(counts_imp)
+    if (data_is_freq) {
+        freq <- data
+        freq_imp <- data_imp
+    } else {
+        slot(ecoda_object, "counts") <- data
+        slot(ecoda_object, "counts_imp") <- data_imp
 
-        slot(ecoda_object, "counts") <- counts
-        slot(ecoda_object, "counts_imp") <- counts_imp
+        freq <- calc_freq(data)
+        freq_imp <- calc_freq(data_imp)
     }
 
     # Check if all row sums are close to 100
@@ -274,6 +298,7 @@ ecoda_helper <- function(data = NULL,
             )
             # Scale by 100
             freq <- freq * 100
+            freq_imp <- freq_imp * 100
         } else {
             # If they sum to neither 1 nor 100, warn and scale them to 100
             message(
@@ -282,25 +307,24 @@ ecoda_helper <- function(data = NULL,
             )
             # Re-scale each row so it sums to 100: (freq / row_sum) * 100
             freq <- (freq / row_sums) * 100
+            freq_imp <- (freq_imp / rowSums(freq_imp)) * 100
         }
     }
 
-    clr_df <- clr(freq_imp)
     slot(ecoda_object, "freq") <- freq
     slot(ecoda_object, "freq_imp") <- freq_imp
+
+    clr_df <- clr(freq_imp)
+    slot(ecoda_object, "clr") <- clr_df
+    slot(ecoda_object, "sample_distances") <- clr_df %>%
+        dist() %>%
+        as.matrix() %>%
+        as.data.frame()
 
     slot(ecoda_object, "asin_sqrt") <- freq %>%
         mutate(across(everything(), ~ . / 100)) %>%
         sqrt() %>%
         asin()
-
-    sdist <- clr_df %>%
-        dist() %>%
-        as.matrix() %>%
-        as.data.frame()
-
-    slot(ecoda_object, "clr") <- clr_df
-    slot(ecoda_object, "sample_distances") <- sdist
 
     ecoda_object <- find_hvcs(
         ecoda_object,
@@ -329,9 +353,8 @@ ecoda_helper <- function(data = NULL,
 #' counts <- data.frame(A = c(10, 50), B = c(90, 50))
 #' calc_freq(counts)
 calc_freq <- function(df) {
-    df <- t(apply(df, 1, function(row) (row / sum(row)) * 100)) %>%
-        as.data.frame()
-    return(df)
+    df <- (df / rowSums(df)) * 100
+    return(as.data.frame(df))
 }
 
 
@@ -353,11 +376,10 @@ calc_freq <- function(df) {
 #' freq_imp <- data.frame(A = c(10.1, 50.1), B = c(89.9, 49.9))
 #' clr(freq_imp)
 clr <- function(df) {
-    geometric_mean <- apply(df, 1, function(row) exp(mean(log(row))))
-    clr_df <- apply(df, 2, function(row) log(row) - log(geometric_mean)) %>%
-        as.data.frame()
+    log_df <- log(df)
+    clr_df <- log_df - rowMeans(log_df)
 
-    return(clr_df)
+    return(as.data.frame(clr_df))
 }
 
 
@@ -365,56 +387,68 @@ clr <- function(df) {
 #'
 #' This function replaces zero values in a data frame or matrix to facilitate
 #' downstream transformations that require strictly positive values, such as the
-#' Centered Log-Ratio (CLR) transformation. It employs a simple multiplicative
-#' replacement strategy for both raw counts and relative frequencies.
+#' Centered Log-Ratio (CLR) transformation.
 #'
-#' @details The imputation logic differs based on the type of data:
+#' @details The function provides two methods for handling zeros:
 #' \itemize{
-#'   \item \strong{Counts:} Zeros are replaced by a fraction of a minimum count
-#'   (typically 1). Formula: \code{0 + counts_min * xmin_factor}.
-#'   \item \strong{Frequencies:} Zeros are replaced by a fraction of the
-#'   smallest observed non-zero value in the dataset.
-#'   Formula: \code{0 + min(non_zero_values) * xmin_factor}.
+#'   \item \strong{counts:} Adds a fixed value (\code{pseudo_count}).
+#'   \item \strong{frac_min:} Replaces zeros with a fraction (\code{pseudo_frac_min})
+#'   of the smallest observed non-zero value in the dataset.
 #' }
 #'
-#' @param df A data frame or matrix where zeros need to be replaced. Rows are
-#'   typically samples and columns are cell types.
-#' @param is_freq Logical (default: \code{FALSE}). If \code{TRUE}, the function
-#'   treats the input as relative frequencies and uses the minimum observed
-#'   non-zero value for imputation. If \code{FALSE}, it treats the input as raw
-#'   counts.
-#' @param counts_min Numeric (default: 1). The base value used for count
-#'   imputation. Only used if \code{is_freq = FALSE}.
-#' @param xmin_factor Numeric (default: 2/3). If the input was frequencies,
-#'   replaces zeros with xmin_factor times the observed minimum.
+#' @param df A data frame or matrix where zeros need to be replaced.
+#' @param rep_method Character string specifying the replacement strategy. One
+#'   of \code{"counts"}, or \code{"frac_min"}.
+#' @param pseudo_count Numeric (default: 0.5). Used if \code{rep_method =
+#'   "counts"}.
+#' @param pseudo_frac_min Numeric (default: 2/3). The multiplier for the minimum
+#'   non-zero value when \code{rep_method = "frac_min"}.
+#' @param add_to Character string. Should the value be added to \code{"all"}
+#'   cells or just the \code{"zeros"}?
 #'
 #' @return A data frame or matrix of the same dimensions as \code{df} with all
-#'   zero values replaced by the calculated imputation value.
+#'   zero values replaced by the calculated replacement value.
 #'
 #' @export replace_zeros
 #'
 #' @examples
 #' # Replace zeros in a count matrix
 #' counts_df <- data.frame(A = c(10, 0, 5), B = c(20, 10, 0))
-#' replace_zeros(counts_df, is_freq = FALSE)
+#' replace_zeros(counts_df, rep_method = "counts", add_to = "all")
 #'
 #' # Replace zeros in a frequency matrix
 #' freq_df <- data.frame(A = c(0.5, 0, 0.2), B = c(0.5, 1.0, 0.8))
-#' replace_zeros(freq_df, is_freq = TRUE)
+#' replace_zeros(freq_df, rep_method = "frac_min", add_to = "zeros")
 replace_zeros <- function(df,
-                          is_freq = FALSE,
-                          counts_min = 0.5,
-                          xmin_factor = 2 / 3) {
-    zero_idx <- df == 0
-    if (is_freq) {
-        # Frequencies
-        df[zero_idx] <- min(df[df > 0], na.rm = TRUE) * xmin_factor
+                          rep_method = c("counts", "frac_min"),
+                          pseudo_count = 0.5,
+                          pseudo_frac_min = 2 / 3,
+                          add_to = NULL) {
+    rep_method <- match.arg(rep_method)
+    add_to <- check_add_to(add_to, rep_method)
+
+    imp_val <- switch(rep_method,
+        "counts"   = pseudo_count,
+        "frac_min" = min(df[df > 0], na.rm = TRUE) * pseudo_frac_min
+    )
+
+    if (add_to == "all") {
+        df <- df + imp_val
     } else {
-        # Counts
-        df <- df + counts_min
+        df[df == 0] <- imp_val
     }
 
     return(df)
+}
+
+check_add_to <- function(add_to, rep_method) {
+    if (is.null(add_to)) {
+        add_to <- if (rep_method == "counts") "all" else "zeros"
+    } else {
+        add_to <- match.arg(add_to, c("all", "zeros"))
+    }
+
+    return(add_to)
 }
 
 
@@ -667,33 +701,27 @@ find_hvcs <- function(ecoda_object,
 #'     descending = FALSE
 #' )
 get_celltype_variances <- function(ecoda_object, descending = TRUE) {
-    df_var <- slot(ecoda_object, "clr") %>%
-        pivot_longer(
-            cols = everything(),
-            names_to = "celltype",
-            values_to = "values"
-        ) %>%
-        group_by(celltype) %>%
-        summarize(
-            avg_clr_abundance = mean(values, na.rm = TRUE),
-            Variance = var(values, na.rm = TRUE)
-        )
+    clr_data <- slot(ecoda_object, "clr")
+
+    df_var <- data.frame(
+        celltype = colnames(clr_data),
+        avg_clr_abundance = colMeans(clr_data, na.rm = TRUE),
+        Variance = apply(clr_data, 2, var, na.rm = TRUE)
+    )
 
     if (descending) {
-        df_var <- arrange(df_var, desc(Variance))
+        df_var <- df_var[order(-df_var$Variance), , drop = FALSE]
     } else {
-        df_var <- arrange(df_var, Variance)
+        df_var <- df_var[order(df_var$Variance), , drop = FALSE]
     }
 
-    total_variance <- sum(df_var$Variance)
+    total_variance <- sum(df_var$Variance, na.rm = TRUE)
+    df_var$cumulative_variance <- cumsum(df_var$Variance)
+    df_var$variance_exp <- df_var$cumulative_variance / total_variance
 
-    df_var <- df_var %>%
-        mutate(
-            cumulative_variance = cumsum(Variance),
-            variance_exp = (cumulative_variance / total_variance)
-        )
+    rownames(df_var) <- NULL
 
-    return(as.data.frame(df_var))
+    return(df_var)
 }
 
 
@@ -898,9 +926,7 @@ plot_varmean <- function(ecoda_object,
     }
 
     # Ensure the legend is not shown if we are not highlighting anything
-    if (!highlight_hvcs) {
-        p <- p + ggplot2::theme(legend.position = "none")
-    }
+    if (!highlight_hvcs) p <- p + ggplot2::theme(legend.position = "none")
 
     if (labels != "none") {
         # Filter data for labeling based on user choice
@@ -1088,9 +1114,7 @@ deseq2_normalize <- function(pb,
         metadata <- metadata[colnames(pb), , drop = FALSE]
     }
 
-    if (is.null(deseq2_design)) {
-        deseq2_design <- formula(paste("~ 1"))
-    }
+    if (is.null(deseq2_design)) deseq2_design <- formula(paste("~ 1"))
 
     # Create DESeq2 dataset (metadata is guaranteed to exist here)
     dds <- DESeqDataSetFromMatrix(

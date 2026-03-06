@@ -8,7 +8,10 @@ ecoda_helper(
   data = NULL,
   data_is_freq,
   variance_explained = 0.5,
-  top_n_hvcs = NULL
+  top_n_hvcs = NULL,
+  pseudo_count = 0.5,
+  pseudo_frac_min = 2/3,
+  add_to = NULL
 )
 }
 \arguments{
@@ -21,6 +24,15 @@ proportions (0-1 or 0-100). If \code{FALSE}, treated as raw integer counts.}
 \item{variance_explained}{Numeric (default: 0.5). Target variance for HVCs.}
 
 \item{top_n_hvcs}{Integer (optional). Number of top HVCs to select.}
+
+\item{pseudo_count}{Numeric (default: 0.5). Used if \code{rep_method =
+"counts"}.}
+
+\item{pseudo_frac_min}{Numeric (default: 2/3). The multiplier for the minimum
+non-zero value when \code{rep_method = "frac_min"}.}
+
+\item{add_to}{Character string. Should the value be added to \code{"all"}
+cells or just the \code{"zeros"}?}
 }
 \value{
 A fully initialized \link[=ECODA-class]{ECODA} object.

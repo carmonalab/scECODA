@@ -217,9 +217,7 @@ plot_pca <- function(ecoda_object,
     }
 
     if (show_label_samples) {
-        if (!"text" %in% geom) {
-            geom <- c(geom, "text")
-        }
+        if (!"text" %in% geom) geom <- c(geom, "text")
     }
 
     p <- fviz_pca(
@@ -243,9 +241,7 @@ plot_pca <- function(ecoda_object,
         )
     }
 
-    if (coord_equal) {
-        p <- p + coord_equal()
-    }
+    if (coord_equal) p <- p + coord_equal()
 
     return(p)
 }
@@ -434,9 +430,7 @@ calc_ari <- function(dist_mat,
                      return_mean = TRUE) {
     results <- list()
 
-    if (is.null(nclusts)) {
-        nclusts <- length(unique(labels))
-    }
+    if (is.null(nclusts)) nclusts <- length(unique(labels))
 
     # Perform hierarchical clustering
     hc <- hclust(dist_mat, method = "ward.D2")
@@ -510,9 +504,7 @@ calc_ari <- function(dist_mat,
 calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
     ngroups <- length(unique(labels))
 
-    if (is.null(knn_k)) {
-        knn_k <- max(3, round(sqrt(attr(dist_mat, "Size"))))
-    }
+    if (is.null(knn_k)) knn_k <- max(3, round(sqrt(attr(dist_mat, "Size"))))
 
     # Create a graph object
     knn <- compute_KNN_from_dist(dist_mat, knn_k)
@@ -738,7 +730,6 @@ create_long_data <- function(ecoda_object,
         plot_data <- long_data %>%
             left_join(metadata_df, by = "sample_id")
     } else {
-        # If no label_col, just return the long data without joining metadata
         plot_data <- long_data
     }
 
@@ -878,7 +869,6 @@ plot_barplot <- function(ecoda_object,
                     arrange(ordered_group, mixedsort(sample_id)) %>%
                     pull(sample_id)
             } else {
-                # If no label_col, just sort samples naturally by sample_id
                 ordered_levels <- mixedsort(unique(plot_data$sample_id))
             }
         }
@@ -903,8 +893,7 @@ plot_barplot <- function(ecoda_object,
         )
 
     if (!is.null(label_col) & plot_by == "sample" & facet_by_label_col) {
-        p <- p +
-            facet_grid(reformulate(label_col), scales = "free_x")
+        p <- p + facet_grid(reformulate(label_col), scales = "free_x")
     }
 
     return(p)
