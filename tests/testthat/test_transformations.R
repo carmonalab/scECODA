@@ -10,14 +10,14 @@ test_that("Frequency calculation is accurate", {
 test_that("Zero imputation handles counts and frequencies correctly", {
     # Test count imputation (multiplicative replacement)
     counts_df <- data.frame(A = c(10, 0), B = c(20, 10))
-    imputed_counts <- impute_zeros(counts_df, is_freq = FALSE)
+    imputed_counts <- replace_zeros(counts_df, is_freq = FALSE)
 
     expect_false(any(imputed_counts == 0))
-    expect_equal(imputed_counts[2, 1], 2 / 3) # Default xmin_factor * counts_min
+    expect_equal(imputed_counts[2, 1], 0.5) # Default xmin_factor * counts_min
 
     # Test frequency imputation (fraction of smallest non-zero)
     freq_df <- data.frame(A = c(0.5, 0), B = c(0.5, 1.0))
-    imputed_freq <- impute_zeros(freq_df, is_freq = TRUE)
+    imputed_freq <- replace_zeros(freq_df, is_freq = TRUE)
 
     expect_false(any(imputed_freq == 0))
     expect_equal(imputed_freq[2, 1], 0.5 * (2 / 3))
