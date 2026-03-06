@@ -59,7 +59,7 @@ Imports:
     corrplot,
     DESeq2,
     dplyr,
-    factoextra,
+    factoextra (>= 2.0.0),
     ggplot2,
     ggpubr,
     ggrepel,
