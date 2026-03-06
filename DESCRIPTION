@@ -1,6 +1,6 @@
 Package: scECODA
 Title: Single-Cell Exploratory Compositional Data Analysis
-Version: 0.99.2
+Version: 0.99.3
 Authors@R: c(
     person("Christian", "Halter",
       email = "scecoda.dev@gmail.com",
