@@ -6,6 +6,7 @@ test_that("Clustering and distance metrics return valid scores", {
         matrix(rnorm(10, mean = 0), ncol = 2),
         matrix(rnorm(10, mean = 100), ncol = 2)
     )
+    mat <- dist(mat)
     labels <- c(rep("Group1", 5), rep("Group2", 5))
 
     # ANOSIM
@@ -32,6 +33,7 @@ test_that("Clustering and distance metrics return valid scores", {
         matrix(rnorm(10, mean = 0), ncol = 2),
         matrix(rnorm(10, mean = 0), ncol = 2)
     )
+    mat <- dist(mat)
 
     # ANOSIM
     ano <- calc_anosim(mat, labels, parallel = 1)
