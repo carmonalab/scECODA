@@ -73,17 +73,17 @@ Additionally, it will calculate useful metrics, such as:
 -   The names of the top *n* most highly variable cell types (HVCs) ("hvcs")
 -   The variance explained by the top_n_hvcs ("variance_explained")
 -   Sample distance matrix ("sample_distances")
--   
 
 **NOTE:** To calculate CLR-transformed cell type abundances, zero counts or
-relative abundances are not allowed (log of zero is not defined). For this
-reason, zeros are replaced by adding a small pseudocount of + 0.5 to all values
-(to not distort ratios) or 2/3 times the smallest value [@martín-fernández2003]
-in case the ECODA object was created from a data frame of relative abundances.
+relative abundances are not allowed (log of zero is not defined). By default,
+scECODA adds a pseudocount of +0.5 to all values if a counts matrix is provided;
+when the input is a frequency matrix, we add 2/3 times the smallest frequency value
+as suggested in [@martín-fernández2003].
 
 
 ## From SingleCellExperiment object
 
+Load an example dataset from the `scRNAseq` BioC library. 
 ```{r message=FALSE, warning=FALSE}
 # Loading an example SingleCellExperiment dataset
 library(scRNAseq)
@@ -98,6 +98,7 @@ sce_object <- fetchDataset(
 names(sce_object@colData)
 ```
 
+To represent this dataset in terms of cell type composition, we will use the cell type labels provided by the authors and stored in the "cluster" metadata field. We will do this for each individual sample ("sample" metadata field). The `ecoda()` function will do this for you:
 ```{r}
 # Create ECODA object
 ecoda_object <- ecoda(
@@ -107,9 +108,15 @@ ecoda_object <- ecoda(
 )
 ```
 
+The resulting object stores row counts, frequencies and several transformations for the cell type composition by sample. For instance, the `clr` slot contains centered log-ratio values for the cell types in each sample:
+
+```{r}
+ecoda_object@clr[1:5,1:5]
+```
 
 ## From Seurat object
 
+Alternatively, scECODA also supports generating compositional matrices from Seurat objects:
 ```{r}
 library(Seurat)
 
@@ -128,9 +135,11 @@ ecoda_object <- ecoda(
 
 ## From counts or frequency data frame
 
-Metadata can be added optionally.
+If you have a pre-calculated sample x cell type compositional matrix (either as counts
+or raw frequencies), you can use them directly as input to scECODA. Metadata can
+be optionally provided and used downstream for visualization.
 
-Here, we load the immune cell composition in samples from a breast cancer cohort
+In this example, we load the immune cell composition in samples from a breast cancer cohort
 [@zhang2021]
 
 **NOTES:**
@@ -163,18 +172,9 @@ ecoda_object <- ecoda(data = freq, metadata = metadata)
 
 ## PCA
 
-To explore a dataset, Principal Component Analysis (PCA) is commonly performed
-as a first step. It is very useful to find the major axis of variation between
-samples. You can plot a PCA of your ecoda_object with `plot_pca(ecoda_object)`.
-
-How strongly samples separate based on a user defined grouping can be quantified
-with different metrics, for example:
-
--   Analysis of similarities (ANOSIM)
--   Adjusted rand index (ARI)
--   Modularity score
--   Silhouette score (not recommended as it expects gaussian cluster shapes and
-    is not robust to outliers. ANOSIM and modularity are more robust.)
+For explorative analysis, Principal Component Analysis (PCA) can be very useful
+to find the major axes of variation between samples. You can plot a PCA of your 
+ecoda_object with `plot_pca(ecoda_object)`.
 
 ```{r message=FALSE, warning=FALSE}
 ecoda_object <- ecoda(
@@ -188,8 +188,9 @@ plot_pca(
   title = "PCA based on cell type composition",
   n_hv_feat_show = 5 # Shows the most highly variable features (cell types)
 )
-
-# Using only the most highly variable cell types
+```
+Not all cell types have informative composition (some may be very rare, others constant across samples). It is often more robust to restrict the analysis on highly-variable cell types (HVCs); for example, PCA can be calculated on HVCs:
+```{r}
 plot_pca(
   ecoda_object,
   slot = "clr_hvc",
@@ -199,17 +200,34 @@ plot_pca(
 )
 ```
 
-### Quantifying group separation
+Optionally, we can also add an extra dimension and plot the first 3 principal
+components:
+
+```{r}
+plot_pca3d(ecoda_object, label_col = "Tissue")
+```
+
+
+## Quantifying group separation
+
+Sample separation (based on a user-defined grouping) can be quantified
+with different metrics, for example:
+
+-   Analysis of similarities (ANOSIM)
+-   Adjusted rand index (ARI)
+-   Modularity score
+-   Average silhouette score (not recommended as it expects gaussian cluster shapes and
+    is not robust to outliers. ANOSIM and modularity are more robust.)
 
 ```{r message=FALSE, warning=FALSE}
 # You can get the separation scores like this:
-feat_mat <- ecoda_object@clr
+dist_mat <- dist(ecoda_object@clr)
 labels <- ecoda_object@metadata$Tissue
 
-anosim_r_score <- calc_anosim(feat_mat, labels)
-ari_score <- calc_ari(feat_mat, labels)
-modularity_score <- calc_modularity(feat_mat, labels)
-silhouette_score <- calc_sil(feat_mat, labels)
+anosim_r_score <- calc_anosim(dist_mat, labels)
+ari_score <- calc_ari(dist_mat, labels)
+modularity_score <- calc_modularity(dist_mat, labels)
+silhouette_score <- calc_sil(dist_mat, labels)
 
 print(paste("ANOSIM R:", anosim_r_score))
 print(paste("ARI:", ari_score))
@@ -217,36 +235,16 @@ print(paste("Modularity:", modularity_score))
 print(paste("Silhouette:", silhouette_score))
 ```
 
-### PCA (3D)
-
-Sometimes, looking at only the first two PCA dimensions can be misleading if
-there are other main sources of variance. For this purpose, we can also plot the
-PCA in 3D.
-
-```{r}
-plot_pca3d(ecoda_object, label_col = "Tissue")
-```
-
 ## Box and bar plots
 
 Box plots are another useful tool to visualize the distribution of cell types
-across samples or differences in cell type composition between samples. This
-function also allows you do some basic statistical comparisons in cell type
-composition between groups.
-
-**NOTE:** It is highly recommended to only do statistical testing on
-log-ratio-transformed compositional data and not on counts or relative
-abundances in % [@greenacre2021].
-
-The main focus of scECODA is **exploratory** (unsupervised) analysis of samples
-based on cell type composition. If you want to do down-stream comparative
-(supervised) differential abundance testing of *a priori known groups*
-(including statistical designs with multiple known covariates), there are other
-tools available for that purpose, e.g. scCODA [@büttner2021] or tascCODA
-[@tasccoda].
+across samples:
 
 ```{r}
 plot_boxplot(ecoda_object, title = "CLR Abundance by Cell Type")
+```
+If there are biological groupings of interest, we can directly perform statistical tests between the per-sample cell type compositions:
+```{r}
 plot_boxplot(
   ecoda_object,
   label_col = "Tissue",
@@ -264,7 +262,8 @@ plot_barplot(
   plot_by = "group",
   title = "Mean Relative Abundance by Condition"
 )
-
+```
+```{r}
 # Plotting cell type abundance for each sample separately
 plot_barplot(
   ecoda_object,
@@ -274,15 +273,22 @@ plot_barplot(
 )
 ```
 
+**NOTE:** It is highly recommended to only do statistical testing on
+log-ratio-transformed compositional data and not on counts or relative
+abundances in % [@greenacre2021].
+
+The main focus of scECODA is **exploratory** (unsupervised) analysis of samples
+based on cell type composition. If you want to do down-stream comparative
+(supervised) differential abundance testing of *a priori known groups*
+(including statistical designs with multiple known covariates), there are other
+tools available for that purpose, e.g. scCODA [@büttner2021] or tascCODA
+[@tasccoda].
+
 ## Heatmap
 
 The clustered heatmap plot is a good alternative to not only visualize how
 samples and cell types correlate but also to cluster samples. It is important
 not to re-scale in order to avoid amplifying tiny differences.
-
-It is especially useful, if you have many cell types and subtypes annotated. Box
-or bar plots can get too crowded in such cases. Heatmaps are better suited to
-visualize large number of samples and cell types.
 
 Also, it is possible that you see your samples forming separate clusters in the
 PCA or heatmap even though you do not find any (or only few) significant
@@ -296,18 +302,16 @@ samples group across multiple covariates simultaneously.
 Here is an example for a simple dataset:
 
 ```{r}
-plot_heatmap(ecoda_object, label_col = c("Clinical.efficacy.", "Tissue"))
-
 plot_heatmap(
   ecoda_object,
   label_col = c("Clinical.efficacy.", "Tissue"),
-  # Additional arguments for pheatmap:
   cutree_rows = 3,
   cutree_cols = 3
 )
 ```
+We see, for example, an enrichment of plasma cells in the tumor samples, while neutrophils and platelets are more abundant in blood samples.
 
-And here an example of a large healthy cohort with 868 samples and 69 cell types
+As a second example, here's the same analysis using a large healthy cohort with 868 PBMC samples and 69 cell types
 [@gong2024]:
 
 ```{r fig.height=16, fig.width=12}
@@ -340,6 +344,7 @@ plot_heatmap(
   show_colnames = FALSE
 )
 ```
+Interestingly, we see that cell type composition tends to cluster subjects, in an unsupervised manner, based on their age group and their CMV status. For example, naive cell types appear to be enriched in younger subjects that were not exposed to CMV infection.
 
 ## Cell type correlation
 
@@ -382,17 +387,20 @@ groups to display this increased variance. scECODA provides convenient functions
 to calculate and visualize these cell type variances and mean abundance across
 all samples:
 
+
 ```{r}
 library(ggplot2)
-plot_varmean(ecoda_object) +
-  ggtitle("Default - cell types explaining 50% variance")
-
 plot_varmean(ecoda_object, labels = "none") +
   ggtitle("Default - cell types explaining 50% variance")
+```
 
+```{r}
 ecoda_object_new <- find_hvcs(ecoda_object, variance_explained = 0.8)
 plot_varmean(ecoda_object_new) +
   ggtitle("Cell types explaining 80% variance")
+```
+
+```{r}
 ecoda_object_new <- find_hvcs(ecoda_object, top_n_hvcs = 5)
 plot_varmean(ecoda_object_new) +
   ggtitle("Top 5 HVCs")
@@ -428,14 +436,18 @@ ecoda_object <- ecoda(
   celltype_col = "cluster",
   get_pb = TRUE
 )
+```
 
+```{r}
 plot_pca(
   ecoda_object,
   label_col = "Condition",
   title = "PCA based on cell type composition",
   n_hv_feat_show = 5
 )
+```
 
+```{r}
 plot_pca(
   ecoda_object,
   slot = "pb",
