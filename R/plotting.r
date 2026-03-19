@@ -55,7 +55,7 @@
 #'   calculates the ANOSIM statistic (R) using \code{vegan::anosim}.
 #' @param anosim_permutations Integer (default: \code{99}). The number of
 #'   permutations to use when calculating the ANOSIM statistic.
-#' @param anosim_parallel Integer (default: \code{detectCores()}). The number of
+#' @param anosim_parallel Integer (default: \code{1}). The number of
 #'   parallel processes/cores to use for the ANOSIM calculation.
 #' @param ari_nclusts Integer (optional, default: \code{NULL}). The target
 #'   number of clusters (\code{k}) to use for \code{hclust} and \code{pam}. If
@@ -137,7 +137,7 @@ plot_pca <- function(ecoda_object,
                      sil_score = FALSE,
                      anosim_score = TRUE,
                      anosim_permutations = 99,
-                     anosim_parallel = detectCores(),
+                     anosim_parallel = 1,
                      ari_nclusts = NULL,
                      knn_k = 3,
                      pointsize = 3,
