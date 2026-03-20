@@ -15,7 +15,7 @@ calc_anosim(dist_mat, labels, permutations = 99, parallel = 1, digits = 3)
 \item{permutations}{Integer (default: \code{999}). The number of permutations
 to use when calculating the ANOSIM R-statistic and p-value.}
 
-\item{parallel}{Integer (optional, default: \code{detectCores()}). The number
+\item{parallel}{Integer (optional, default: \code{1}). The number
 of parallel processes/cores to use for the permutation testing.}
 
 \item{digits}{Integer (default: \code{3}). The number of decimal places to
