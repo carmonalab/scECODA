@@ -1,12 +1,14 @@
-# scECODA
+# scECODA – single-cell Exploratory COmpositional Data Analysis
 
 <p align="center">
 <img width="154" height="154" alt="image" src="https://github.com/user-attachments/assets/ecd4f6c8-de4b-433c-b0f7-75aa2e37dee7" />
 </p>
 
-This R package faciliates ***Exploratory COmpositional Data Analysis (ECODA)*** and visualization for single-cell omics sample embeddings at the population level
+Single-cell omics technologies are increasingly applied to large patient cohorts, opening the possibility of unsupervised patient stratification based on cellular states. Identifying patient groups that share common patterns of cellular dysregulation is a key step toward more precise therapeutic strategies. 
+Cohort-level exploratory analysis of single-cell omics data requires mapping high-dimensional molecular profiles into a lower-dimensional patient-level (or more generally, sample-level) representation space, in which biologically meaningful cohort-level structure can be identified, for example through clustering.
 
-It enables intuitive exploration of multi-sample datasets –such as large patient cohorts– and supports the unsupervised identification of samples with similar cell type compositional profiles, e.g. patient clustering. In addition, scECODA provides metrics to quantify the degree of separation between groups of samples, e.g. biological conditions, and to pinpoint the cell types or states whose change in abundance drives these differences.
+scECODA is scalable and interpretable framework for exploratory, cohort-level analysis and patient stratification based on single-cell transcriptomics. It enables intuitive exploration of multi-sample datasets –such as of large patient cohorts– and facilitates the unsupervised identification of sample with similar cell type compositional profiles, e.g. patient stratification. In addition, scECODA provides metrics to quantify the degree of separation between groups of samples and to pinpoint the cell types or states whose change in abundance drives these differences.
+
 
 ### Package Installation
 
