@@ -55,4 +55,4 @@ See how scECODA's compositional analysis compares to **pseudobulk** analysis and
 
 ## References
 
-Halter C, et al. 2025
+Halter C, et al. 2026
