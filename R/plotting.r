@@ -541,16 +541,10 @@ calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
 #' @importFrom RANN nn2
 #' @importFrom igraph graph_from_adjacency_matrix
 compute_KNN_from_dist <- function(dist_mat, knn_k) {
-    # dist_mat should be a square matrix or 'dist' object
     dist_mat <- as.matrix(dist_mat)
-    n <- nrow(dist_mat)
-    knn <- matrix(0, nrow = n, ncol = knn_k)
-
-    for (i in 1:n) {
-        # Sort distances in row i, get indices of the 2nd to (k+1)th closest
-        # (index 1 is always the node itself)
-        knn[i, ] <- order(dist_mat[i, ])[2:(knn_k + 1)]
-    }
+    knn <- t(apply(dist_mat, 1, function(x) {
+        order(x)[2:(knn_k + 1)]
+    }))
     return(knn)
 }
 
@@ -567,27 +561,38 @@ compute_KNN_from_dist <- function(dist_mat, knn_k) {
 #'   count of shared neighbors between nodes.
 #'
 #' @importFrom igraph graph_from_adjacency_matrix
+#' @importFrom Matrix sparseMatrix
 compute_snn_graph <- function(knn) {
-    # Initialize adjacency matrix
     n <- nrow(knn)
-    adj_matrix <- matrix(0, n, n)
-    # Count shared neighbors
-    for (i in seq_len(n)) {
-        for (j in knn[i, ]) {
-            shared_neighbors <- length(intersect(knn[i, ], knn[j, ]))
-            adj_matrix[i, j] <- shared_neighbors
-            adj_matrix[j, i] <- shared_neighbors # Ensure symmetry
-        }
-    }
-    # Create graph object
-    g <- graph_from_adjacency_matrix(adj_matrix,
+    k <- ncol(knn)
+
+    # 1. Create a binary sparse matrix (A)
+    # Row i has a 1 at column j if j is a neighbor of i
+    i_idx <- rep(1:n, each = k)
+    j_idx <- as.vector(t(knn))
+
+    adj_bin <- sparseMatrix(
+        i = i_idx,
+        j = j_idx,
+        x = 1,
+        dims = c(n, n)
+    )
+
+    # 2. Compute SNN weights for ALL pairs using Matrix Multiplication
+    # The dot product of row i and row j equals the count of shared '1's
+    snn_matrix <- adj_bin %*% t(adj_bin)
+
+    # 3. Convert to igraph
+    # weighted = TRUE treats the shared neighbor count as the edge weight
+    g <- graph_from_adjacency_matrix(
+        snn_matrix,
         mode = "undirected",
         weighted = TRUE,
         diag = FALSE
     )
+
     return(g)
 }
-
 
 #' Calculate Average Silhouette Width
 #'
