@@ -37,7 +37,34 @@ clustering functions. Additionally, it provides metrics to quantify how strongly
 groups of samples separate and which cell types are driving this separation
 (differential abundance analysis).
 
-```{r Load scECODA package}
+## Motivation for Bioconductor Integration
+
+While many tools exist for supervised comparative single-cell analysis, there is
+a distinct need for a standardized framework that handles unsupervised
+**exploratory compositional data analysis (ECODA)** specifically for large-scale
+cohorts. `scECODA` is motivated by the following goals for the Bioconductor
+ecosystem:
+
+-   **Interoperability**: The package natively supports core Bioconductor
+    classes, including `SingleCellExperiment` and `SummarizedExperiment`,
+    allowing seamless integration into existing pipelines.
+-   **Infrastructure Synergy**: It leverages the established Bioconductor tool
+    `DESeq2` for pseudobulk normalization.
+
+--------------------------------------------------------------------------------
+
+# Installation
+
+You can install the latest stable release of `scECODA` from Bioconductor.
+
+```{r Install the scECODA package, eval=FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("scECODA")
+```
+
+```{r Load scECODA}
 library(scECODA)
 ```
 
@@ -77,13 +104,13 @@ Additionally, it will calculate useful metrics, such as:
 **NOTE:** To calculate CLR-transformed cell type abundances, zero counts or
 relative abundances are not allowed (log of zero is not defined). By default,
 scECODA adds a pseudocount of +0.5 to all values if a counts matrix is provided;
-when the input is a frequency matrix, we add 2/3 times the smallest frequency value
-as suggested in [@martín-fernández2003].
-
+when the input is a frequency matrix, we add 2/3 times the smallest frequency
+value as suggested in [@martín-fernández2003].
 
 ## From SingleCellExperiment object
 
-Load an example dataset from the `scRNAseq` BioC library. 
+Load an example dataset from the `scRNAseq` BioC library.
+
 ```{r Load example SingleCellExperiment dataset, message=FALSE, warning=FALSE}
 # Loading an example SingleCellExperiment dataset
 library(scRNAseq)
@@ -98,7 +125,11 @@ sce_object <- fetchDataset(
 names(sce_object@colData)
 ```
 
-To represent this dataset in terms of cell type composition, we will use the cell type labels provided by the authors and stored in the "cluster" metadata field. We will do this for each individual sample ("sample" metadata field). The `ecoda()` function will do this for you:
+To represent this dataset in terms of cell type composition, we will use the
+cell type labels provided by the authors and stored in the "cluster" metadata
+field. We will do this for each individual sample ("sample" metadata field). The
+`ecoda()` function will do this for you:
+
 ```{r Create ECODA object}
 # Create ECODA object
 ecoda_object <- ecoda(
@@ -108,7 +139,9 @@ ecoda_object <- ecoda(
 )
 ```
 
-The resulting object stores row counts, frequencies and several transformations for the cell type composition by sample. For instance, the `clr` slot contains centered log-ratio values for the cell types in each sample:
+The resulting object stores row counts, frequencies and several transformations
+for the cell type composition by sample. For instance, the `clr` slot contains
+centered log-ratio values for the cell types in each sample:
 
 ```{r Show example of CLR df}
 ecoda_object@clr[1:5,1:5]
@@ -116,7 +149,9 @@ ecoda_object@clr[1:5,1:5]
 
 ## From Seurat object
 
-Alternatively, scECODA also supports generating compositional matrices from Seurat objects:
+Alternatively, scECODA also supports generating compositional matrices from
+Seurat objects:
+
 ```{r Create ECODA object from Seurat object}
 library(Seurat)
 
@@ -132,15 +167,14 @@ ecoda_object <- ecoda(
 )
 ```
 
-
 ## From counts or frequency data frame
 
-If you have a pre-calculated sample x cell type compositional matrix (either as counts
-or raw frequencies), you can use them directly as input to scECODA. Metadata can
-be optionally provided and used downstream for visualization.
+If you have a pre-calculated sample x cell type compositional matrix (either as
+counts or raw frequencies), you can use them directly as input to scECODA.
+Metadata can be optionally provided and used downstream for visualization.
 
-In this example, we load the immune cell composition in samples from a breast cancer cohort
-[@zhang2021]
+In this example, we load the immune cell composition in samples from a breast
+cancer cohort [@zhang2021]
 
 **NOTES:**
 
@@ -173,7 +207,7 @@ ecoda_object <- ecoda(data = freq, metadata = metadata)
 ## PCA
 
 For explorative analysis, Principal Component Analysis (PCA) can be very useful
-to find the major axes of variation between samples. You can plot a PCA of your 
+to find the major axes of variation between samples. You can plot a PCA of your
 ecoda_object with `plot_pca(ecoda_object)`.
 
 ```{r Show PCA based on cell type composition, message=FALSE, warning=FALSE}
@@ -189,7 +223,11 @@ plot_pca(
   n_hv_feat_show = 5 # Shows the most highly variable features (cell types)
 )
 ```
-Not all cell types have informative composition (some may be very rare, others constant across samples). It is often more robust to restrict the analysis on highly-variable cell types (HVCs); for example, PCA can be calculated on HVCs:
+
+Not all cell types have informative composition (some may be very rare, others
+constant across samples). It is often more robust to restrict the analysis on
+highly-variable cell types (HVCs); for example, PCA can be calculated on HVCs:
+
 ```{r PCA based on highly variable cell types}
 plot_pca(
   ecoda_object,
@@ -207,17 +245,17 @@ components:
 plot_pca3d(ecoda_object, label_col = "Tissue")
 ```
 
-
 ## Quantifying group separation
 
-Sample separation (based on a user-defined grouping) can be quantified
-with different metrics, for example:
+Sample separation (based on a user-defined grouping) can be quantified with
+different metrics, for example:
 
 -   Analysis of similarities (ANOSIM)
 -   Adjusted rand index (ARI)
 -   Modularity score
--   Average silhouette score (not recommended as it expects gaussian cluster shapes and
-    is not robust to outliers. ANOSIM and modularity are more robust.)
+-   Average silhouette score (not recommended as it expects gaussian cluster
+    shapes and is not robust to outliers. ANOSIM and modularity are more
+    robust.)
 
 ```{r Quantifying group separation, message=FALSE, warning=FALSE}
 # You can get the separation scores like this:
@@ -243,7 +281,10 @@ across samples:
 ```{r Box plot}
 plot_boxplot(ecoda_object, title = "CLR Abundance by Cell Type")
 ```
-If there are biological groupings of interest, we can directly perform statistical tests between the per-sample cell type compositions:
+
+If there are biological groupings of interest, we can directly perform
+statistical tests between the per-sample cell type compositions:
+
 ```{r Grouped box plot}
 plot_boxplot(
   ecoda_object,
@@ -263,6 +304,7 @@ plot_barplot(
   title = "Mean Relative Abundance by Condition"
 )
 ```
+
 ```{r Bar plot by sample}
 # Plotting cell type abundance for each sample separately
 plot_barplot(
@@ -309,10 +351,12 @@ plot_heatmap(
   cutree_cols = 3
 )
 ```
-We see, for example, an enrichment of plasma cells in the tumor samples, while neutrophils and platelets are more abundant in blood samples.
 
-As a second example, here's the same analysis using a large healthy cohort with 868 PBMC samples and 69 cell types
-[@gong2024]:
+We see, for example, an enrichment of plasma cells in the tumor samples, while
+neutrophils and platelets are more abundant in blood samples.
+
+As a second example, here's the same analysis using a large healthy cohort with
+868 PBMC samples and 69 cell types [@gong2024]:
 
 ```{r Plot heatmap example 2, fig.height=16, fig.width=12}
 ecoda_object <- ecoda(
@@ -344,7 +388,11 @@ plot_heatmap(
   show_colnames = FALSE
 )
 ```
-Interestingly, we see that cell type composition tends to cluster subjects, in an unsupervised manner, based on their age group and their CMV status. For example, naive cell types appear to be enriched in younger subjects that were not exposed to CMV infection.
+
+Interestingly, we see that cell type composition tends to cluster subjects, in
+an unsupervised manner, based on their age group and their CMV status. For
+example, naive cell types appear to be enriched in younger subjects that were
+not exposed to CMV infection.
 
 ## Cell type correlation
 
@@ -386,7 +434,6 @@ We expect cell types that are differentially abundant between key biological
 groups to display this increased variance. scECODA provides convenient functions
 to calculate and visualize these cell type variances and mean abundance across
 all samples:
-
 
 ```{r Mean-variance plot 50%}
 library(ggplot2)
