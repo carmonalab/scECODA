@@ -539,6 +539,7 @@ calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
 #'   where each row contains the indices of the nearest neighbors.
 #'
 #' @importFrom RANN nn2
+#' @importFrom igraph graph_from_adjacency_matrix
 compute_KNN_from_dist <- function(dist_mat, knn_k) {
     # dist_mat should be a square matrix or 'dist' object
     dist_mat <- as.matrix(dist_mat)
@@ -579,7 +580,7 @@ compute_snn_graph <- function(knn) {
         }
     }
     # Create graph object
-    g <- igraph::graph_from_adjacency_matrix(adj_matrix,
+    g <- graph_from_adjacency_matrix(adj_matrix,
         mode = "undirected",
         weighted = TRUE,
         diag = FALSE

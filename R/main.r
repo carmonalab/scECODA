@@ -108,6 +108,7 @@ setClass(
 #'
 #' @importFrom methods new
 #' @importFrom gtools mixedsort
+#' @importFrom SummarizedExperiment colData assay
 #'
 #' @export ecoda
 #'
@@ -155,12 +156,12 @@ ecoda <- function(data = NULL,
             if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
                 stop("Package 'SummarizedExperiment' must be installed.")
             }
-            cell_data_df <- as.data.frame(SummarizedExperiment::colData(data))
-            names(cell_data_df) <- names(SummarizedExperiment::colData(data))
+            cell_data_df <- as.data.frame(colData(data))
+            names(cell_data_df) <- names(colData(data))
             if (get_pb) {
-                if (!is.null(SummarizedExperiment::assay(data, "counts"))) {
+                if (!is.null(assay(data, "counts"))) {
                     pb <- calculate_pseudobulk(
-                        count_matrix = SummarizedExperiment::assay(
+                        count_matrix = assay(
                             data, "counts"
                         ),
                         sample_ids = cell_data_df[[sample_col]]
@@ -849,9 +850,9 @@ get_hvcs <- function(df_var,
 #' @return A \code{ggplot} object representing the mean-variance plot.
 #'
 #' @importFrom ggplot2 ggplot aes geom_point geom_smooth labs theme_classic xlab
-#'   ylab scale_color_manual
+#'   ylab scale_color_manual theme
 #' @importFrom ggrepel geom_text_repel
-#' @importFrom dplyr mutate if_else
+#' @importFrom dplyr mutate if_else filter
 #'
 #' @export plot_varmean
 #'
@@ -886,8 +887,8 @@ plot_varmean <- function(ecoda_object,
     # --- 1. Create a highlighting factor column ---
     if (highlight_hvcs) {
         df_var <- df_var %>%
-            dplyr::mutate(
-                is_highlighted = dplyr::if_else(
+            mutate(
+                is_highlighted = if_else(
                     .data$celltype %in% highlight_celltypes,
                     "HVC selected",
                     "Not selected"
@@ -926,7 +927,7 @@ plot_varmean <- function(ecoda_object,
     }
 
     # Ensure the legend is not shown if we are not highlighting anything
-    if (!highlight_hvcs) p <- p + ggplot2::theme(legend.position = "none")
+    if (!highlight_hvcs) p <- p + theme(legend.position = "none")
 
     if (labels != "none") {
         # Filter data for labeling based on user choice
@@ -940,7 +941,7 @@ plot_varmean <- function(ecoda_object,
         # highlighted labels match the point color
         if (highlight_hvcs) {
             p <- p +
-                ggrepel::geom_text_repel(
+                geom_text_repel(
                     data = label_df,
                     aes(label = celltype, color = is_highlighted),
                     size = 3,
@@ -948,7 +949,7 @@ plot_varmean <- function(ecoda_object,
                 )
         } else {
             p <- p +
-                ggrepel::geom_text_repel(
+                geom_text_repel(
                     data = label_df,
                     aes(label = celltype),
                     size = 3,
@@ -1082,6 +1083,7 @@ calculate_pseudobulk <- function(count_matrix,
 #' @importFrom stats formula
 #' @importFrom DESeq2 DESeqDataSetFromMatrix estimateSizeFactors vst
 #' @importFrom BiocGenerics counts
+#' @importFrom SummarizedExperiment assay
 #'
 #' @examples
 #' nrow <- 100
@@ -1131,7 +1133,7 @@ deseq2_normalize <- function(pb,
 
     # Transform counts using variance stabilizing transformation (VST)
     dds <- vst(dds, blind = FALSE, nsub = nsub)
-    pb_norm <- SummarizedExperiment::assay(dds) # Genes x Samples format
+    pb_norm <- assay(dds) # Genes x Samples format
 
     # Select highly variable genes
     if (!is.null(hvg)) {
@@ -1174,7 +1176,7 @@ deseq2_normalize <- function(pb,
 # Stops R CMD check from complaining about
 # "no visible binding for global variable"
 # when using unquoted column names inside ggplot2 or dplyr code.
-utils::globalVariables(c(
+globalVariables(c(
     "sample_id", "celltype", "values", "Variance",
     "cumulative_variance", "rel_abundance", "mean_rel_abund",
     "ordered_group", "x_var", "y_var", "Relative_abundance",
