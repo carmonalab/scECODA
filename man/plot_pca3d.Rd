@@ -5,18 +5,18 @@
 \title{Plot 3-dimensional interactive Principal Component Analysis plot}
 \usage{
 plot_pca3d(
-  ecoda_object,
-  slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt",
+  se,
+  assay = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "clr_hvc",
     "pb"),
   label_col = NULL,
   scale. = FALSE
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
+\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
 
-\item{slot}{Character string (default: \code{"clr"}). The name of the data
-matrix slot in the \code{ECODA} object to use for PCA. Must be one of:
+\item{assay}{Character string (default: \code{"clr"}). The name of the assay
+in the \code{SummarizedExperiment} object to use for PCA. Must be one of:
 \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
 (CLR-transformed abundances of only the most highly variable cell types
 (HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
@@ -41,10 +41,10 @@ matrix from the \code{ECODA} object (default: CLR-transformed abundances,
 }
 \examples{
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$Zhang$cell_counts_lowresolution,
     metadata = example_data$Zhang$metadata,
 )
 
-plot_pca3d(ecoda_object, label_col = "Tissue")
+plot_pca3d(se, label_col = "Tissue")
 }

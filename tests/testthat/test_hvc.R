@@ -7,9 +7,9 @@ test_that("get_celltype_variances calculates metrics correctly", {
         C = c(10, 11, 12, 13)
     )
 
-    obj <- ecoda(data = df)
+    se <- ecoda(data = df)
 
-    var_df <- get_celltype_variances(obj)
+    var_df <- get_celltype_variances(se)
 
     expect_equal(var_df$celltype[1], "A")
     expect_true(var_df$Variance[1] > var_df$Variance[2])

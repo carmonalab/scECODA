@@ -6,7 +6,8 @@
 Group Comparison.}
 \usage{
 plot_boxplot(
-  ecoda_object,
+  se,
+  assay = c("clr", "clr_hvc", "asin_sqrt"),
   label_col = NULL,
   selected_celltypes = NULL,
   title = "",
@@ -16,16 +17,22 @@ plot_boxplot(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing the
-CLR-transformed abundances in the \code{clr} slot.}
+\item{se}{An \link[=SummarizedExperiment-class]{SummarizedExperiment} object
+containing the CLR-transformed abundances in the \code{clr}.}
+
+\item{assay}{Character string (default: \code{"clr"}). The name of the assay
+in the \code{SummarizedExperiment} object to use for plotting. Must be one
+of: \code{"clr"} (CLR-transformed abundances, default),  \code{"clr_hvc"}
+(CLR-transformed abundances of only the most highly variable cell types
+(HVCs)) or \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in \code{slot(ecoda_object, "metadata")} used to define groups
-for comparison. If \code{NULL}, a single boxplot is generated per cell
-type.}
+of a column in \code{colData(se)} used to define groups for comparison. If
+\code{NULL}, a single boxplot is generated per cell type.}
 
 \item{selected_celltypes}{Specify selected celltypes you want to plot instead
-of plotting boxplots for all.}
+of plotting boxplots for all. Note: this does not recalculate CLR-values on
+subset.}
 
 \item{title}{Character string (default: \code{""}). The main title for the
 plot.}
@@ -70,22 +77,23 @@ for the comparison across all groups.
 }
 \examples{
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$Zhang$cell_counts_lowresolution,
     metadata = example_data$Zhang$metadata,
 )
 
 # 1. Boxplots for CLR abundance without grouping (no stats calculated):
-plot_boxplot(ecoda_object)
+plot_boxplot(se)
 
 # 2. Boxplots grouped by 'Treatment' (2 groups) and applying Wilcoxon test:
 plot_boxplot(
-    ecoda_object,
+    se,
     label_col = "Tissue",
     stat_method = "wilcox.test",
     title = "CLR Abundance by Tissue (with Wilcoxon Test)"
 )
 }
 \seealso{
-\code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
+\code{\link{create_long_data}},
+\link[=SummarizedExperiment-class]{SummarizedExperiment}
 }

@@ -2,11 +2,12 @@
 % Please edit documentation in R/plotting.r
 \name{plot_heatmap}
 \alias{plot_heatmap}
-\title{Generates a Heatmap of Cell Abundance Data from an ECODA Slot.}
+\title{Generates a Heatmap of Cell Abundance Data from an SummarizedExperiment
+assay.}
 \usage{
 plot_heatmap(
-  ecoda_object,
-  slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt",
+  se,
+  assay = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "clr_hvc",
     "pb"),
   label_col,
   cluster_rows = TRUE,
@@ -18,20 +19,11 @@ plot_heatmap(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
-
-\item{slot}{Character string (default: \code{"clr"}). The name of the data
-matrix slot in the \code{ECODA} object to use for the heatmap. Must be one
-of: \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
-(CLR-transformed abundances of only the most highly variable cell types
-(HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
-counts), \code{"counts_imp"} (imputed counts), \code{"freq"} (relative
-frequencies), \code{"freq_imp"} (imputed frequencies), or
-\code{"asin_sqrt"} (arcsin-square root transformed data).}
+\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
 
 \item{label_col}{Character string. The name of the column in
-\code{slot(ecoda_object, "metadata")} to use for annotating the samples
-(columns) of the heatmap.}
+\code{colData(se)} to use for annotating the samples (columns) of the
+heatmap.}
 
 \item{cluster_rows}{Logical (default: \code{TRUE}). Whether to apply
 hierarchical clustering to the cell types (rows).}
@@ -56,6 +48,15 @@ labels (columns).}
 
 \item{...}{Additional arguments passed directly to the \code{pheatmap}
 function.}
+
+\item{assaylot}{Character string (default: \code{"clr"}). The name of the
+assay in the \code{SummarizedExperiment} object to use for the heatmap.
+Must be one of: \code{"clr"} (CLR-transformed abundances, default),
+\code{"clr_hvc"} (CLR-transformed abundances of only the most highly
+variable cell types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+\code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+\code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
 }
 \value{
 A \code{pheatmap} object, which is typically visualized automatically
@@ -70,15 +71,15 @@ includes a sample annotation sidebar based on a specified metadata column.
 \examples{
 # Example for a simple dataset:
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$Zhang$cell_counts_lowresolution,
     metadata = example_data$Zhang$metadata,
 )
 
-plot_heatmap(ecoda_object, label_col = c("Clinical.efficacy.", "Tissue"))
+plot_heatmap(se, label_col = c("Clinical.efficacy.", "Tissue"))
 
 plot_heatmap(
-    ecoda_object,
+    se,
     label_col = c("Clinical.efficacy.", "Tissue"),
     # Additional arguments for pheatmap:
     cutree_rows = 3,
@@ -86,13 +87,13 @@ plot_heatmap(
 )
 
 # Example of a large cohort with 868 samples and 69 cell types
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,
     metadata = example_data$GongSharma_full$metadata
 )
 
 plot_heatmap(
-    ecoda_object,
+    se,
     label_col = c("subject.cmv", "age_group"),
     cutree_rows = 3,
     cutree_cols = 5,
@@ -101,8 +102,8 @@ plot_heatmap(
 
 # Using only the most highly variable cell types (HVCs)
 plot_heatmap(
-    ecoda_object,
-    slot = "clr_hvc",
+    se,
+    assay = "clr_hvc",
     label_col = c("subject.cmv", "age_group"),
     cutree_rows = 3,
     cutree_cols = 4,
@@ -110,5 +111,6 @@ plot_heatmap(
 )
 }
 \seealso{
-\link[=ECODA-class]{ECODA}, \code{\link{pheatmap}}
+\link[=SummarizedExperiment-class]{SummarizedExperiment},
+\code{\link{pheatmap}}
 }

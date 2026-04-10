@@ -5,7 +5,7 @@
 \title{Generates a Mean-Variance Plot for CLR-transformed Cell Type Data.}
 \usage{
 plot_varmean(
-  ecoda_object,
+  se,
   plot_title = "",
   highlight_hvcs = TRUE,
   labels = c("only_hvc", "all", "none"),
@@ -14,15 +14,16 @@ plot_varmean(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing
-pre-calculated cell type variances in the \code{celltype_variances} slot
-and the HVC list in the \code{hvcs} slot.}
+\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object
+containing pre-calculated cell type variances in
+\code{metadata(se)$celltype_variances} and the HVC list in
+\code{metadata(se)$hvcs}}
 
 \item{plot_title}{Character string (default: ""). The title for the plot.}
 
 \item{highlight_hvcs}{Logical (default: \code{TRUE}). If \code{TRUE}, the
 points corresponding to the Highly Variable Cell Types (HVCs) stored in the
-ECODA object are colored red.}
+SummarizedExperiment object are colored red.}
 
 \item{labels}{Character (default: "only_hvc"). Options: "all" (label every
 point), "none" (no labels), or "only_hvc" (label only the highly variable
@@ -45,26 +46,27 @@ typically used to identify Highly Variable Cell Types (HVCs).
 }
 \details{
 If \code{highlight_hvcs} is \code{TRUE}, cell types previously
-identified and stored in the \code{slot(ecoda_object, "hvcs")}
-slot will be highlighted in red on the plot.
+identified and stored in \code{metadata(se)$hvcs} will be highlighted in
+red on the plot.
 }
 \examples{
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,
     metadata = example_data$GongSharma_full$metadata
 )
 
 # 1. Generate the plot, highlighting HVCs (default)
-plot_varmean(ecoda_object, plot_title = "HVCs on Mean-Variance Plot")
+plot_varmean(se, plot_title = "HVCs on Mean-Variance Plot")
 
 # 2. Generate the plot without highlighting HVCs and add a fit line
-plot_varmean(ecoda_object,
+plot_varmean(se,
     highlight_hvcs = FALSE,
     plot_fit_line = TRUE,
     smooth_method = "loess"
 )
 }
 \seealso{
-\link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}}
+\link[=SummarizedExperiment-class]{SummarizedExperiment},
+\code{\link{get_celltype_variances}}
 }

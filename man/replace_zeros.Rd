@@ -50,6 +50,6 @@ counts_df <- data.frame(A = c(10, 0, 5), B = c(20, 10, 0))
 replace_zeros(counts_df, rep_method = "counts", add_to = "all")
 
 # Replace zeros in a frequency matrix
-freq_df <- data.frame(A = c(0.5, 0, 0.2), B = c(0.5, 1.0, 0.8))
+freq_df <- data.frame(A = c(0.5, 0.5), B = c(0.2, 0.8), C = c(0.0, 1.0))
 replace_zeros(freq_df, rep_method = "frac_min", add_to = "zeros")
 }

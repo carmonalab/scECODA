@@ -2,7 +2,8 @@
 % Please edit documentation in R/main.r
 \name{ecoda_helper}
 \alias{ecoda_helper}
-\title{Core constructor for ECODA objects from count/frequency matrices}
+\title{Core constructor for SummarizedExperiment objects from count/frequency
+matrices}
 \usage{
 ecoda_helper(
   data = NULL,
@@ -11,12 +12,12 @@ ecoda_helper(
   top_n_hvcs = NULL,
   pseudo_count = 0.5,
   pseudo_frac_min = 2/3,
-  add_to = NULL
+  add_to = c("all", "zeros")
 )
 }
 \arguments{
-\item{data}{A matrix or data frame where \strong{rows are samples} and
-\strong{columns are cell types}.}
+\item{data}{A matrix or data frame where \strong{columns are samples} and
+\strong{rows are cell types}.}
 
 \item{data_is_freq}{Logical. If \code{TRUE}, \code{data} is treated as
 proportions (0-1 or 0-100). If \code{FALSE}, treated as raw integer counts.}
@@ -35,11 +36,12 @@ non-zero value when \code{rep_method = "frac_min"}.}
 cells or just the \code{"zeros"}?}
 }
 \value{
-A fully initialized \link[=ECODA-class]{ECODA} object.
+A fully initialized
+\link[=SummarizedExperiment-class]{SummarizedExperiment} object.
 }
 \description{
-This is the internal engine that initializes an \link[=ECODA-class]{ECODA}
-object. It performs zero-imputation, Centered Log-Ratio (CLR) transformation,
-calculates sample distances, and identifies highly variable cell types
-(HVCs).
+This is the internal engine that initializes an
+\link[=SummarizedExperiment-class]{SummarizedExperiment} object. It performs
+zero-imputation, Centered Log-Ratio (CLR) transformation, calculates sample
+distances, and identifies highly variable cell types (HVCs).
 }

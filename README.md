@@ -25,12 +25,12 @@ remotes::install_github("carmonalab/scECODA")
 The following example uses 868 scRNA-seq samples from the blood of healthy donors (data from [Gong & Sharma *et al.*](https://pubmed.ncbi.nlm.nih.gov/39314416/)) with previously annotated cell types. It illustrates how samples naturally separate in an unsupervised manner by donor age and CMV infection status, and highlights the top cell types whose changes in abundance drive inter-sample variation.
 
 ```r
-ecoda_object <- ecoda(
+se <- ecoda(
   seurat_object, # or SingleCellExperiment object or count data
   sample_col = "sample_id", # Metadata column containing sample annotation for each cell
   celltype_col = "celltype_annotations" # Metadata column containing cell type annotations
 )
-plot_pca(ecoda_object)
+plot_pca(se)
 ```
 See also the [Tutorial](https://github.com/carmonalab/scECODA/tree/main?tab=readme-ov-file#tutorial) below.
 
@@ -55,4 +55,4 @@ See how scECODA's compositional analysis compares to **pseudobulk** analysis and
 
 ## References
 
-Halter C, et al. 2026
+"Cell type composition drives patient stratification in single-cell RNA-seq cohorts", Halter C, et al. 2026, [Preprint on bioRxiv](https://doi.org/10.64898/2026.03.27.714811)

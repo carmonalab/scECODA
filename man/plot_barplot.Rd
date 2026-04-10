@@ -5,7 +5,7 @@
 \title{Generates a Stacked Bar Plot of Cell Type Relative Abundance.}
 \usage{
 plot_barplot(
-  ecoda_object,
+  se,
   label_col = NULL,
   plot_by = c("sample", "group"),
   custom_sample_order = NULL,
@@ -14,12 +14,12 @@ plot_barplot(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object containing cell type
-relative frequencies in the \code{freq} slot.}
+\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object
+containing cell type relative frequencies in the \code{freq} assay.}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in \code{slot(ecoda_object, "metadata")} used to define
-grouping or groups (required if \code{plot_by = "group"}).}
+of a column in \code{colData(se))} used to define grouping or groups
+(required if \code{plot_by = "group"}).}
 
 \item{plot_by}{Character string (default: \code{"sample"}). Specifies whether
 to plot the relative abundance for each individual sample (\code{"sample"})
@@ -48,16 +48,16 @@ preparation and ordering based on the provided parameters.
 }
 \examples{
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$Zhang$cell_counts_lowresolution,
     metadata = example_data$Zhang$metadata,
 )
 
-plot_barplot(ecoda_object)
+plot_barplot(se)
 
 # Plotting average cell type abundance by experimental group
 plot_barplot(
-    ecoda_object,
+    se,
     label_col = "Tissue",
     plot_by = "group",
     title = "Mean Relative Abundance by Condition"
@@ -65,12 +65,13 @@ plot_barplot(
 
 # Plotting cell type abundance for each sample separately
 plot_barplot(
-    ecoda_object,
+    se,
     label_col = "Tissue",
     plot_by = "sample",
     title = "Relative Abundance for Each Sample"
 )
 }
 \seealso{
-\code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
+\code{\link{create_long_data}},
+\link[=SummarizedExperiment-class]{SummarizedExperiment}
 }

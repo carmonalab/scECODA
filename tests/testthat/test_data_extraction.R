@@ -4,13 +4,17 @@ test_that("get_celltype_counts handles NA and dimensions correctly", {
         Type = c("B", "T", NA, "T", "T")
     )
 
-    counts <- get_celltype_counts(cell_df, "Sample", "Type")
+    counts <- get_celltype_counts(
+        cell_data_df = cell_df,
+        sample_col = "Sample",
+        celltype_col = "Type"
+    )
 
     # Check dimensions: 2 samples, 3 categories (B, T, and NA)
-    expect_equal(nrow(counts), 2)
-    expect_equal(ncol(counts), 3)
-    expect_true("NA" %in% colnames(counts))
-    expect_equal(counts["S1", "NA"], 1)
+    expect_equal(ncol(counts), 2)
+    expect_equal(nrow(counts), 3)
+    expect_true("NA." %in% rownames(counts))
+    expect_equal(counts["NA.", "S1"], 1)
 })
 
 test_that("get_sample_metadata filters non-constant columns", {

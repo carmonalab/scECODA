@@ -5,8 +5,8 @@
 \title{Plot Cell Type Correlation Matrix}
 \usage{
 plot_corr(
-  ecoda_object,
-  slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt",
+  se,
+  assay = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "clr_hvc",
     "pb"),
   order = "hclust",
   hclust.method = "ward.D2",
@@ -14,11 +14,11 @@ plot_corr(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
+\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
 
-\item{slot}{Character string (default: \code{"clr"}). The name of the data
-matrix slot in the \code{ECODA} object to use for the correlation plot Must
-be one of: \code{"clr"} (CLR-transformed abundances, default),
+\item{assay}{Character string (default: \code{"clr"}). The name of the assay
+in the \code{SummarizedExperiment} object to use for the correlation plot
+Must be one of: \code{"clr"} (CLR-transformed abundances, default),
 \code{"clr_hvc"} (CLR-transformed abundances of only the most highly
 variable cell types (HVCs)), \code{"pb"} (pseudobulk gene expression),
 \code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
@@ -47,8 +47,8 @@ R plot or a grid object depending on the \code{corrplot} version and options.
 \description{
 Calculates the pairwise Pearson correlation matrix for all cell
 types (columns) using the Centered Log-Ratio (CLR) transformed abundances
-stored in \code{slot(ecoda_object, "clr")}. It then visualizes this matrix
-as a heatmap using \code{corrplot::corrplot}.
+stored in \code{assay(se, "clr")}. It then visualizes this matrix as a
+heatmap using \code{corrplot::corrplot}.
 }
 \details{
 The function uses the CLR matrix, where high correlation between two
@@ -58,9 +58,9 @@ co-occurrence or co-regulation.
 \examples{
 data(example_data)
 # Example of a large cohort with 868 samples and 69 cell types
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,
     metadata = example_data$GongSharma_full$metadata
 )
-plot_corr(ecoda_object)
+plot_corr(se)
 }

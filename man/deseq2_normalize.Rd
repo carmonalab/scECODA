@@ -36,7 +36,7 @@ Only used if \code{hvg = NULL}; the function will select the top
 }
 \value{
 A normalized expression matrix (VST-transformed) with\
-\strong{samples as rows} and \strong{genes as columns}.
+\strong{samples as columns} and \strong{genes as rows}.
 }
 \description{
 This function normalizes a gene x sample pseudobulk count matrix using the

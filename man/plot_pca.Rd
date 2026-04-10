@@ -5,8 +5,8 @@
 \title{Plot Principal Component Analysis and Calculate Clustering Scores}
 \usage{
 plot_pca(
-  ecoda_object,
-  slot = c("clr", "clr_hvc", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt",
+  se,
+  assay = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "clr_hvc",
     "pb"),
   label_col = NULL,
   scale. = FALSE,
@@ -34,10 +34,10 @@ plot_pca(
 )
 }
 \arguments{
-\item{ecoda_object}{An \link[=ECODA-class]{ECODA} object.}
+\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
 
-\item{slot}{Character string (default: \code{"clr"}). The name of the data
-matrix slot in the \code{ECODA} object to use for PCA. Must be one of:
+\item{assay}{Character string (default: \code{"clr"}). The name of the assay
+in the \code{SummarizedExperiment} object to use for PCA. Must be one of:
 \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
 (CLR-transformed abundances of only the most highly variable cell types
 (HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
@@ -46,8 +46,8 @@ frequencies), \code{"freq_imp"} (imputed frequencies), or
 \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in \code{slot(ecoda_object, "metadata")} used to color and
-group samples in the plot, and for calculating clustering scores.}
+of a column in \code{colData(sd)} used to color and group samples in the
+plot, and for calculating clustering scores.}
 
 \item{scale.}{Logical (default: \code{FALSE}). A value indicating whether the
 variables should be scaled to have unit variance before the PCA.}
@@ -93,7 +93,7 @@ parallel processes/cores to use for the ANOSIM calculation.}
 number of clusters (\code{k}) to use for \code{hclust} and \code{pam}. If
 \code{NULL}, it defaults to the number of unique levels in \code{labels}.}
 
-\item{knn_k}{Integer (optional, default: \code{NULL}). The number of nearest
+\item{knn_k}{Integer (optional, default: \code{3}). The number of nearest
 neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN) graph
 construction, required for Modularity score calculation. If \code{NULL}, it
 defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is the number of
@@ -111,8 +111,9 @@ aspect ratio of the plot to be equal.}
 components to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).}
 
 \item{invisible}{Character vector (default: \code{c("var", "quali")}).
-Elements to hide. Can include "var" (variables/cell types),
-"ind" (samples), or "quali" (group centroids).}
+Elements to hide. Can include "var" (variables/cell types), "ind"
+(samples), or "quali" (group centroids). see the description of fviz_pca
+of the \link[=factorextra]{factorextra} package for details.}
 
 \item{geom}{Character string or vector (default: \code{"point"}). The
 geometry to be used for the plot. Allowed values are combinations of:
@@ -136,10 +137,11 @@ results.
 }
 \description{
 Performs Principal Component Analysis (PCA) on a selected data
-matrix from the \code{ECODA} object (default: CLR-transformed abundances,
-\code{clr}) and visualizes the results. It can also calculate and display
-several metrics to evaluate the separation of groups defined by
-\code{label_col}.
+matrix from the \code{SummarizedExperiment} object (default:
+CLR-transformed abundances, \code{clr}) and visualizes the results. It can
+also calculate and display several metrics to evaluate the separation of
+groups defined by \code{label_col}. It uses the
+\link[=factorextra]{factorextra} package.
 }
 \details{
 The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
@@ -154,7 +156,7 @@ ecoda_object <- ecoda(
 )
 
 plot_pca(
-    ecoda_object,
+    se,
     label_col = "Tissue",
     title = "PCA based on cell type composition",
     anosim_parallel = 1,
@@ -163,11 +165,11 @@ plot_pca(
 
 # Using only the most highly variable cell types
 plot_pca(
-    ecoda_object,
+    se,
     slot = "clr_hvc",
     label_col = "Tissue",
     title = "PCA based on highly variable cell types",
     anosim_parallel = 1,
-    n_hv_feat_show = ncol(slot(ecoda_object, "clr_hvc"))
+    n_hv_feat_show = nrow(metadata(se)$clr_hvc)
 )
 }

@@ -4,19 +4,28 @@
 \alias{create_long_data}
 \title{Reshapes ECODA data into a long format for plotting and analysis.}
 \usage{
-create_long_data(ecoda_object, data_slot, label_col = NULL)
+create_long_data(
+  se,
+  assay = c("clr", "freq", "asin_sqrt", "clr_hvc"),
+  label_col = NULL
+)
 }
 \arguments{
-\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object.}
+\item{se}{An initialized
+\link[=SummarizedExperiment-class]{ECSummarizedExperimentODA} object.}
 
-\item{data_slot}{Character string specifying the data matrix to use. Must be
-either \code{"freq"} (for relative abundance) or \code{"clr"} (for
-CLR-transformed abundance).}
+\item{assay}{Character string (default: \code{"clr"}). The name of the assay
+in the \code{SummarizedExperiment} object to use for plotting. Must be one
+of: \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+(CLR-transformed abundances of only the most highly variable cell types
+(HVCs)), \code{"counts"} (raw counts), \code{"counts_imp"} (imputed
+counts), \code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in the \code{slot(ecoda_object, "metadata")} slot to merge into
-the long data frame (e.g., "Disease_State" or "Batch"). If \code{NULL},
-only the abundance data and sample/celltype IDs are returned.}
+of a column in \code{colData(se)} to merge into the long data frame (e.g.,
+"Disease_State" or "Batch"). If \code{NULL}, only the abundance data and
+sample/celltype IDs are returned.}
 }
 \value{
 A tidy, long format data frame with columns:
@@ -33,10 +42,11 @@ The quantitative value depending on the chosen
 \description{
 This function takes either the relative abundance (\code{freq}) or
 CLR-transformed abundance (\code{clr}) matrix from an
-\link[=ECODA-class]{ECODA} object, converts it from a wide (samples x cell
-types) to a long (sample, celltype, value) format, and optionally joins it
-with a specified column from the sample metadata.
+\link[=SummarizedExperiment-class]{SummarizedExperiment} object, converts it
+from a wide (cell types x samples) to a long (sample, cell type, value)
+format for plotting, and optionally joins it with a specified column from the
+sample metadata.
 }
 \seealso{
-\link[=ECODA-class]{ECODA}
+\link[=SummarizedExperiment-class]{SummarizedExperiment}
 }
