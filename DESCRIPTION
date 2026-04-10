@@ -1,6 +1,6 @@
 Package: scECODA
 Title: Single-Cell Exploratory Compositional Data Analysis
-Version: 0.99.6
+Version: 0.99.7
 Authors@R: c(
     person("Christian", "Halter",
       email = "scecoda.dev@gmail.com",
@@ -20,11 +20,11 @@ Description: The scECODA R package provides a complete workflow for the
     specialized methods, such as the Centered Log-Ratio (CLR) transformation, 
     to properly analyze proportional data while avoiding the biases introduced 
     by the compositional constraint. The package encapsulates data management, 
-    transformation, and analysis into a single ECODA S4 object, offering 
-    downstream tools for dimensionality reduction via PCA, calculating critical
-    metrics like the Adjusted Rand Index (ARI) and Modularity to quantify 
-    sample grouping quality, and generating high-quality visualizations like 
-    heatmaps and scatter plots.
+    transformation, and analysis into a single SummarizedExperiment object,
+    offering downstream tools for dimensionality reduction via PCA, calculating 
+    critical metrics like the Adjusted Rand Index (ARI) and Modularity to 
+    quantify sample grouping quality, and generating high-quality visualizations
+    like heatmaps and scatter plots.
 biocViews: Software,
     SingleCell,
     Transcriptomics,
