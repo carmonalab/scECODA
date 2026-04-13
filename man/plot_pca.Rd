@@ -34,7 +34,9 @@ plot_pca(
 )
 }
 \arguments{
-\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
+\item{se}{A
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.}
 
 \item{assay}{Character string (default: \code{"clr"}). The name of the assay
 in the \code{SummarizedExperiment} object to use for PCA. Must be one of:
@@ -86,8 +88,8 @@ calculates the ANOSIM statistic (R) using \code{vegan::anosim}.}
 \item{anosim_permutations}{Integer (default: \code{99}). The number of
 permutations to use when calculating the ANOSIM statistic.}
 
-\item{anosim_parallel}{Integer (default: \code{1}). The number of
-parallel processes/cores to use for the ANOSIM calculation.}
+\item{anosim_parallel}{Integer (default: \code{1}). The number of parallel
+processes/cores to use for the ANOSIM calculation.}
 
 \item{ari_nclusts}{Integer (optional, default: \code{NULL}). The target
 number of clusters (\code{k}) to use for \code{hclust} and \code{pam}. If
@@ -112,8 +114,8 @@ components to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).}
 
 \item{invisible}{Character vector (default: \code{c("var", "quali")}).
 Elements to hide. Can include "var" (variables/cell types), "ind"
-(samples), or "quali" (group centroids). see the description of fviz_pca
-of the \link[=factoextra]{factoextra} package for details.}
+(samples), or "quali" (group centroids). see the description of
+\link[factoextra:fviz_pca]{factoextra} for details.}
 
 \item{geom}{Character string or vector (default: \code{"point"}). The
 geometry to be used for the plot. Allowed values are combinations of:
@@ -140,8 +142,8 @@ Performs Principal Component Analysis (PCA) on a selected data
 matrix from the \code{SummarizedExperiment} object (default:
 CLR-transformed abundances, \code{clr}) and visualizes the results. It can
 also calculate and display several metrics to evaluate the separation of
-groups defined by \code{label_col}. It uses the
-\link[=factoextra]{factoextra} package.
+groups defined by \code{label_col}. It uses
+\link[factoextra:fviz_pca]{factoextra}.
 }
 \details{
 The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
@@ -166,10 +168,10 @@ plot_pca(
 # Using only the most highly variable cell types
 plot_pca(
     se,
-    slot = "clr_hvc",
+    assay = "clr_hvc",
     label_col = "Tissue",
     title = "PCA based on highly variable cell types",
     anosim_parallel = 1,
-    n_hv_feat_show = nrow(metadata(se)$clr_hvc)
+    n_hv_feat_show = nrow(S4Vectors::metadata(se)$clr_hvc)
 )
 }

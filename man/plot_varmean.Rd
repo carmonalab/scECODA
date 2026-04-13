@@ -14,8 +14,9 @@ plot_varmean(
 )
 }
 \arguments{
-\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object
-containing pre-calculated cell type variances in
+\item{se}{A
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object containing pre-calculated cell type variances in
 \code{metadata(se)$celltype_variances} and the HVC list in
 \code{metadata(se)$hvcs}}
 
@@ -67,6 +68,6 @@ plot_varmean(se,
 )
 }
 \seealso{
-\link[=SummarizedExperiment-class]{SummarizedExperiment},
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
 \code{\link{get_celltype_variances}}
 }

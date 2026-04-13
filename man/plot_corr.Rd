@@ -14,7 +14,9 @@ plot_corr(
 )
 }
 \arguments{
-\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
+\item{se}{A
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.}
 
 \item{assay}{Character string (default: \code{"clr"}). The name of the assay
 in the \code{SummarizedExperiment} object to use for the correlation plot

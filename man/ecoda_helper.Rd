@@ -37,11 +37,13 @@ cells or just the \code{"zeros"}?}
 }
 \value{
 A fully initialized
-\link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.
 }
 \description{
 This is the internal engine that initializes an
-\link[=SummarizedExperiment-class]{SummarizedExperiment} object. It performs
-zero-imputation, Centered Log-Ratio (CLR) transformation, calculates sample
-distances, and identifies highly variable cell types (HVCs).
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object. It performs zero-imputation, Centered Log-Ratio (CLR) transformation,
+calculates sample distances, and identifies highly variable cell types
+(HVCs).
 }

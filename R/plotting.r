@@ -6,14 +6,16 @@
 #'   matrix from the \code{SummarizedExperiment} object (default:
 #'   CLR-transformed abundances, \code{clr}) and visualizes the results. It can
 #'   also calculate and display several metrics to evaluate the separation of
-#'   groups defined by \code{label_col}. It uses the
-#'   \link[=factoextra]{factoextra} package.
+#'   groups defined by \code{label_col}. It uses
+#'   \link[factoextra:fviz_pca]{factoextra}.
 #'
 #' @details The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
 #'   how well the sample groupings (\code{labels}) align with the underlying
 #'   data structure in the feature space defined by the PCA.
 #'
-#' @param se A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
 #' @param assay Character string (default: \code{"clr"}). The name of the assay
 #'   in the \code{SummarizedExperiment} object to use for PCA. Must be one of:
 #'   \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
@@ -56,8 +58,8 @@
 #'   calculates the ANOSIM statistic (R) using \code{vegan::anosim}.
 #' @param anosim_permutations Integer (default: \code{99}). The number of
 #'   permutations to use when calculating the ANOSIM statistic.
-#' @param anosim_parallel Integer (default: \code{1}). The number of
-#'   parallel processes/cores to use for the ANOSIM calculation.
+#' @param anosim_parallel Integer (default: \code{1}). The number of parallel
+#'   processes/cores to use for the ANOSIM calculation.
 #' @param ari_nclusts Integer (optional, default: \code{NULL}). The target
 #'   number of clusters (\code{k}) to use for \code{hclust} and \code{pam}. If
 #'   \code{NULL}, it defaults to the number of unique levels in \code{labels}.
@@ -70,8 +72,8 @@
 #'   components to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).
 #' @param invisible Character vector (default: \code{c("var", "quali")}).
 #'   Elements to hide. Can include "var" (variables/cell types), "ind"
-#'   (samples), or "quali" (group centroids). see the description of fviz_pca
-#'   of the \link[=factoextra]{factoextra} package for details.
+#'   (samples), or "quali" (group centroids). see the description of
+#'   \link[factoextra:fviz_pca]{factoextra} for details.
 #' @param geom Character string or vector (default: \code{"point"}). The
 #'   geometry to be used for the plot. Allowed values are combinations of:
 #'             \itemize{
@@ -116,11 +118,11 @@
 #' # Using only the most highly variable cell types
 #' plot_pca(
 #'     se,
-#'     slot = "clr_hvc",
+#'     assay = "clr_hvc",
 #'     label_col = "Tissue",
 #'     title = "PCA based on highly variable cell types",
 #'     anosim_parallel = 1,
-#'     n_hv_feat_show = nrow(metadata(se)$clr_hvc)
+#'     n_hv_feat_show = nrow(S4Vectors::metadata(se)$clr_hvc)
 #' )
 plot_pca <- function(se,
                      assay = c(
@@ -193,25 +195,33 @@ plot_pca <- function(se,
                 parallel = anosim_parallel,
                 digits = score_digits
             )
-            title <- paste0(title, "\nANOSIM score: ", sprintf(format_str, anosim_score))
+            title <- paste0(
+                title, "\nANOSIM score: ", sprintf(format_str, anosim_score)
+            )
         }
         if (cluster_score) {
             cluster_score <- calc_ari(
                 dist_mat, labels,
                 nclusts = ari_nclusts, digits = score_digits
             )
-            title <- paste0(title, "\nARI: ", sprintf(format_str, cluster_score))
+            title <- paste0(
+                title, "\nARI: ", sprintf(format_str, cluster_score)
+            )
         }
         if (mod_score) {
             mod_score <- calc_modularity(
                 dist_mat, labels, knn_k,
                 digits = score_digits
             )
-            title <- paste0(title, "\nModularity score: ", sprintf(format_str, mod_score))
+            title <- paste0(
+                title, "\nModularity score: ", sprintf(format_str, mod_score)
+            )
         }
         if (sil_score) {
             sil_score <- calc_sil(dist_mat, labels, digits = score_digits)
-            title <- paste0(title, "\nSilhouette score: ", sprintf(format_str, sil_score))
+            title <- paste0(
+                title, "\nSilhouette score: ", sprintf(format_str, sil_score)
+            )
         }
     } else {
         labels <- "none"
@@ -258,7 +268,9 @@ plot_pca <- function(se,
 #'   matrix from the \code{ECODA} object (default: CLR-transformed abundances,
 #'   \code{clr}) and visualizes the results in 3D colored by \code{label_col}.
 #'
-#' @param se A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
 #' @param assay Character string (default: \code{"clr"}). The name of the assay
 #'   in the \code{SummarizedExperiment} object to use for PCA. Must be one of:
 #'   \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
@@ -268,8 +280,8 @@ plot_pca <- function(se,
 #'   frequencies), \code{"freq_imp"} (imputed frequencies), or
 #'   \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{colData(se)} used to color and
-#'   group samples in the plot, and for calculating clustering scores.
+#'   of a column in \code{colData(se)} used to color and group samples in the
+#'   plot, and for calculating clustering scores.
 #' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
 #'   variables should be scaled to have unit variance before the PCA.
 #'
@@ -367,7 +379,7 @@ plot_pca3d <- function(se,
 #' )
 #'
 #' # Extract necessary components
-#' dist_mat <- dist(assay(se, "clr"))
+#' dist_mat <- dist(t(assay(se, "clr")))
 #' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
@@ -426,7 +438,7 @@ calc_anosim <- function(dist_mat,
 #' )
 #'
 #' # Extract necessary components
-#' dist_mat <- dist(assay(se, "clr"))
+#' dist_mat <- dist(t(assay(se, "clr")))
 #' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
@@ -504,14 +516,19 @@ calc_ari <- function(dist_mat,
 #' )
 #'
 #' # Extract necessary components
-#' dist_mat <- dist(assay(se, "clr"))
+#' dist_mat <- dist(t(assay(se, "clr")))
 #' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
+#' \donttest{
 #' calc_modularity(dist_mat, labels)
+#' }
 calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
     if (!requireNamespace("igraph", quietly = TRUE)) {
-        stop("Package 'igraph' is required for this function. Please install it.")
+        stop(
+            "Package 'igraph' is required for this function. ",
+            "Please install it."
+        )
     }
 
     ngroups <- length(unique(labels))
@@ -523,7 +540,10 @@ calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
     g <- compute_snn_graph(knn)
 
     # Compute modularity
-    modularity_score <- igraph::modularity(g, membership = as.numeric(factor(labels)))
+    modularity_score <- igraph::modularity(
+        g,
+        membership = as.numeric(factor(labels))
+    )
 
     # NOTE:
     # Maximum modularity depends on the number of groups:
@@ -577,7 +597,7 @@ compute_snn_graph <- function(knn) {
 
     # 1. Create a binary sparse matrix (A)
     # Row i has a 1 at column j if j is a neighbor of i
-    i_idx <- rep(1:n, each = k)
+    i_idx <- rep(seq_len(n), each = k)
     j_idx <- as.vector(t(knn))
 
     adj_bin <- sparseMatrix(
@@ -632,7 +652,7 @@ compute_snn_graph <- function(knn) {
 #' )
 #'
 #' # Extract necessary components
-#' dist_mat <- dist(assay(se, "clr"))
+#' dist_mat <- dist(t(assay(se, "clr")))
 #' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
@@ -654,13 +674,14 @@ calc_sil <- function(dist_mat, labels, digits = 3) {
 #'
 #' This function takes either the relative abundance (\code{freq}) or
 #' CLR-transformed abundance (\code{clr}) matrix from an
-#' \link[=SummarizedExperiment-class]{SummarizedExperiment} object, converts it
-#' from a wide (cell types x samples) to a long (sample, cell type, value)
-#' format for plotting, and optionally joins it with a specified column from the
-#' sample metadata.
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#' object, converts it from a wide (cell types x samples) to a long (sample,
+#' cell type, value) format for plotting, and optionally joins it with a
+#' specified column from the sample metadata.
 #'
 #' @param se An initialized
-#'   \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
 #' @param assay Character string (default: \code{"clr"}). The name of the assay
 #'   in the \code{SummarizedExperiment} object to use for plotting. Must be one
 #'   of: \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
@@ -690,7 +711,8 @@ calc_sil <- function(dist_mat, labels, digits = 3) {
 #' @importFrom rlang sym
 #' @importFrom SummarizedExperiment colData
 #'
-#' @seealso \link[=SummarizedExperiment-class]{SummarizedExperiment}
+#' @seealso
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 create_long_data <- function(se,
                              assay = c("clr", "freq", "asin_sqrt", "clr_hvc"),
                              label_col = NULL) {
@@ -707,7 +729,7 @@ create_long_data <- function(se,
     # 2. Reshape the data from wide to long format
     long_data <- data_df %>%
         pivot_longer(
-            cols = -sample_id,
+            cols = -.data$sample_id,
             names_to = "celltype",
             values_to = "value"
         )
@@ -742,8 +764,9 @@ create_long_data <- function(se,
 #' across samples or across aggregated groups. It automatically handles data
 #' preparation and ordering based on the provided parameters.
 #'
-#' @param se A \link[=SummarizedExperiment-class]{SummarizedExperiment} object
-#'   containing cell type relative frequencies in the \code{freq} assay.
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object containing cell type relative frequencies in the \code{freq} assay.
 #' @param label_col Character string (optional, default: \code{NULL}). The name
 #'   of a column in \code{colData(se))} used to define grouping or groups
 #'   (required if \code{plot_by = "group"}).
@@ -773,7 +796,7 @@ create_long_data <- function(se,
 #' @export plot_barplot
 #'
 #' @seealso \code{\link{create_long_data}},
-#'   \link[=SummarizedExperiment-class]{SummarizedExperiment}
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 #'
 #' @examples
 #' data(example_data)
@@ -821,19 +844,19 @@ plot_barplot <- function(se,
 
         # Plotting by group
         plot_df <- plot_data %>%
-            group_by(celltype, !!sym(label_col)) %>%
+            group_by(.data$celltype, !!sym(label_col)) %>%
             summarise(
-                mean_rel_abund = mean(value, na.rm = TRUE),
+                mean_rel_abund = mean(.data$value, na.rm = TRUE),
                 .groups = "drop"
             ) %>%
-            mutate(x_var = !!sym(label_col), y_var = mean_rel_abund)
+            mutate(x_var = !!sym(label_col), y_var = .data$mean_rel_abund)
 
         # Ensure group is a factor
         plot_df$x_var <- factor(plot_df$x_var)
     } else if (plot_by == "sample") {
         # Plotting by Sample
         plot_df <- plot_data %>%
-            mutate(x_var = sample_id, y_var = value)
+            mutate(x_var = .data$sample_id, y_var = .data$value)
 
         current_levels <- unique(plot_df$x_var)
 
@@ -853,7 +876,7 @@ plot_barplot <- function(se,
                 # 1. Get a unique list of samples
                 # and their corresponding label_col
                 sample_group_map <- plot_data %>%
-                    distinct(sample_id, !!sym(label_col))
+                    distinct(.data$sample_id, !!sym(label_col))
 
                 # 2. Order the samples by the group column first
                 # (using mixedsort on its values) and then
@@ -866,8 +889,8 @@ plot_barplot <- function(se,
                             ordered = TRUE
                         )
                     ) %>%
-                    arrange(ordered_group, mixedsort(sample_id)) %>%
-                    pull(sample_id)
+                    arrange(.data$ordered_group, mixedsort(.data$sample_id)) %>%
+                    pull(.data$sample_id)
             } else {
                 ordered_levels <- mixedsort(unique(plot_data$sample_id))
             }
@@ -878,7 +901,10 @@ plot_barplot <- function(se,
     }
 
     # --- Generate the plot ---
-    p <- ggplot(plot_df, aes(x = x_var, y = y_var, fill = celltype)) +
+    p <- ggplot(
+        plot_df,
+        aes(x = .data$x_var, y = .data$y_var, fill = .data$celltype)
+    ) +
         geom_col(position = "stack") +
         theme_minimal() +
         theme(
@@ -921,8 +947,9 @@ plot_barplot <- function(se,
 #'         for the comparison across all groups.
 #' }
 #'
-#' @param se An \link[=SummarizedExperiment-class]{SummarizedExperiment} object
-#'   containing the CLR-transformed abundances in the \code{clr}.
+#' @param se An
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object containing the CLR-transformed abundances in the \code{clr}.
 #' @param assay Character string (default: \code{"clr"}). The name of the assay
 #'   in the \code{SummarizedExperiment} object to use for plotting. Must be one
 #'   of: \code{"clr"} (CLR-transformed abundances, default),  \code{"clr_hvc"}
@@ -962,7 +989,7 @@ plot_barplot <- function(se,
 #' @export plot_boxplot
 #'
 #' @seealso \code{\link{create_long_data}},
-#'   \link[=SummarizedExperiment-class]{SummarizedExperiment}
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 #'
 #' @examples
 #' data(example_data)
@@ -1081,7 +1108,7 @@ plot_boxplot <- function(se,
             dsub_stats <- plot_data %>%
                 group_by(!!sym(x_group_var)) %>%
                 wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
-                add_xy_position(x = x_group_var)
+                add_xy_position(x = .data$x_group_var)
 
             p <- p +
                 # Add p-values using the generated stats table
@@ -1117,10 +1144,12 @@ plot_boxplot <- function(se,
 #' supports optional filtering to only Highly Variable Cell Types (HVCs) and
 #' includes a sample annotation sidebar based on a specified metadata column.
 #'
-#' @param se A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
-#' @param assay Character string (default: \code{"clr"}). The name of the
-#'   assay in the \code{SummarizedExperiment} object to use for the heatmap.
-#'   Must be one of: \code{"clr"} (CLR-transformed abundances, default),
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
+#' @param assay Character string (default: \code{"clr"}). The name of the assay
+#'   in the \code{SummarizedExperiment} object to use for the heatmap. Must be
+#'   one of: \code{"clr"} (CLR-transformed abundances, default),
 #'   \code{"clr_hvc"} (CLR-transformed abundances of only the most highly
 #'   variable cell types (HVCs)), \code{"pb"} (pseudobulk gene expression),
 #'   \code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
@@ -1156,8 +1185,9 @@ plot_boxplot <- function(se,
 #'
 #' @export plot_heatmap
 #'
-#' @seealso \link[=SummarizedExperiment-class]{SummarizedExperiment},
-#'   \code{\link{pheatmap}}
+#' @seealso
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
+#' \code{\link[pheatmap]{pheatmap}}
 #'
 #' @examples
 #' # Example for a simple dataset:
@@ -1252,7 +1282,9 @@ plot_heatmap <- function(se,
 #'   cell types suggests they vary together across samples, indicating potential
 #'   co-occurrence or co-regulation.
 #'
-#' @param se A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
 #' @param assay Character string (default: \code{"clr"}). The name of the assay
 #'   in the \code{SummarizedExperiment} object to use for the correlation plot
 #'   Must be one of: \code{"clr"} (CLR-transformed abundances, default),
@@ -1315,7 +1347,9 @@ plot_corr <- function(se,
 #' @description Because not all data can be stored in assays (e.g. pseudobulk
 #'   and clr_hvc have different number of features (rows) than counts etc.)
 #'
-#' @param se A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
 #' @param assay Character string, the name of the assay.
 #'
 #' @return A data frame containing the assay data.

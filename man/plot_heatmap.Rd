@@ -19,11 +19,13 @@ plot_heatmap(
 )
 }
 \arguments{
-\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
+\item{se}{A
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.}
 
-\item{assay}{Character string (default: \code{"clr"}). The name of the
-assay in the \code{SummarizedExperiment} object to use for the heatmap.
-Must be one of: \code{"clr"} (CLR-transformed abundances, default),
+\item{assay}{Character string (default: \code{"clr"}). The name of the assay
+in the \code{SummarizedExperiment} object to use for the heatmap. Must be
+one of: \code{"clr"} (CLR-transformed abundances, default),
 \code{"clr_hvc"} (CLR-transformed abundances of only the most highly
 variable cell types (HVCs)), \code{"pb"} (pseudobulk gene expression),
 \code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
@@ -111,6 +113,6 @@ plot_heatmap(
 )
 }
 \seealso{
-\link[=SummarizedExperiment-class]{SummarizedExperiment},
-\code{\link{pheatmap}}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
+\code{\link[pheatmap]{pheatmap}}
 }

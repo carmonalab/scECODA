@@ -12,7 +12,8 @@ create_long_data(
 }
 \arguments{
 \item{se}{An initialized
-\link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.}
 
 \item{assay}{Character string (default: \code{"clr"}). The name of the assay
 in the \code{SummarizedExperiment} object to use for plotting. Must be one
@@ -42,11 +43,11 @@ The quantitative value depending on the chosen
 \description{
 This function takes either the relative abundance (\code{freq}) or
 CLR-transformed abundance (\code{clr}) matrix from an
-\link[=SummarizedExperiment-class]{SummarizedExperiment} object, converts it
-from a wide (cell types x samples) to a long (sample, cell type, value)
-format for plotting, and optionally joins it with a specified column from the
-sample metadata.
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object, converts it from a wide (cell types x samples) to a long (sample,
+cell type, value) format for plotting, and optionally joins it with a
+specified column from the sample metadata.
 }
 \seealso{
-\link[=SummarizedExperiment-class]{SummarizedExperiment}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 }

@@ -59,12 +59,14 @@ non-zero value when \code{rep_method = "frac_min"}.}
 cells or just the \code{"zeros"}?}
 }
 \value{
-A new \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+A new
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.
 }
 \description{
 This is a smart constructor function used to initialize an
-\link[=SummarizedExperiment-class]{SummarizedExperiment} object. It handles
-the processing of single-cell objects (\code{Seurat} or
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object. It handles the processing of single-cell objects (\code{Seurat} or
 \code{SingleCellExperiment}) or raw data frames to extract cell type counts,
 calculate sample metadata, and optionally generate DESeq2-normalized
 pseudobulk data.

@@ -8,8 +8,8 @@ get_celltype_variances(se, descending = TRUE)
 }
 \arguments{
 \item{se}{An initialized
-\link[=SummarizedExperiment-class]{SummarizedExperiment} object containing
-CLR-transformed data in the \code{clr} assay}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object containing CLR-transformed data in the \code{clr} assay}
 
 \item{descending}{Logical (default: \code{TRUE}). If \code{TRUE}, the
 returned data frame is sorted by variance in descending order.}
@@ -31,9 +31,10 @@ explained cumulatively.
 \description{
 This function takes the Centered Log-Ratio (CLR) transformed cell type
 abundance data from an
-\link[=SummarizedExperiment-class]{SummarizedExperiment} object, calculates
-the mean CLR abundance and variance for each cell type. It also calculates
-the cumulative variance explained by the cell types when ranked by variance.
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object, calculates the mean CLR abundance and variance for each cell type. It
+also calculates the cumulative variance explained by the cell types when
+ranked by variance.
 }
 \examples{
 data(example_data)
@@ -49,6 +50,6 @@ df_var_asc <- get_celltype_variances(
 )
 }
 \seealso{
-\link[=SummarizedExperiment-class]{SummarizedExperiment},
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
 \code{\link{plot_varmean}}
 }

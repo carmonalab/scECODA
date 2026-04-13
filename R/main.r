@@ -5,8 +5,8 @@
 #' Create an SummarizedExperiment object from various data types
 #'
 #' This is a smart constructor function used to initialize an
-#' \link[=SummarizedExperiment-class]{SummarizedExperiment} object. It handles
-#' the processing of single-cell objects (\code{Seurat} or
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#' object. It handles the processing of single-cell objects (\code{Seurat} or
 #' \code{SingleCellExperiment}) or raw data frames to extract cell type counts,
 #' calculate sample metadata, and optionally generate DESeq2-normalized
 #' pseudobulk data.
@@ -40,7 +40,9 @@
 #' @param add_to Character string. Should the value be added to \code{"all"}
 #'   cells or just the \code{"zeros"}?
 #'
-#' @return A new \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+#' @return A new
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
 #'
 #' @importFrom methods new
 #' @importFrom gtools mixedsort
@@ -155,9 +157,10 @@ ecoda <- function(data = NULL,
 #' matrices
 #'
 #' This is the internal engine that initializes an
-#' \link[=SummarizedExperiment-class]{SummarizedExperiment} object. It performs
-#' zero-imputation, Centered Log-Ratio (CLR) transformation, calculates sample
-#' distances, and identifies highly variable cell types (HVCs).
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#' object. It performs zero-imputation, Centered Log-Ratio (CLR) transformation,
+#' calculates sample distances, and identifies highly variable cell types
+#' (HVCs).
 #'
 #' @param data A matrix or data frame where **columns are samples** and
 #'   **rows are cell types**.
@@ -173,7 +176,8 @@ ecoda <- function(data = NULL,
 #'   cells or just the \code{"zeros"}?
 #'
 #' @return A fully initialized
-#'   \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
 #'
 #' @importFrom methods new
 #' @importFrom dplyr %>% mutate across everything
@@ -338,8 +342,9 @@ calc_clr <- function(df) {
 #' @details The function provides two methods for handling zeros:
 #' \itemize{
 #'   \item \strong{counts:} Adds a fixed value (\code{pseudo_count}).
-#'   \item \strong{frac_min:} Replaces zeros with a fraction (\code{pseudo_frac_min})
-#'   of the smallest observed non-zero value in the dataset.
+#'   \item \strong{frac_min:} Replaces zeros with a fraction
+#'   (\code{pseudo_frac_min}) of the smallest observed non-zero value in
+#'   the dataset.
 #' }
 #'
 #' @param df A data frame or matrix where zeros need to be replaced.
@@ -408,23 +413,23 @@ replace_zeros <- function(df,
 #' @export get_celltype_counts
 #' @examples
 #' # Create example data frame
-# cell_data_df <- data.frame(
-#     Cell_ID = paste0("C", seq(10)),
-#     Sample_Name = c(rep("S1", 5), rep("S2", 5)),
-#     Cluster_Annotation = factor(c(
-#         "B_Cell", "T_Cell", "B_Cell", NA, "T_Cell",
-#         "T_Cell", "Macrophage", "B_Cell", "T_Cell", "T_Cell"
-#     ))
-# )
+#' cell_data_df <- data.frame(
+#'     Cell_ID = paste0("C", seq(10)),
+#'     Sample_Name = c(rep("S1", 5), rep("S2", 5)),
+#'     Cluster_Annotation = factor(c(
+#'         "B_Cell", "T_Cell", "B_Cell", NA, "T_Cell",
+#'         "T_Cell", "Macrophage", "B_Cell", "T_Cell", "T_Cell"
+#'     ))
+#' )
 #' #
-# # Calculate cell type counts per sample
-# celltype_counts <- get_celltype_counts(
-#     cell_data_df = cell_data_df,
-#     sample_col = "Sample_Name",
-#     celltype_col = "Cluster_Annotation"
-# )
+#' # Calculate cell type counts per sample
+#' celltype_counts <- get_celltype_counts(
+#'     cell_data_df = cell_data_df,
+#'     sample_col = "Sample_Name",
+#'     celltype_col = "Cluster_Annotation"
+#' )
 #' #
-# print(celltype_counts)
+#' print(celltype_counts)
 #' # Note how the NA cell type count is handled and renamed to "NA".
 get_celltype_counts <- function(cell_data_df,
                                 sample_col,
@@ -528,8 +533,8 @@ get_sample_metadata <- function(cell_data_df,
 #' types.
 #'
 #' @param se An initialized
-#'   \link[=SummarizedExperiment-class]{SummarizedExperiment} object containing
-#'   the CLR-transformed data in the \code{clr} assay.
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object containing the CLR-transformed data in the \code{clr} assay.
 #' @param variance_explained Numeric (default: 0.5). The target cumulative
 #'   proportion of total variance to be explained by the selected HVCs. The
 #'   function stops selecting cell types once this threshold is met.
@@ -539,7 +544,8 @@ get_sample_metadata <- function(cell_data_df,
 #'
 #' @importFrom S4Vectors metadata metadata<-
 #'
-#' @return The updated \link[=SummarizedExperiment-class]{SummarizedExperiment}
+#' @return The updated
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 #'   object with the following metadata populated:
 #'         \itemize{
 #'           \item \code{celltype_variances}: Data frame of cell type variances.
@@ -552,7 +558,8 @@ get_sample_metadata <- function(cell_data_df,
 #'
 #' @export find_hvcs
 #'
-#' @seealso \link[=SummarizedExperiment-class]{SummarizedExperiment},
+#' @seealso
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
 #'   \code{\link{get_celltype_variances}}, \code{\link{get_hvcs}}
 #'
 #' @examples
@@ -595,13 +602,14 @@ find_hvcs <- function(se,
 #'
 #' This function takes the Centered Log-Ratio (CLR) transformed cell type
 #' abundance data from an
-#' \link[=SummarizedExperiment-class]{SummarizedExperiment} object, calculates
-#' the mean CLR abundance and variance for each cell type. It also calculates
-#' the cumulative variance explained by the cell types when ranked by variance.
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#' object, calculates the mean CLR abundance and variance for each cell type. It
+#' also calculates the cumulative variance explained by the cell types when
+#' ranked by variance.
 #'
 #' @param se An initialized
-#'   \link[=SummarizedExperiment-class]{SummarizedExperiment} object containing
-#'   CLR-transformed data in the \code{clr} assay
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object containing CLR-transformed data in the \code{clr} assay
 #' @param descending Logical (default: \code{TRUE}). If \code{TRUE}, the
 #'   returned data frame is sorted by variance in descending order.
 #'
@@ -625,7 +633,8 @@ find_hvcs <- function(se,
 #'
 #' @export get_celltype_variances
 #'
-#' @seealso \link[=SummarizedExperiment-class]{SummarizedExperiment},
+#' @seealso
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
 #'   \code{\link{plot_varmean}}
 #'
 #' @examples
@@ -726,11 +735,11 @@ get_hvcs <- function(df_var,
         if (top_n_hvcs < 1) {
             top_hvcs <- df_var %>%
                 slice_head(prop = top_n_hvcs) %>%
-                pull(celltype)
+                pull(.data$celltype)
         } else {
             top_hvcs <- df_var %>%
                 slice_head(n = top_n_hvcs) %>%
-                pull(celltype)
+                pull(.data$celltype)
         }
     } else {
         last_hvc_index <- which.max(df_var$variance_exp >= variance_explained)
@@ -745,7 +754,7 @@ get_hvcs <- function(df_var,
 
         top_hvcs <- df_var %>%
             slice(seq_len(last_hvc_index)) %>%
-            pull(celltype)
+            pull(.data$celltype)
     }
 
     # Select at least two cell types
@@ -753,7 +762,7 @@ get_hvcs <- function(df_var,
         message("The minimum number of highly variable cell types to use is 2")
         top_hvcs <- df_var %>%
             slice_head(n = 2) %>%
-            pull(celltype)
+            pull(.data$celltype)
     }
 
     return(top_hvcs)
@@ -770,8 +779,9 @@ get_hvcs <- function(df_var,
 #'   identified and stored in \code{metadata(se)$hvcs} will be highlighted in
 #'   red on the plot.
 #'
-#' @param se A \link[=SummarizedExperiment-class]{SummarizedExperiment} object
-#'   containing pre-calculated cell type variances in
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object containing pre-calculated cell type variances in
 #'   \code{metadata(se)$celltype_variances} and the HVC list in
 #'   \code{metadata(se)$hvcs}
 #' @param plot_title Character string (default: ""). The title for the plot.
@@ -797,7 +807,8 @@ get_hvcs <- function(df_var,
 #'
 #' @export plot_varmean
 #'
-#' @seealso \link[=SummarizedExperiment-class]{SummarizedExperiment},
+#' @seealso
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
 #'   \code{\link{get_celltype_variances}}
 #'
 #' @examples
@@ -841,14 +852,16 @@ plot_varmean <- function(se,
         p <- ggplot(
             df_var,
             aes(
-                x = avg_clr_abundance,
-                y = Variance,
-                color = is_highlighted
+                x = .data$avg_clr_abundance,
+                y = .data$Variance,
+                color = .data$is_highlighted
             )
         ) +
             scale_color_manual(values = color_map, name = "Cell Type Group")
     } else {
-        p <- ggplot(df_var, aes(x = avg_clr_abundance, y = Variance))
+        p <- ggplot(
+            df_var, aes(x = .data$avg_clr_abundance, y = .data$Variance)
+        )
     }
 
     p <- p +
@@ -885,7 +898,7 @@ plot_varmean <- function(se,
             p <- p +
                 geom_text_repel(
                     data = label_df,
-                    aes(label = celltype, color = is_highlighted),
+                    aes(label = .data$celltype, color = .data$is_highlighted),
                     size = 3,
                     show.legend = FALSE
                 )
@@ -893,7 +906,7 @@ plot_varmean <- function(se,
             p <- p +
                 geom_text_repel(
                     data = label_df,
-                    aes(label = celltype),
+                    aes(label = .data$celltype),
                     size = 3,
                     color = "black"
                 )
@@ -1110,14 +1123,3 @@ deseq2_normalize <- function(pb,
 
     return(as.data.frame(pb_norm))
 }
-
-
-# Stops R CMD check from complaining about
-# "no visible binding for global variable"
-# when using unquoted column names inside ggplot2 or dplyr code.
-globalVariables(c(
-    "sample_id", "celltype", "values", "Variance",
-    "cumulative_variance", "rel_abundance", "mean_rel_abund",
-    "ordered_group", "x_var", "y_var", "Relative_abundance",
-    "avg_clr_abundance", "is_highlighted"
-))

@@ -17,8 +17,9 @@ plot_boxplot(
 )
 }
 \arguments{
-\item{se}{An \link[=SummarizedExperiment-class]{SummarizedExperiment} object
-containing the CLR-transformed abundances in the \code{clr}.}
+\item{se}{An
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object containing the CLR-transformed abundances in the \code{clr}.}
 
 \item{assay}{Character string (default: \code{"clr"}). The name of the assay
 in the \code{SummarizedExperiment} object to use for plotting. Must be one
@@ -95,5 +96,5 @@ plot_boxplot(
 }
 \seealso{
 \code{\link{create_long_data}},
-\link[=SummarizedExperiment-class]{SummarizedExperiment}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 }

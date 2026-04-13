@@ -39,11 +39,13 @@ se <- ecoda(
 )
 
 # Extract necessary components
-dist_mat <- dist(assay(se, "clr"))
+dist_mat <- dist(t(assay(se, "clr")))
 labels <- colData(se)$subject.cmv
 
 # Run the calculation
+\donttest{
 calc_modularity(dist_mat, labels)
+}
 }
 \references{
 Brandes, Ulrik, et al.

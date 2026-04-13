@@ -7,7 +7,9 @@
 get_ecoda_assay(se, assay)
 }
 \arguments{
-\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
+\item{se}{A
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.}
 
 \item{assay}{Character string, the name of the assay.}
 }

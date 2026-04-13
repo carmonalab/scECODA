@@ -13,7 +13,9 @@ plot_pca3d(
 )
 }
 \arguments{
-\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
+\item{se}{A
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.}
 
 \item{assay}{Character string (default: \code{"clr"}). The name of the assay
 in the \code{SummarizedExperiment} object to use for PCA. Must be one of:
@@ -25,8 +27,8 @@ frequencies), \code{"freq_imp"} (imputed frequencies), or
 \code{"asin_sqrt"} (arcsin-square root transformed data).}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
-of a column in \code{colData(se)} used to color and
-group samples in the plot, and for calculating clustering scores.}
+of a column in \code{colData(se)} used to color and group samples in the
+plot, and for calculating clustering scores.}
 
 \item{scale.}{Logical (default: \code{FALSE}). A value indicating whether the
 variables should be scaled to have unit variance before the PCA.}

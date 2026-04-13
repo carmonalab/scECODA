@@ -40,8 +40,9 @@ Centered Log-Ratio (CLR) transformation.
 The function provides two methods for handling zeros:
 \itemize{
 \item \strong{counts:} Adds a fixed value (\code{pseudo_count}).
-\item \strong{frac_min:} Replaces zeros with a fraction (\code{pseudo_frac_min})
-of the smallest observed non-zero value in the dataset.
+\item \strong{frac_min:} Replaces zeros with a fraction
+(\code{pseudo_frac_min}) of the smallest observed non-zero value in
+the dataset.
 }
 }
 \examples{

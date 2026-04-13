@@ -14,8 +14,9 @@ plot_barplot(
 )
 }
 \arguments{
-\item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object
-containing cell type relative frequencies in the \code{freq} assay.}
+\item{se}{A
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object containing cell type relative frequencies in the \code{freq} assay.}
 
 \item{label_col}{Character string (optional, default: \code{NULL}). The name
 of a column in \code{colData(se))} used to define grouping or groups
@@ -73,5 +74,5 @@ plot_barplot(
 }
 \seealso{
 \code{\link{create_long_data}},
-\link[=SummarizedExperiment-class]{SummarizedExperiment}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 }

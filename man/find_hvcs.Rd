@@ -9,8 +9,8 @@ find_hvcs(se, variance_explained = 0.5, top_n_hvcs = NULL)
 }
 \arguments{
 \item{se}{An initialized
-\link[=SummarizedExperiment-class]{SummarizedExperiment} object containing
-the CLR-transformed data in the \code{clr} assay.}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object containing the CLR-transformed data in the \code{clr} assay.}
 
 \item{variance_explained}{Numeric (default: 0.5). The target cumulative
 proportion of total variance to be explained by the selected HVCs. The
@@ -21,7 +21,8 @@ function stops selecting cell types once this threshold is met.}
 highest variance.}
 }
 \value{
-The updated \link[=SummarizedExperiment-class]{SummarizedExperiment}
+The updated
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 object with the following metadata populated:
 \itemize{
 \item \code{celltype_variances}: Data frame of cell type variances.
@@ -53,6 +54,6 @@ se <- find_hvcs(se, variance_explained = 0.75)
 se <- find_hvcs(se, top_n_hvcs = 5)
 }
 \seealso{
-\link[=SummarizedExperiment-class]{SummarizedExperiment},
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
 \code{\link{get_celltype_variances}}, \code{\link{get_hvcs}}
 }
