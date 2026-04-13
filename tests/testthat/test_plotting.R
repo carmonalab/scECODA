@@ -1,10 +1,10 @@
-test_that("create_long_data reshapes ECODA slots correctly", {
+test_that("create_long_data reshapes ECODA assays correctly", {
     data(example_data)
     d <- example_data$Zhang
     se <- ecoda(data = d$cell_counts_lowresolution, metadata = d$metadata)
 
     # Test with label join
-    long_df <- create_long_data(se, assay = "clr", label_col = "Tissue")
+    long_df <- scECODA:::create_long_data(se, assay = "clr", label_col = "Tissue")
 
     expect_true("value" %in% colnames(long_df))
     expect_true("Tissue" %in% colnames(long_df))

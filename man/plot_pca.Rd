@@ -15,8 +15,8 @@ plot_pca(
   legend_title = "Group",
   show_label_samples = FALSE,
   score_digits = 3,
-  cluster_score = TRUE,
-  mod_score = TRUE,
+  cluster_score = FALSE,
+  mod_score = FALSE,
   sil_score = FALSE,
   anosim_score = TRUE,
   anosim_permutations = 99,
@@ -150,7 +150,7 @@ data structure in the feature space defined by the PCA.
 }
 \examples{
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$Zhang$cell_counts_lowresolution,
     metadata = example_data$Zhang$metadata,
 )

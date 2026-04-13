@@ -267,12 +267,12 @@ labels <- colData(se)$Tissue
 
 anosim_r_score <- calc_anosim(dist_mat, labels)
 ari_score <- calc_ari(dist_mat, labels)
-modularity_score <- calc_modularity(dist_mat, labels)
+# modularity_score <- calc_modularity(dist_mat, labels)
 silhouette_score <- calc_sil(dist_mat, labels)
 
 print(paste("ANOSIM R:", anosim_r_score))
 print(paste("ARI:", ari_score))
-print(paste("Modularity:", modularity_score))
+# print(paste("Modularity:", modularity_score))
 print(paste("Silhouette:", silhouette_score))
 ```
 
@@ -555,8 +555,8 @@ se <- ecoda(data = counts, metadata = metadata)
 # Specify cell types to drop
 cts_to_drop <- c("RBC", "Platelets", "Neutrophils")
 keep <- !rownames(assay(se, "counts")) %in% cts_to_drop
-counts_subset <- assay(se, "counts")[keep, ]
-colData_subset <- colData(se)[, keep]
+counts_subset <- assay(se, "counts")[, keep]
+colData_subset <- as.data.frame(colData(se))[keep, ]
 
 # Re-initialize a new subset object
 # This ensures all transformations (CLR, HVCs, etc.) are recalculated correctly

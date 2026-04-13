@@ -23,6 +23,6 @@ strictly positive (i.e., does not contain zeros). Use an imputation or
 pseudocount method prior to this function if zeros are present.
 }
 \examples{
-freq_imp <- data.frame(A = c(10.1, 50.1), B = c(89.9, 49.9))
+freq_imp <- data.frame(A = c(10.1, 89.9), B = c(50.1, 49.9))
 calc_clr(freq_imp)
 }

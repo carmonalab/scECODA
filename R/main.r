@@ -1,71 +1,6 @@
 # Create SummarizedExperiment object ---------------------------
 
-# Define ECODA object to store data
-
-#' An S4 class to represent a compositional data analysis object (ECODA).
-#'
-#' This class is designed to store various forms of compositional data derived
-#' from cell counts (or similar proportional data), alongside associated
-#' metadata, transformation results, and variability analysis outcomes.
-#'
-#' @slot counts Original cell count data (samples as rows, cell types as
-#'   columns).
-#' @slot counts_imp Zero-replaced cell count data, typically used to handle zero
-#'   counts.
-#' @slot freq Relative frequency (percentage) of cell types derived from
-#'   `counts`.
-#' @slot freq_imp Relative frequency (percentage) derived from `counts_imp`.
-#' @slot clr Centered Log-Ratio transformed data, derived from `freq_imp`.
-#' @slot celltype_variances Data frame detailing the variance metrics for each
-#'   cell type.
-#' @slot variance_explained Numeric value indicating the total variance captured
-#'   by highly variable cell types (HVCs).
-#' @slot top_n_hvcs Integer specifying the number of top highly variable cell
-#'   types selected.
-#' @slot hvcs Character vector of names of the highly variable cell types.
-#' @slot metadata Data frame of sample-level metadata (samples as rows).
-#' @slot pb Data frame of pseudobulk gene expression.
-#' @slot sample_distances Data frame storing calculated distances between
-#'   samples.
-#'
-#' @importFrom methods setClass
-setClass(
-    Class = "ECODA",
-    slots = list(
-        counts = "data.frame",
-        counts_imp = "data.frame",
-        freq = "data.frame",
-        freq_imp = "data.frame",
-        clr = "data.frame",
-        clr_hvc = "data.frame",
-        asin_sqrt = "data.frame",
-        pb = "data.frame",
-        celltype_variances = "data.frame",
-        top_n_hvcs = "integer",
-        hvcs = "character",
-        variance_explained = "numeric",
-        metadata = "data.frame",
-        sample_distances = "data.frame"
-    ),
-    # Define the default values for each slot.
-    prototype = list(
-        counts = NULL,
-        counts_imp = NULL,
-        freq = NULL,
-        freq_imp = NULL,
-        clr = NULL,
-        clr_hvc = NULL,
-        asin_sqrt = NULL,
-        pb = NULL,
-        celltype_variances = NULL,
-        top_n_hvcs = NULL,
-        hvcs = NULL,
-        variance_explained = NULL,
-        metadata = NULL,
-        sample_distances = NULL
-    )
-)
-
+# Define SummarizedExperiment object for ECODA
 
 #' Create an SummarizedExperiment object from various data types
 #'
@@ -80,7 +15,7 @@ setClass(
 #'   \itemize{
 #'     \item A \code{Seurat} object.
 #'     \item A \code{SingleCellExperiment} object.
-#'     \item A sample x cell type matrix or data frame (counts or frequencies).
+#'     \item A cell type x sample matrix or data frame (counts or frequencies).
 #'   }
 #' @param data_is_freq Logical (default: \code{FALSE}). If \code{TRUE}, the
 #'   input \code{data} is treated as relative frequencies (proportions) rather
@@ -109,7 +44,8 @@ setClass(
 #'
 #' @importFrom methods new
 #' @importFrom gtools mixedsort
-#' @importFrom SummarizedExperiment colData assay
+#' @importFrom SummarizedExperiment colData colData<- assay
+#' @importFrom S4Vectors metadata metadata<- DataFrame
 #'
 #' @export ecoda
 #'
@@ -183,11 +119,14 @@ ecoda <- function(data = NULL,
     data <- data[, mixedsort(colnames(data))]
 
     if (!is.null(metadata)) {
-        metadata <- metadata[, mixedsort(colnames(metadata)), drop = FALSE]
+        metadata <- metadata[mixedsort(rownames(metadata)), , drop = FALSE]
 
         # Ensure correct and matching colnames
-        if (!all(colnames(data) == colnames(metadata))) {
-            stop("Colnames of cell counts (or freq) do not match metadata.")
+        if (!all(colnames(data) == rownames(metadata))) {
+            stop(
+                "Colnames of cell counts (or freq) ",
+                "do not match rownames of metadata."
+            )
         }
     }
 
@@ -200,7 +139,7 @@ ecoda <- function(data = NULL,
         pseudo_frac_min = pseudo_frac_min,
         add_to = add_to
     )
-    if (!is.null(metadata)) colData(se) <- metadata
+    if (!is.null(metadata)) colData(se) <- DataFrame(metadata)
 
     if (get_pb && exists("pb")) {
         pb <- deseq2_normalize(pb)
@@ -239,7 +178,8 @@ ecoda <- function(data = NULL,
 #' @importFrom methods new
 #' @importFrom dplyr %>% mutate across everything
 #' @importFrom stats dist
-#' @importFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom SummarizedExperiment SummarizedExperiment assay assay<-
+#' @importFrom S4Vectors metadata metadata<-
 ecoda_helper <- function(data = NULL,
                          data_is_freq,
                          variance_explained = 0.5,
@@ -247,8 +187,6 @@ ecoda_helper <- function(data = NULL,
                          pseudo_count = 0.5,
                          pseudo_frac_min = 2 / 3,
                          add_to = c("all", "zeros")) {
-    se <- SummarizedExperiment()
-
     rep_method <- ifelse(data_is_freq, "frac_min", "counts")
     add_to <- match.arg(add_to)
 
@@ -279,9 +217,6 @@ ecoda_helper <- function(data = NULL,
         freq <- data
         freq_imp <- data_imp
     } else {
-        assay(se, "counts") <- data
-        assay(se, "counts_imp") <- data_imp
-
         freq <- calc_freq(data)
         freq_imp <- calc_freq(data_imp)
     }
@@ -311,8 +246,23 @@ ecoda_helper <- function(data = NULL,
         }
     }
 
-    assay(se, "freq") <- freq
-    assay(se, "freq_imp") <- freq_imp
+    if (data_is_freq) {
+        se <- SummarizedExperiment(
+            assays = list(
+                freq = freq,
+                freq_imp = freq_imp
+            )
+        )
+    } else {
+        se <- SummarizedExperiment(
+            assays = list(
+                counts = data,
+                counts_imp = data_imp,
+                freq = freq,
+                freq_imp = freq_imp
+            )
+        )
+    }
 
     clr_df <- calc_clr(freq_imp)
     assay(se, "clr") <- clr_df
@@ -320,10 +270,7 @@ ecoda_helper <- function(data = NULL,
         t() %>%
         dist()
 
-    assay(se, "asin_sqrt") <- freq %>%
-        mutate(across(everything(), ~ . / 100)) %>%
-        sqrt() %>%
-        asin()
+    assay(se, "asin_sqrt") <- asin(sqrt(as.matrix(freq) / 100))
 
     se <- find_hvcs(
         se,
@@ -372,11 +319,11 @@ calc_freq <- function(df) {
 #'   values.
 #' @export calc_clr
 #' @examples
-#' freq_imp <- data.frame(A = c(10.1, 50.1), B = c(89.9, 49.9))
+#' freq_imp <- data.frame(A = c(10.1, 89.9), B = c(50.1, 49.9))
 #' calc_clr(freq_imp)
 calc_clr <- function(df) {
     log_df <- log(df)
-    clr_df <- log_df - colMeans(log_df)
+    clr_df <- sweep(log_df, 2, colMeans(log_df), "-")
 
     return(as.data.frame(clr_df))
 }
@@ -456,7 +403,7 @@ replace_zeros <- function(df,
 #' @param celltype_col The column that defines the cell type annotation for each
 #'   cell
 #'
-#' @return A data frame with samples as rows and cell types as columns,
+#' @return A data frame with cell types as rows and samples as columns,
 #'   containing the count of each cell type per sample.
 #' @export get_celltype_counts
 #' @examples
@@ -516,7 +463,7 @@ get_celltype_counts <- function(cell_data_df,
 #'                 row names.
 #'         }
 #' @importFrom dplyr group_by summarise across everything n_distinct ungroup
-#'   select where all_of distinct
+#'   select where all_of distinct %>%
 #' @importFrom rlang sym
 #' @export get_sample_metadata
 #' @examples
@@ -562,7 +509,8 @@ get_sample_metadata <- function(cell_data_df,
     # Remove the sample column from the final metadata table
     cols_to_return <- setdiff(colnames(metadata), sample_col)
 
-    metadata <- metadata[, cols_to_return, drop = FALSE]
+    metadata <- metadata[, cols_to_return, drop = FALSE] %>%
+        as.data.frame()
 
     return(metadata)
 }
@@ -588,6 +536,8 @@ get_sample_metadata <- function(cell_data_df,
 #' @param top_n_hvcs Integer (optional). If provided, this overrides
 #'   \code{variance_explained} and selects exactly the top N cell types with the
 #'   highest variance.
+#'
+#' @importFrom S4Vectors metadata metadata<-
 #'
 #' @return The updated \link[=SummarizedExperiment-class]{SummarizedExperiment}
 #'   object with the following metadata populated:
@@ -655,7 +605,7 @@ find_hvcs <- function(se,
 #' @param descending Logical (default: \code{TRUE}). If \code{TRUE}, the
 #'   returned data frame is sorted by variance in descending order.
 #'
-#' @return A data frame (samples as columns, cell types as rows) containing:
+#' @return A data frame where each row is a cell type, containing:
 #'         \itemize{
 #'           \item \code{celltype}: The name of the cell type.
 #'           \item \code{avg_clr_abundance}: The mean CLR value for that
@@ -843,6 +793,7 @@ get_hvcs <- function(df_var,
 #'   ylab scale_color_manual theme
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom dplyr mutate if_else filter
+#' @importFrom S4Vectors metadata
 #'
 #' @export plot_varmean
 #'

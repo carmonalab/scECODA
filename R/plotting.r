@@ -94,12 +94,13 @@
 #' @importFrom dplyr bind_rows
 #' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal
 #'   scale_color_discrete
+#' @importFrom S4Vectors metadata
 #'
 #' @export plot_pca
 #'
 #' @examples
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$Zhang$cell_counts_lowresolution,
 #'     metadata = example_data$Zhang$metadata,
 #' )
@@ -267,7 +268,7 @@ plot_pca <- function(se,
 #'   frequencies), \code{"freq_imp"} (imputed frequencies), or
 #'   \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{slot(ecoda_object, "metadata")} used to color and
+#'   of a column in \code{colData(se)} used to color and
 #'   group samples in the plot, and for calculating clustering scores.
 #' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
 #'   variables should be scaled to have unit variance before the PCA.
@@ -655,7 +656,7 @@ calc_sil <- function(dist_mat, labels, digits = 3) {
 #' sample metadata.
 #'
 #' @param se An initialized
-#'   \link[=SummarizedExperiment-class]{ECSummarizedExperimentODA} object.
+#'   \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
 #' @param assay Character string (default: \code{"clr"}). The name of the assay
 #'   in the \code{SummarizedExperiment} object to use for plotting. Must be one
 #'   of: \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
@@ -709,7 +710,7 @@ create_long_data <- function(se,
 
     # 3. Prepare the metadata (only if label_col is provided)
     if (!is.null(label_col)) {
-        if (!(label_col %in% colData(se))) {
+        if (!(label_col %in% colnames(colData(se)))) {
             stop("label_col '", label_col, "' not found in colData()")
         }
 
@@ -988,7 +989,7 @@ plot_boxplot <- function(se,
     signif_label <- match.arg(signif_label)
 
     plot_data <- create_long_data(
-        ecoda_object,
+        se,
         assay = assay,
         label_col = label_col
     )
@@ -1069,9 +1070,9 @@ plot_boxplot <- function(se,
                 hide.ns = TRUE
             )
         } else if (nr_of_boxplots > 2) {
-            y_var <- colnames(plot_data)[3]
-            x_group_var <- colnames(plot_data)[2]
-            fill_compare_var <- colnames(plot_data)[4]
+            y_var <- colnames(plot_data)[3].           # "value"
+            x_group_var <- colnames(plot_data)[2].     # "celltype"
+            fill_compare_var <- colnames(plot_data)[4] # label_col
 
             dsub_stats <- plot_data %>%
                 group_by(!!sym(x_group_var)) %>%
@@ -1216,7 +1217,7 @@ plot_heatmap <- function(se,
         t() %>%
         as.data.frame()
 
-    metadata <- colData(se)[, label_col, drop = FALSE]
+    metadata <- as.data.frame(colData(se)[, label_col, drop = FALSE])
     metadata[] <- lapply(metadata, as.factor)
 
     heatmap <- pheatmap(
@@ -1316,11 +1317,14 @@ plot_corr <- function(se,
 #' @return A data frame containing the assay data.
 #'
 #' @importFrom SummarizedExperiment assays
+#' @importFrom S4Vectors metadata
 get_ecoda_assay <- function(se, assay) {
     if (assay %in% names(assays(se))) {
         df <- assay(se, assay)
     } else if (assay %in% names(metadata(se))) {
         df <- metadata(se)[[assay]]
+    } else {
+        stop("Assay '", assay, "' not found in assays or metadata.")
     }
 
     return(df)
