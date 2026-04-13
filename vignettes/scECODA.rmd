@@ -153,6 +153,9 @@ Alternatively, scECODA also supports generating compositional matrices from
 Seurat objects:
 
 ```{r Create ECODA object from Seurat object}
+# Commented out because Seurat depends on igraph which has not been updated
+# to work with R 4.6 yet.
+
 # library(Seurat)
 # 
 # counts <- counts(sce_object)
