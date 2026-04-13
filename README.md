@@ -12,13 +12,21 @@ Single-cell omics technologies are increasingly applied to large patient cohorts
 
 ### Package Installation
 
-To install `scECODA` directly from the GitHub repository, run the following code from within R or RStudio:
+To install `scECODA` from BioConductor (requires R-4.6 or higher), run the following code from within R or RStudio:
 
+```r
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+  BiocManager::install(version = "3.23")
+}
+BiocManager::install("scECODA")
+```
+
+To install specific versions of scECODA, please install from GitHub. For example, for version 0.99.5 (**compatible with R-4.4**):
 ``` r
 install.packages("remotes")
 library(remotes)
-
-remotes::install_github("carmonalab/scECODA")
+remotes::install_github("carmonalab/scECODA", ref="v0.99.5-legacy")
 ```
 
 ### Example
