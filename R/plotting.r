@@ -154,6 +154,19 @@ plot_pca <- function(se,
                      n_hv_feat_show = Inf,
                      repel = TRUE) {
     assay <- match.arg(assay)
+    stopifnot(is.logical(scale.))
+    stopifnot(is.logical(title_show_n_features))
+    stopifnot(is.logical(show_label_samples))
+    stopifnot(is.numeric(score_digits))
+    stopifnot(is.logical(cluster_score))
+    stopifnot(is.logical(mod_score))
+    stopifnot(is.logical(sil_score))
+    stopifnot(is.logical(anosim_score))
+    stopifnot(is.numeric(pointsize))
+    stopifnot(is.numeric(labelsize))
+    stopifnot(is.logical(coord_equal))
+    stopifnot(is.infinite(n_hv_feat_show) || is.numeric(n_hv_feat_show))
+    stopifnot(is.logical(repel))
 
     feat_mat <- t(get_ecoda_assay(se, assay))
 
@@ -309,6 +322,7 @@ plot_pca3d <- function(se,
                        label_col = NULL,
                        scale. = FALSE) {
     assay <- match.arg(assay)
+    stopifnot(is.logical(scale.))
     feat_mat <- t(get_ecoda_assay(se, assay))
 
     res.pca <- prcomp(feat_mat, scale. = scale.)
@@ -389,6 +403,8 @@ calc_anosim <- function(dist_mat,
                         permutations = 99,
                         parallel = 1,
                         digits = 3) {
+    stopifnot(is.numeric(permutations) && permutations >= 1)
+    stopifnot(is.numeric(parallel) && parallel >= 1)
     score <- anosim(
         x = dist_mat,
         grouping = labels,
@@ -520,10 +536,12 @@ calc_ari <- function(dist_mat,
 #' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
-#' \donttest{
+#' \dontrun{
 #' calc_modularity(dist_mat, labels)
 #' }
 calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
+    stopifnot(is.numeric(knn_k) && knn_k >= 2)
+
     if (!requireNamespace("igraph", quietly = TRUE)) {
         stop(
             "Package 'igraph' is required for this function. ",
@@ -706,7 +724,7 @@ calc_sil <- function(dist_mat, labels, digits = 3) {
 #'         }
 #'
 #' @importFrom methods slot slotNames
-#' @importFrom dplyr %>% left_join
+#' @importFrom dplyr %>% left_join all_of
 #' @importFrom tidyr pivot_longer everything
 #' @importFrom rlang sym
 #' @importFrom SummarizedExperiment colData
@@ -729,7 +747,7 @@ create_long_data <- function(se,
     # 2. Reshape the data from wide to long format
     long_data <- data_df %>%
         pivot_longer(
-            cols = -.data$sample_id,
+            cols = !all_of("sample_id"),
             names_to = "celltype",
             values_to = "value"
         )
@@ -828,14 +846,15 @@ plot_barplot <- function(se,
                          custom_sample_order = NULL,
                          title = "",
                          facet_by_label_col = TRUE) {
+    plot_by <- match.arg(plot_by)
+    stopifnot(is.logical(facet_by_label_col))
+
     # Use the helper function to get the long data from @freq
     plot_data <- create_long_data(
         se,
         assay = "freq",
         label_col = label_col
     )
-
-    plot_by <- match.arg(plot_by)
 
     if (plot_by == "group") {
         if (is.null(label_col)) {
@@ -1244,6 +1263,8 @@ plot_heatmap <- function(se,
                          angle_col = "90",
                          ...) {
     assay <- match.arg(assay)
+    stopifnot(is.logical(cluster_rows))
+    stopifnot(is.logical(cluster_cols))
     df_heatmap <- t(get_ecoda_assay(se, assay))
 
     df_heatmap <- df_heatmap %>%

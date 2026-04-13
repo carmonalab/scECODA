@@ -72,8 +72,13 @@ ecoda <- function(data = NULL,
                   pseudo_count = 0.5,
                   pseudo_frac_min = 2 / 3,
                   add_to = NULL) {
+    if (is.null(data)) stop("'data' must be provided.")
+    stopifnot(is.logical(data_is_freq))
+    stopifnot(is.logical(get_pb))
+
+
     # --- A) Handle input from a Seurat or SingleCellExperiment object ---
-    if (inherits(data, "Seurat") | inherits(data, "SingleCellExperiment")) {
+    if (inherits(data, "Seurat") || inherits(data, "SingleCellExperiment")) {
         if (is.null(sample_col) || is.null(celltype_col)) {
             stop("Please provide 'sample_col' and 'celltype_col'.")
         }
@@ -116,6 +121,11 @@ ecoda <- function(data = NULL,
 
         data <- get_celltype_counts(cell_data_df, sample_col, celltype_col)
         metadata <- get_sample_metadata(cell_data_df, sample_col)
+    } else {
+        # --- 3. Handle Matrix/DF inputs ---
+        if (!is.matrix(data) && !is.data.frame(data)) {
+            stop("'data' must be a Seurat/SCE object, matrix, or data frame.")
+        }
     }
 
     data <- data[, mixedsort(colnames(data))]
@@ -326,6 +336,16 @@ calc_freq <- function(df) {
 #' freq_imp <- data.frame(A = c(10.1, 89.9), B = c(50.1, 49.9))
 #' calc_clr(freq_imp)
 calc_clr <- function(df) {
+    if (any(df <= 0, na.rm = TRUE)) {
+        stop(
+            "Data must be strictly positive for CLR. ",
+            "Did you forget zero-imputation?"
+        )
+    }
+    if (!all(vapply(df, is.numeric, logical(1)))) {
+        stop("All columns in the input data must be numeric.")
+    }
+
     log_df <- log(df)
     clr_df <- sweep(log_df, 2, colMeans(log_df), "-")
 
@@ -376,6 +396,11 @@ replace_zeros <- function(df,
                           pseudo_frac_min = 2 / 3,
                           add_to = NULL) {
     rep_method <- match.arg(rep_method)
+
+    if (!all(vapply(df, is.numeric, logical(1)))) {
+        stop("Input data must be numeric to perform zero replacement.")
+    }
+
     if (is.null(add_to)) {
         add_to <- if (rep_method == "counts") "all" else "zeros"
     } else {
@@ -395,7 +420,6 @@ replace_zeros <- function(df,
 
     return(df)
 }
-
 
 
 #' Get the cell type counts from a long data frame (e.g. seurat object metadata)
@@ -577,6 +601,13 @@ get_sample_metadata <- function(cell_data_df,
 find_hvcs <- function(se,
                       variance_explained = 0.5,
                       top_n_hvcs = NULL) {
+    stopifnot(is.numeric(variance_explained) &&
+        variance_explained > 0 && variance_explained <= 1)
+
+    if (!is.null(top_n_hvcs)) {
+        stopifnot(is.numeric(top_n_hvcs) && top_n_hvcs > 0)
+    }
+
     df_var <- get_celltype_variances(se)
 
     hvcs <- get_hvcs(
@@ -835,6 +866,10 @@ plot_varmean <- function(se,
                          smooth_method = "lm") {
     labels <- match.arg(labels)
     df_var <- metadata(se)$celltype_variances
+    stopifnot(is.character(plot_title) || is.null(plot_title))
+    stopifnot(is.logical(highlight_hvcs))
+    stopifnot(is.logical(plot_fit_line))
+
     highlight_celltypes <- metadata(se)$hvcs
 
     # --- 1. Create a highlighting factor column ---
@@ -966,6 +1001,8 @@ calculate_pseudobulk <- function(count_matrix,
         )
     }
 
+    stopifnot(is.numeric(min_cells) && min_cells >= 1)
+
     # Convert sample_ids to factor for grouping
     sample_ids <- as.factor(sample_ids)
 
@@ -1055,6 +1092,8 @@ deseq2_normalize <- function(pb,
                              deseq2_design = NULL,
                              hvg = NULL,
                              nvar_genes = 2000) {
+    stopifnot(is.numeric(nvar_genes) && nvar_genes >= 1)
+
     if (is.null(metadata)) {
         metadata <- data.frame(
             # Add dummy column required for the design formula (~ 1)
