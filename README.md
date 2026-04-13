@@ -55,4 +55,4 @@ See how scECODA's compositional analysis compares to **pseudobulk** analysis and
 
 ## References
 
-Halter C, et al. 2026
+**Cell type composition drives patient stratification in single-cell RNA-seq cohorts** - Christian Halter, Massimo Andreatta, Santiago J. Carmona. bioRxiv preprint: [doi.org/10.64898/2026.03.27.714811](https://doi.org/10.64898/2026.03.27.714811) 
