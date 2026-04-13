@@ -43,7 +43,7 @@ dist_mat <- dist(t(assay(se, "clr")))
 labels <- colData(se)$subject.cmv
 
 # Run the calculation
-\donttest{
+\dontrun{
 calc_modularity(dist_mat, labels)
 }
 }
