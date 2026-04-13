@@ -7,7 +7,7 @@
 #'   CLR-transformed abundances, \code{clr}) and visualizes the results. It can
 #'   also calculate and display several metrics to evaluate the separation of
 #'   groups defined by \code{label_col}. It uses the
-#'   \link[=factorextra]{factorextra} package.
+#'   \link[=factoextra]{factoextra} package.
 #'
 #' @details The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
 #'   how well the sample groupings (\code{labels}) align with the underlying
@@ -71,7 +71,7 @@
 #' @param invisible Character vector (default: \code{c("var", "quali")}).
 #'   Elements to hide. Can include "var" (variables/cell types), "ind"
 #'   (samples), or "quali" (group centroids). see the description of fviz_pca
-#'   of the \link[=factorextra]{factorextra} package for details.
+#'   of the \link[=factoextra]{factoextra} package for details.
 #' @param geom Character string or vector (default: \code{"point"}). The
 #'   geometry to be used for the plot. Allowed values are combinations of:
 #'             \itemize{
@@ -359,6 +359,7 @@ plot_pca3d <- function(se,
 #' @export calc_anosim
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_data)
 #' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
@@ -417,6 +418,7 @@ calc_anosim <- function(dist_mat,
 #' @export calc_ari
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_data)
 #' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
@@ -494,6 +496,7 @@ calc_ari <- function(dist_mat,
 #' @export calc_modularity
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_data)
 #' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
@@ -621,6 +624,7 @@ compute_snn_graph <- function(knn) {
 #' @export calc_sil
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_data)
 #' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
@@ -1070,8 +1074,8 @@ plot_boxplot <- function(se,
                 hide.ns = TRUE
             )
         } else if (nr_of_boxplots > 2) {
-            y_var <- colnames(plot_data)[3].           # "value"
-            x_group_var <- colnames(plot_data)[2].     # "celltype"
+            y_var <- colnames(plot_data)[3] # "value"
+            x_group_var <- colnames(plot_data)[2] # "celltype"
             fill_compare_var <- colnames(plot_data)[4] # label_col
 
             dsub_stats <- plot_data %>%
@@ -1114,7 +1118,7 @@ plot_boxplot <- function(se,
 #' includes a sample annotation sidebar based on a specified metadata column.
 #'
 #' @param se A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.
-#' @param assaylot Character string (default: \code{"clr"}). The name of the
+#' @param assay Character string (default: \code{"clr"}). The name of the
 #'   assay in the \code{SummarizedExperiment} object to use for the heatmap.
 #'   Must be one of: \code{"clr"} (CLR-transformed abundances, default),
 #'   \code{"clr_hvc"} (CLR-transformed abundances of only the most highly

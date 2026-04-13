@@ -15,7 +15,7 @@ CLR-transformed data in the \code{clr} assay}
 returned data frame is sorted by variance in descending order.}
 }
 \value{
-A data frame (samples as columns, cell types as rows) containing:
+A data frame where each row is a cell type, containing:
 \itemize{
 \item \code{celltype}: The name of the cell type.
 \item \code{avg_clr_abundance}: The mean CLR value for that

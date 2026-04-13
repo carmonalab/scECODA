@@ -12,7 +12,7 @@ create_long_data(
 }
 \arguments{
 \item{se}{An initialized
-\link[=SummarizedExperiment-class]{ECSummarizedExperimentODA} object.}
+\link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
 
 \item{assay}{Character string (default: \code{"clr"}). The name of the assay
 in the \code{SummarizedExperiment} object to use for plotting. Must be one

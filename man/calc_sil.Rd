@@ -25,6 +25,7 @@ pre-defined cluster assignments (\code{labels}). This metric assesses the
 quality of the clustering.
 }
 \examples{
+library(SummarizedExperiment)
 data(example_data)
 se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,

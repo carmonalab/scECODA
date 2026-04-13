@@ -23,7 +23,7 @@ ecoda(
 \itemize{
 \item A \code{Seurat} object.
 \item A \code{SingleCellExperiment} object.
-\item A sample x cell type matrix or data frame (counts or frequencies).
+\item A cell type x sample matrix or data frame (counts or frequencies).
 }}
 
 \item{data_is_freq}{Logical (default: \code{FALSE}). If \code{TRUE}, the

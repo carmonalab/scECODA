@@ -21,6 +21,15 @@ plot_heatmap(
 \arguments{
 \item{se}{A \link[=SummarizedExperiment-class]{SummarizedExperiment} object.}
 
+\item{assay}{Character string (default: \code{"clr"}). The name of the
+assay in the \code{SummarizedExperiment} object to use for the heatmap.
+Must be one of: \code{"clr"} (CLR-transformed abundances, default),
+\code{"clr_hvc"} (CLR-transformed abundances of only the most highly
+variable cell types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+\code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+\code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
+
 \item{label_col}{Character string. The name of the column in
 \code{colData(se)} to use for annotating the samples (columns) of the
 heatmap.}
@@ -48,15 +57,6 @@ labels (columns).}
 
 \item{...}{Additional arguments passed directly to the \code{pheatmap}
 function.}
-
-\item{assaylot}{Character string (default: \code{"clr"}). The name of the
-assay in the \code{SummarizedExperiment} object to use for the heatmap.
-Must be one of: \code{"clr"} (CLR-transformed abundances, default),
-\code{"clr_hvc"} (CLR-transformed abundances of only the most highly
-variable cell types (HVCs)), \code{"pb"} (pseudobulk gene expression),
-\code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
-\code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
-frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).}
 }
 \value{
 A \code{pheatmap} object, which is typically visualized automatically

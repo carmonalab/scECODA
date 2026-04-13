@@ -18,7 +18,7 @@ annotation.}
 cell}
 }
 \value{
-A data frame with samples as rows and cell types as columns,
+A data frame with cell types as rows and samples as columns,
 containing the count of each cell type per sample.
 }
 \description{

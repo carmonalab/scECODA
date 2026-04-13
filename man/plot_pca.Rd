@@ -113,7 +113,7 @@ components to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).}
 \item{invisible}{Character vector (default: \code{c("var", "quali")}).
 Elements to hide. Can include "var" (variables/cell types), "ind"
 (samples), or "quali" (group centroids). see the description of fviz_pca
-of the \link[=factorextra]{factorextra} package for details.}
+of the \link[=factoextra]{factoextra} package for details.}
 
 \item{geom}{Character string or vector (default: \code{"point"}). The
 geometry to be used for the plot. Allowed values are combinations of:
@@ -141,7 +141,7 @@ matrix from the \code{SummarizedExperiment} object (default:
 CLR-transformed abundances, \code{clr}) and visualizes the results. It can
 also calculate and display several metrics to evaluate the separation of
 groups defined by \code{label_col}. It uses the
-\link[=factorextra]{factorextra} package.
+\link[=factoextra]{factoextra} package.
 }
 \details{
 The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess

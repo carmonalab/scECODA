@@ -35,6 +35,7 @@ from two unsupervised clustering methods: Hierarchical Clustering
 (\code{hclust}) and Partitioning Around Medoids (\code{pam}).
 }
 \examples{
+library(SummarizedExperiment)
 data(example_data)
 se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,

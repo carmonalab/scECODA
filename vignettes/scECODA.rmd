@@ -441,13 +441,13 @@ groups to display this increased variance. scECODA provides convenient functions
 to calculate and visualize these cell type variances and mean abundance across
 all samples:
 
-```{r Mean-variance plot 50%}
+```{r Mean-variance plot 50 percent}
 library(ggplot2)
 plot_varmean(se, labels = "none") +
   ggtitle("Default - cell types explaining 50% variance")
 ```
 
-```{r Mean-variance plot 80%}
+```{r Mean-variance plot 80 percent}
 se_new <- find_hvcs(se, variance_explained = 0.8)
 plot_varmean(se_new) +
   ggtitle("Cell types explaining 80% variance")

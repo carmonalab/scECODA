@@ -43,6 +43,7 @@ dissimilarities are greater than between-group dissimilarities
 }
 }
 \examples{
+library(SummarizedExperiment)
 data(example_data)
 se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,
