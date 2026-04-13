@@ -134,8 +134,8 @@ plot_pca <- function(se,
                      legend_title = "Group",
                      show_label_samples = FALSE,
                      score_digits = 3,
-                     cluster_score = TRUE,
-                     mod_score = TRUE,
+                     cluster_score = FALSE,
+                     mod_score = FALSE,
                      sil_score = FALSE,
                      anosim_score = TRUE,
                      anosim_permutations = 99,
@@ -489,7 +489,6 @@ calc_ari <- function(dist_mat,
 #' "On finding graph clusterings with maximum modularity."
 #' European Symposium on Algorithms. Springer, Berlin, Heidelberg, 2007.
 #'
-#' @importFrom igraph modularity
 #'
 #' @export calc_modularity
 #'
@@ -507,7 +506,10 @@ calc_ari <- function(dist_mat,
 #' # Run the calculation
 #' calc_modularity(dist_mat, labels)
 calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
-    dist_mat <- as.matrix(dist_mat)
+    if (!requireNamespace("igraph", quietly = TRUE)) {
+        stop("Package 'igraph' is required for this function. Please install it.")
+    }
+
     ngroups <- length(unique(labels))
 
     if (is.null(knn_k)) knn_k <- max(3, round(sqrt(attr(dist_mat, "Size"))))
@@ -517,7 +519,7 @@ calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
     g <- compute_snn_graph(knn)
 
     # Compute modularity
-    modularity_score <- modularity(g, membership = as.numeric(factor(labels)))
+    modularity_score <- igraph::modularity(g, membership = as.numeric(factor(labels)))
 
     # NOTE:
     # Maximum modularity depends on the number of groups:
@@ -544,9 +546,6 @@ calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
 #'
 #' @return A matrix with \code{nrow(dist_mat)} rows and \code{knn_k} columns,
 #'   where each row contains the indices of the nearest neighbors.
-#'
-#' @importFrom RANN nn2
-#' @importFrom igraph graph_from_adjacency_matrix
 compute_KNN_from_dist <- function(dist_mat, knn_k) {
     dist_mat <- as.matrix(dist_mat)
     knn <- t(apply(dist_mat, 1, function(x) {
@@ -567,8 +566,7 @@ compute_KNN_from_dist <- function(dist_mat, knn_k) {
 #' @return An \code{igraph} graph object where edge weights correspond to the
 #'   count of shared neighbors between nodes.
 #'
-#' @importFrom igraph graph_from_adjacency_matrix
-#' @importFrom Matrix sparseMatrix
+#' @importFrom Matrix sparseMatrix tcrossprod
 compute_snn_graph <- function(knn) {
     n <- nrow(knn)
     k <- ncol(knn)
@@ -587,11 +585,11 @@ compute_snn_graph <- function(knn) {
 
     # 2. Compute SNN weights for ALL pairs using Matrix Multiplication
     # The dot product of row i and row j equals the count of shared '1's
-    snn_matrix <- adj_bin %*% t(adj_bin)
+    snn_matrix <- tcrossprod(adj_bin)
 
     # 3. Convert to igraph
     # weighted = TRUE treats the shared neighbor count as the edge weight
-    g <- graph_from_adjacency_matrix(
+    g <- igraph::graph_from_adjacency_matrix(
         snn_matrix,
         mode = "undirected",
         weighted = TRUE,

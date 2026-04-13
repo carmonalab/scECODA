@@ -45,6 +45,7 @@ Depends: R (>= 4.6.0)
 VignetteBuilder: knitr
 Suggests: 
     Seurat (>= 5.0.0),
+    igraph,
     knitr,
     rmarkdown,
     BiocStyle,
@@ -64,7 +65,6 @@ Imports:
     ggpubr,
     ggrepel,
     gtools,
-    igraph,
     mclust,
     methods,
     pheatmap,

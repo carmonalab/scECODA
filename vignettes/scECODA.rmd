@@ -153,18 +153,18 @@ Alternatively, scECODA also supports generating compositional matrices from
 Seurat objects:
 
 ```{r Create ECODA object from Seurat object}
-library(Seurat)
-
-counts <- counts(sce_object)
-metadata <- as.data.frame(SummarizedExperiment::colData(sce_object))
-
-seurat_object <- CreateSeuratObject(counts = counts, meta.data = metadata)
-
-se <- ecoda(
-  seurat_object,
-  sample_col = "sample",
-  celltype_col = "cluster"
-)
+# library(Seurat)
+# 
+# counts <- counts(sce_object)
+# metadata <- as.data.frame(SummarizedExperiment::colData(sce_object))
+# 
+# seurat_object <- CreateSeuratObject(counts = counts, meta.data = metadata)
+# 
+# se <- ecoda(
+#   seurat_object,
+#   sample_col = "sample",
+#   celltype_col = "cluster"
+# )
 ```
 
 ## From counts or frequency data frame
