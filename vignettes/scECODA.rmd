@@ -115,14 +115,14 @@ Load an example dataset from the `scRNAseq` BioC library.
 # Loading an example SingleCellExperiment dataset
 library(scRNAseq)
 
-all.ds <- surveyDatasets()
+all.ds <- as.data.frame(surveyDatasets())
 ds <- 1
 sce_object <- fetchDataset(
-  all.ds@listData[["name"]][ds],
-  all.ds@listData[["version"]][ds]
+  all.ds[["name"]][ds],
+  all.ds[["version"]][ds]
 )
 
-names(sce_object@colData)
+names(colData(sce_object))
 ```
 
 To represent this dataset in terms of cell type composition, we will use the
@@ -476,11 +476,11 @@ A PCA plot based on pseudobulk can be plotted like this:
 # Loading an example SingleCellExperiment dataset
 library(scRNAseq)
 
-all.ds <- surveyDatasets()
+all.ds <- as.data.frame(surveyDatasets())
 ds <- 1
 sce_object <- fetchDataset(
-  all.ds@listData[["name"]][ds],
-  all.ds@listData[["version"]][ds]
+  all.ds[["name"]][ds],
+  all.ds[["version"]][ds]
 )
 
 se <- ecoda(
@@ -570,6 +570,6 @@ se_subset <- ecoda(data = counts_subset, metadata = colData_subset)
 
 # Session Info
 
-```{r, sessionInfo}
+```{r sessionInfo}
 sessionInfo()
 ```
