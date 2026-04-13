@@ -17,7 +17,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Christian Halter \email{scecoda.dev@gmail.com}
+\strong{Maintainer}: Christian Halter \email{scecoda.dev@gmail.com} (\href{https://orcid.org/0009-0009-5479-2246}{ORCID})
 
 Authors:
 \itemize{
