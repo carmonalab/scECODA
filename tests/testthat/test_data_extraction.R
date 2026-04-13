@@ -28,8 +28,8 @@ test_that("get_sample_metadata filters non-constant columns", {
     sample_meta <- get_sample_metadata(cell_df, "Sample_ID")
 
     # Should keep Age and Condition, but drop Cell_ID
-    expect_true(all(c("Age", "Condition") %in% rownames(sample_meta)))
+    expect_true(all(c("Age", "Condition") %in% colnames(sample_meta)))
     expect_false("Cell_ID" %in% colnames(sample_meta))
     expect_equal(nrow(sample_meta), 2)
-    expect_equal(colnames(sample_meta), c("S1", "S2"))
+    expect_equal(rownames(sample_meta), c("S1", "S2"))
 })
