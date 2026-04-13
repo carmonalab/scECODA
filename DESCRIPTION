@@ -1,6 +1,6 @@
 Package: scECODA
 Title: Single-Cell Exploratory Compositional Data Analysis
-Version: 0.99.7
+Version: 0.99.8
 Authors@R: c(
     person("Christian", "Halter",
       email = "scecoda.dev@gmail.com",
@@ -13,7 +13,8 @@ Authors@R: c(
     person("Santiago", "Carmona",
       email = "Santiago.Carmona@unige.ch",
       role = c("aut"),
-      comment = c(ORCID = '0000-0002-2495-0671'))
+      comment = c(ORCID = '0000-0002-2495-0671')),
+    person("Swiss Cancer Research Foundation", role = c("fnd"))
     )
 Description: The scECODA R package provides a complete workflow for the 
     analysis and visualization of compositional data, primarily focusing on 

@@ -25,5 +25,10 @@ Authors:
   \item Santiago Carmona \email{Santiago.Carmona@unige.ch} (\href{https://orcid.org/0000-0002-2495-0671}{ORCID})
 }
 
+Other contributors:
+\itemize{
+  \item Swiss Cancer Research Foundation [funder]
+}
+
 }
 \keyword{internal}
