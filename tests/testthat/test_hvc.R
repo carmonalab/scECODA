@@ -1,17 +1,18 @@
 test_that("get_celltype_variances calculates metrics correctly", {
     # Create an ECODA object with known variance
-    # Celltype A varies a lot, Celltypes B and C vary less
+    # Celltype 1 varies a lot, Celltypes 2, 3 and 4 vary less
     df <- data.frame(
-        A = c(10, 20, 30, 40),
-        B = c(25, 25, 25, 25),
-        C = c(10, 11, 12, 13)
+        A = c(10, 20, 5, 400),
+        B = c(11, 30, 10, 250),
+        C = c(12, 40, 15, 130)
     )
+    rownames(df) <- c("ct1", "ct2", "ct3", "ct4")
 
-    obj <- ecoda(data = df)
+    se <- ecoda(data = df)
 
-    var_df <- get_celltype_variances(obj)
+    var_df <- get_celltype_variances(se)
 
-    expect_equal(var_df$celltype[1], "A")
+    expect_equal(var_df$celltype[1], "ct4")
     expect_true(var_df$Variance[1] > var_df$Variance[2])
     expect_equal(var_df$variance_exp[nrow(var_df)], 1.0) # Cumulative should reach 1
 })

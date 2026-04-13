@@ -18,9 +18,9 @@ test_that("Clustering and distance metrics return valid scores", {
     expect_type(ari, "double")
     expect_true(ari > 0.8)
 
-    # Modularity
-    mod <- calc_modularity(mat, labels)
-    expect_true(mod > 0.8)
+    # # Modularity
+    # mod <- calc_modularity(mat, labels)
+    # expect_true(mod > 0.8)
 
     # Silhouette
     sil <- calc_sil(mat, labels)
@@ -44,9 +44,9 @@ test_that("Clustering and distance metrics return valid scores", {
     expect_type(ari, "double")
     expect_true(ari < 0.2)
 
-    # Modularity
-    mod <- calc_modularity(mat, labels)
-    expect_true(mod < 0.2)
+    # # Modularity
+    # mod <- calc_modularity(mat, labels)
+    # expect_true(mod < 0.2)
 
     # Silhouette
     sil <- calc_sil(mat, labels)

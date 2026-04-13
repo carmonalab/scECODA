@@ -18,7 +18,7 @@ annotation.}
 cell}
 }
 \value{
-A data frame with samples as rows and cell types as columns,
+A data frame with cell types as rows and samples as columns,
 containing the count of each cell type per sample.
 }
 \description{
@@ -35,14 +35,14 @@ cell_data_df <- data.frame(
         "T_Cell", "Macrophage", "B_Cell", "T_Cell", "T_Cell"
     ))
 )
-
+#
 # Calculate cell type counts per sample
 celltype_counts <- get_celltype_counts(
     cell_data_df = cell_data_df,
     sample_col = "Sample_Name",
     celltype_col = "Cluster_Annotation"
 )
-
+#
 print(celltype_counts)
 # Note how the NA cell type count is handled and renamed to "NA".
 }

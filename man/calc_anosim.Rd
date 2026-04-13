@@ -12,7 +12,7 @@ calc_anosim(dist_mat, labels, permutations = 99, parallel = 1, digits = 3)
 \item{labels}{Vector of factors or character strings. The grouping variable
 (the known cluster assignments) for each row in the matrix.}
 
-\item{permutations}{Integer (default: \code{999}). The number of permutations
+\item{permutations}{Integer (default: \code{99}). The number of permutations
 to use when calculating the ANOSIM R-statistic and p-value.}
 
 \item{parallel}{Integer (optional, default: \code{1}). The number
@@ -43,15 +43,16 @@ dissimilarities are greater than between-group dissimilarities
 }
 }
 \examples{
+library(SummarizedExperiment)
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,
     metadata = example_data$GongSharma_full$metadata
 )
 
 # Extract necessary components
-dist_mat <- dist(slot(ecoda_object, "clr"))
-labels <- slot(ecoda_object, "metadata")$subject.cmv
+dist_mat <- dist(t(assay(se, "clr")))
+labels <- colData(se)$subject.cmv
 
 # Run the calculation
 calc_anosim(dist_mat, labels, parallel = 1)

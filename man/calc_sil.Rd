@@ -25,15 +25,16 @@ pre-defined cluster assignments (\code{labels}). This metric assesses the
 quality of the clustering.
 }
 \examples{
+library(SummarizedExperiment)
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,
     metadata = example_data$GongSharma_full$metadata
 )
 
 # Extract necessary components
-dist_mat <- dist(slot(ecoda_object, "clr"))
-labels <- slot(ecoda_object, "metadata")$subject.cmv
+dist_mat <- dist(t(assay(se, "clr")))
+labels <- colData(se)$subject.cmv
 
 # Run the calculation
 calc_sil(dist_mat, labels)

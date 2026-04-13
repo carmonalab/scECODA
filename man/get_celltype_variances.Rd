@@ -4,17 +4,18 @@
 \alias{get_celltype_variances}
 \title{Calculates the variance of cell types across samples.}
 \usage{
-get_celltype_variances(ecoda_object, descending = TRUE)
+get_celltype_variances(se, descending = TRUE)
 }
 \arguments{
-\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object
-containing CLR-transformed data in the \code{clr} slot.}
+\item{se}{An initialized
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object containing CLR-transformed data in the \code{clr} assay}
 
 \item{descending}{Logical (default: \code{TRUE}). If \code{TRUE}, the
 returned data frame is sorted by variance in descending order.}
 }
 \value{
-A data frame (samples as rows, cell types as columns) containing:
+A data frame where each row is a cell type, containing:
 \itemize{
 \item \code{celltype}: The name of the cell type.
 \item \code{avg_clr_abundance}: The mean CLR value for that
@@ -29,23 +30,26 @@ explained cumulatively.
 }
 \description{
 This function takes the Centered Log-Ratio (CLR) transformed cell type
-abundance data from an \link[=ECODA-class]{ECODA} object, calculates the mean
-CLR abundance and variance for each cell type. It also calculates the
-cumulative variance explained by the cell types when ranked by variance.
+abundance data from an
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object, calculates the mean CLR abundance and variance for each cell type. It
+also calculates the cumulative variance explained by the cell types when
+ranked by variance.
 }
 \examples{
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,
     metadata = example_data$GongSharma_full$metadata
 )
 
 # Calculate variances without plotting, sorted by ascending variance
 df_var_asc <- get_celltype_variances(
-    ecoda_object,
+    se,
     descending = FALSE
 )
 }
 \seealso{
-\link[=ECODA-class]{ECODA}, \code{\link{plot_varmean}}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
+\code{\link{plot_varmean}}
 }

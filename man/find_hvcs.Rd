@@ -2,13 +2,15 @@
 % Please edit documentation in R/main.r
 \name{find_hvcs}
 \alias{find_hvcs}
-\title{Identifies and stores Highly Variable Cell Types (HVCs) in an ECODA object.}
+\title{Identifies and stores Highly Variable Cell Types (HVCs) in an
+SummarizedExperiment object.}
 \usage{
-find_hvcs(ecoda_object, variance_explained = 0.5, top_n_hvcs = NULL)
+find_hvcs(se, variance_explained = 0.5, top_n_hvcs = NULL)
 }
 \arguments{
-\item{ecoda_object}{An initialized \link[=ECODA-class]{ECODA} object
-containing the CLR-transformed data in the \code{clr} slot.}
+\item{se}{An initialized
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object containing the CLR-transformed data in the \code{clr} assay.}
 
 \item{variance_explained}{Numeric (default: 0.5). The target cumulative
 proportion of total variance to be explained by the selected HVCs. The
@@ -19,8 +21,9 @@ function stops selecting cell types once this threshold is met.}
 highest variance.}
 }
 \value{
-The updated \link[=ECODA-class]{ECODA} object with the following
-slots populated:
+The updated
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object with the following metadata populated:
 \itemize{
 \item \code{celltype_variances}: Data frame of cell type variances.
 \item \code{variance_explained}: The exact variance proportion
@@ -39,18 +42,18 @@ types.
 }
 \examples{
 data(example_data)
-ecoda_object <- ecoda(
+se <- ecoda(
     data = example_data$GongSharma_full$cell_counts_highresolution,
     metadata = example_data$GongSharma_full$metadata
 )
 
 # Select HVCs that explain 75\% of the total variance
-ecoda_object <- find_hvcs(ecoda_object, variance_explained = 0.75)
+se <- find_hvcs(se, variance_explained = 0.75)
 
 # Select exactly the top 5 most variable cell types
-ecoda_object <- find_hvcs(ecoda_object, top_n_hvcs = 5)
+se <- find_hvcs(se, top_n_hvcs = 5)
 }
 \seealso{
-\link[=ECODA-class]{ECODA}, \code{\link{get_celltype_variances}},
-\code{\link{get_hvcs}}
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
+\code{\link{get_celltype_variances}}, \code{\link{get_hvcs}}
 }

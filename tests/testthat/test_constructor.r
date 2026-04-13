@@ -1,10 +1,10 @@
-test_that("ECODA constructor works", {
+test_that("ECODA SingleCellExperiment object constructor works", {
     data(example_data)
     d <- example_data$Zhang
 
-    obj <- ecoda(data = d$cell_counts_lowresolution, metadata = d$metadata)
+    se <- ecoda(data = d$cell_counts_lowresolution, metadata = d$metadata)
 
-    expect_s4_class(obj, "ECODA")
-    expect_equal(nrow(obj@clr), nrow(d$metadata))
-    expect_true(all(obj@freq_imp > 0))
+    expect_s4_class(se, "SummarizedExperiment")
+    expect_equal(ncol(assay(se, "clr")), nrow(colData(se)))
+    expect_true(all(assay(se, "freq_imp") > 0))
 })

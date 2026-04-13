@@ -3,18 +3,21 @@
 #' @title Plot Principal Component Analysis and Calculate Clustering Scores
 #'
 #' @description Performs Principal Component Analysis (PCA) on a selected data
-#'   matrix from the \code{ECODA} object (default: CLR-transformed abundances,
-#'   \code{clr}) and visualizes the results. It can also calculate and display
-#'   several metrics to evaluate the separation of groups defined by
-#'   \code{label_col}.
+#'   matrix from the \code{SummarizedExperiment} object (default:
+#'   CLR-transformed abundances, \code{clr}) and visualizes the results. It can
+#'   also calculate and display several metrics to evaluate the separation of
+#'   groups defined by \code{label_col}. It uses
+#'   \link[factoextra:fviz_pca]{factoextra}.
 #'
 #' @details The clustering metrics (ARI, Modularity, Silhouette, ANOSIM) assess
 #'   how well the sample groupings (\code{labels}) align with the underlying
 #'   data structure in the feature space defined by the PCA.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
-#' @param slot Character string (default: \code{"clr"}). The name of the data
-#'   matrix slot in the \code{ECODA} object to use for PCA. Must be one of:
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
+#' @param assay Character string (default: \code{"clr"}). The name of the assay
+#'   in the \code{SummarizedExperiment} object to use for PCA. Must be one of:
 #'   \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
 #'   (CLR-transformed abundances of only the most highly variable cell types
 #'   (HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
@@ -22,11 +25,11 @@
 #'   frequencies), \code{"freq_imp"} (imputed frequencies), or
 #'   \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{slot(ecoda_object, "metadata")} used to color and
-#'   group samples in the plot, and for calculating clustering scores.
+#'   of a column in \code{colData(sd)} used to color and group samples in the
+#'   plot, and for calculating clustering scores.
 #' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
 #'   variables should be scaled to have unit variance before the PCA.
-#' @param knn_k Integer (optional, default: \code{NULL}). The number of nearest
+#' @param knn_k Integer (optional, default: \code{3}). The number of nearest
 #'   neighbors (\code{k}) to use for the Shared Nearest Neighbor (SNN) graph
 #'   construction, required for Modularity score calculation. If \code{NULL}, it
 #'   defaults to \code{max(3, round(sqrt(N)))}, where \code{N} is the number of
@@ -55,8 +58,8 @@
 #'   calculates the ANOSIM statistic (R) using \code{vegan::anosim}.
 #' @param anosim_permutations Integer (default: \code{99}). The number of
 #'   permutations to use when calculating the ANOSIM statistic.
-#' @param anosim_parallel Integer (default: \code{1}). The number of
-#'   parallel processes/cores to use for the ANOSIM calculation.
+#' @param anosim_parallel Integer (default: \code{1}). The number of parallel
+#'   processes/cores to use for the ANOSIM calculation.
 #' @param ari_nclusts Integer (optional, default: \code{NULL}). The target
 #'   number of clusters (\code{k}) to use for \code{hclust} and \code{pam}. If
 #'   \code{NULL}, it defaults to the number of unique levels in \code{labels}.
@@ -68,8 +71,9 @@
 #' @param axes Numeric vector (default: \code{c(1, 2)}). The principal
 #'   components to plot (e.g., \code{c(1, 2)} for PC1 vs PC2).
 #' @param invisible Character vector (default: \code{c("var", "quali")}).
-#'   Elements to hide. Can include "var" (variables/cell types),
-#'   "ind" (samples), or "quali" (group centroids).
+#'   Elements to hide. Can include "var" (variables/cell types), "ind"
+#'   (samples), or "quali" (group centroids). see the description of
+#'   \link[factoextra:fviz_pca]{factoextra} for details.
 #' @param geom Character string or vector (default: \code{"point"}). The
 #'   geometry to be used for the plot. Allowed values are combinations of:
 #'             \itemize{
@@ -92,18 +96,19 @@
 #' @importFrom dplyr bind_rows
 #' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal
 #'   scale_color_discrete
+#' @importFrom S4Vectors metadata
 #'
 #' @export plot_pca
 #'
 #' @examples
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$Zhang$cell_counts_lowresolution,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
 #' plot_pca(
-#'     ecoda_object,
+#'     se,
 #'     label_col = "Tissue",
 #'     title = "PCA based on cell type composition",
 #'     anosim_parallel = 1,
@@ -112,17 +117,18 @@
 #'
 #' # Using only the most highly variable cell types
 #' plot_pca(
-#'     ecoda_object,
-#'     slot = "clr_hvc",
+#'     se,
+#'     assay = "clr_hvc",
 #'     label_col = "Tissue",
 #'     title = "PCA based on highly variable cell types",
 #'     anosim_parallel = 1,
-#'     n_hv_feat_show = ncol(slot(ecoda_object, "clr_hvc"))
+#'     n_hv_feat_show = nrow(S4Vectors::metadata(se)$clr_hvc)
 #' )
-plot_pca <- function(ecoda_object,
-                     slot = c(
-                         "clr", "clr_hvc", "counts", "counts_imp",
-                         "freq", "freq_imp", "asin_sqrt", "pb"
+plot_pca <- function(se,
+                     assay = c(
+                         "clr", "counts", "counts_imp",
+                         "freq", "freq_imp", "asin_sqrt",
+                         "clr_hvc", "pb" # in metadata
                      ),
                      label_col = NULL,
                      scale. = FALSE,
@@ -131,8 +137,8 @@ plot_pca <- function(ecoda_object,
                      legend_title = "Group",
                      show_label_samples = FALSE,
                      score_digits = 3,
-                     cluster_score = TRUE,
-                     mod_score = TRUE,
+                     cluster_score = FALSE,
+                     mod_score = FALSE,
                      sil_score = FALSE,
                      anosim_score = TRUE,
                      anosim_permutations = 99,
@@ -147,8 +153,10 @@ plot_pca <- function(ecoda_object,
                      geom = "point",
                      n_hv_feat_show = Inf,
                      repel = TRUE) {
-    slot <- match.arg(slot)
-    feat_mat <- slot(ecoda_object, slot)
+    assay <- match.arg(assay)
+
+    feat_mat <- t(get_ecoda_assay(se, assay))
+
     if (any(cluster_score, mod_score, sil_score, anosim_score)) {
         dist_mat <- dist(feat_mat)
     }
@@ -159,24 +167,24 @@ plot_pca <- function(ecoda_object,
 
 
     if (!is.null(label_col)) {
-        labels <- slot(ecoda_object, "metadata")[[label_col]]
+        labels <- colData(se)[[label_col]]
 
         if (title_show_n_features) {
-            if (slot == "clr_hvc") {
+            if (assay == "clr_hvc") {
                 title <- paste0(
                     title,
-                    "\nHVCs: ", slot(ecoda_object, "top_n_hvcs"),
+                    "\nHVCs: ", metadata(se)$top_n_hvcs,
                     " Variance explained: ",
                     round(
-                        slot(ecoda_object, "variance_explained"),
+                        metadata(se)$variance_explained,
                         score_digits
                     )
                 )
-            } else if (slot == "pb") {
-                title <- paste0(title, "\nNumber of genes: ", ncol(feat_mat))
+            } else if (assay == "pb") {
+                title <- paste0(title, "\nNumber of genes: ", nrow(feat_mat))
             } else {
                 title <- paste0(
-                    title, "\nNumber of cell types: ", ncol(feat_mat)
+                    title, "\nNumber of cell types: ", nrow(feat_mat)
                 )
             }
         }
@@ -187,25 +195,33 @@ plot_pca <- function(ecoda_object,
                 parallel = anosim_parallel,
                 digits = score_digits
             )
-            title <- paste0(title, "\nANOSIM score: ", sprintf(format_str, anosim_score))
+            title <- paste0(
+                title, "\nANOSIM score: ", sprintf(format_str, anosim_score)
+            )
         }
         if (cluster_score) {
             cluster_score <- calc_ari(
                 dist_mat, labels,
                 nclusts = ari_nclusts, digits = score_digits
             )
-            title <- paste0(title, "\nARI: ", sprintf(format_str, cluster_score))
+            title <- paste0(
+                title, "\nARI: ", sprintf(format_str, cluster_score)
+            )
         }
         if (mod_score) {
             mod_score <- calc_modularity(
                 dist_mat, labels, knn_k,
                 digits = score_digits
             )
-            title <- paste0(title, "\nModularity score: ", sprintf(format_str, mod_score))
+            title <- paste0(
+                title, "\nModularity score: ", sprintf(format_str, mod_score)
+            )
         }
         if (sil_score) {
             sil_score <- calc_sil(dist_mat, labels, digits = score_digits)
-            title <- paste0(title, "\nSilhouette score: ", sprintf(format_str, sil_score))
+            title <- paste0(
+                title, "\nSilhouette score: ", sprintf(format_str, sil_score)
+            )
         }
     } else {
         labels <- "none"
@@ -252,9 +268,11 @@ plot_pca <- function(ecoda_object,
 #'   matrix from the \code{ECODA} object (default: CLR-transformed abundances,
 #'   \code{clr}) and visualizes the results in 3D colored by \code{label_col}.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
-#' @param slot Character string (default: \code{"clr"}). The name of the data
-#'   matrix slot in the \code{ECODA} object to use for PCA. Must be one of:
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
+#' @param assay Character string (default: \code{"clr"}). The name of the assay
+#'   in the \code{SummarizedExperiment} object to use for PCA. Must be one of:
 #'   \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
 #'   (CLR-transformed abundances of only the most highly variable cell types
 #'   (HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
@@ -262,8 +280,8 @@ plot_pca <- function(ecoda_object,
 #'   frequencies), \code{"freq_imp"} (imputed frequencies), or
 #'   \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{slot(ecoda_object, "metadata")} used to color and
-#'   group samples in the plot, and for calculating clustering scores.
+#'   of a column in \code{colData(se)} used to color and group samples in the
+#'   plot, and for calculating clustering scores.
 #' @param scale. Logical (default: \code{FALSE}). A value indicating whether the
 #'   variables should be scaled to have unit variance before the PCA.
 #'
@@ -276,26 +294,27 @@ plot_pca <- function(ecoda_object,
 #'
 #' @examples
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$Zhang$cell_counts_lowresolution,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
-#' plot_pca3d(ecoda_object, label_col = "Tissue")
-plot_pca3d <- function(ecoda_object,
-                       slot = c(
-                           "clr", "clr_hvc", "counts", "counts_imp",
-                           "freq", "freq_imp", "asin_sqrt", "pb"
+#' plot_pca3d(se, label_col = "Tissue")
+plot_pca3d <- function(se,
+                       assay = c(
+                           "clr", "counts", "counts_imp",
+                           "freq", "freq_imp", "asin_sqrt",
+                           "clr_hvc", "pb" # in metadata
                        ),
                        label_col = NULL,
                        scale. = FALSE) {
-    slot <- match.arg(slot)
-    feat_mat <- slot(ecoda_object, slot)
+    assay <- match.arg(assay)
+    feat_mat <- t(get_ecoda_assay(se, assay))
 
     res.pca <- prcomp(feat_mat, scale. = scale.)
 
     if (!is.null(label_col)) {
-        labels <- slot(ecoda_object, "metadata")[[label_col]]
+        labels <- colData(se)[[label_col]]
     } else {
         labels <- "none"
     }
@@ -338,7 +357,7 @@ plot_pca3d <- function(ecoda_object,
 #' @param dist_mat Sample distance matrix.
 #' @param labels Vector of factors or character strings. The grouping variable
 #'   (the known cluster assignments) for each row in the matrix.
-#' @param permutations Integer (default: \code{999}). The number of permutations
+#' @param permutations Integer (default: \code{99}). The number of permutations
 #'   to use when calculating the ANOSIM R-statistic and p-value.
 #' @param parallel Integer (optional, default: \code{1}). The number
 #'   of parallel processes/cores to use for the permutation testing.
@@ -352,15 +371,16 @@ plot_pca3d <- function(ecoda_object,
 #' @export calc_anosim
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'
 #' # Extract necessary components
-#' dist_mat <- dist(slot(ecoda_object, "clr"))
-#' labels <- slot(ecoda_object, "metadata")$subject.cmv
+#' dist_mat <- dist(t(assay(se, "clr")))
+#' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
 #' calc_anosim(dist_mat, labels, parallel = 1)
@@ -410,15 +430,16 @@ calc_anosim <- function(dist_mat,
 #' @export calc_ari
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'
 #' # Extract necessary components
-#' dist_mat <- dist(slot(ecoda_object, "clr"))
-#' labels <- slot(ecoda_object, "metadata")$subject.cmv
+#' dist_mat <- dist(t(assay(se, "clr")))
+#' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
 #' calc_ari(dist_mat, labels)
@@ -483,24 +504,33 @@ calc_ari <- function(dist_mat,
 #' "On finding graph clusterings with maximum modularity."
 #' European Symposium on Algorithms. Springer, Berlin, Heidelberg, 2007.
 #'
-#' @importFrom igraph modularity
 #'
 #' @export calc_modularity
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'
 #' # Extract necessary components
-#' dist_mat <- dist(slot(ecoda_object, "clr"))
-#' labels <- slot(ecoda_object, "metadata")$subject.cmv
+#' dist_mat <- dist(t(assay(se, "clr")))
+#' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
+#' \donttest{
 #' calc_modularity(dist_mat, labels)
+#' }
 calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
+    if (!requireNamespace("igraph", quietly = TRUE)) {
+        stop(
+            "Package 'igraph' is required for this function. ",
+            "Please install it."
+        )
+    }
+
     ngroups <- length(unique(labels))
 
     if (is.null(knn_k)) knn_k <- max(3, round(sqrt(attr(dist_mat, "Size"))))
@@ -510,7 +540,10 @@ calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
     g <- compute_snn_graph(knn)
 
     # Compute modularity
-    modularity_score <- modularity(g, membership = as.numeric(factor(labels)))
+    modularity_score <- igraph::modularity(
+        g,
+        membership = as.numeric(factor(labels))
+    )
 
     # NOTE:
     # Maximum modularity depends on the number of groups:
@@ -537,9 +570,6 @@ calc_modularity <- function(dist_mat, labels, knn_k = 3, digits = 3) {
 #'
 #' @return A matrix with \code{nrow(dist_mat)} rows and \code{knn_k} columns,
 #'   where each row contains the indices of the nearest neighbors.
-#'
-#' @importFrom RANN nn2
-#' @importFrom igraph graph_from_adjacency_matrix
 compute_KNN_from_dist <- function(dist_mat, knn_k) {
     dist_mat <- as.matrix(dist_mat)
     knn <- t(apply(dist_mat, 1, function(x) {
@@ -560,15 +590,14 @@ compute_KNN_from_dist <- function(dist_mat, knn_k) {
 #' @return An \code{igraph} graph object where edge weights correspond to the
 #'   count of shared neighbors between nodes.
 #'
-#' @importFrom igraph graph_from_adjacency_matrix
-#' @importFrom Matrix sparseMatrix
+#' @importFrom Matrix sparseMatrix tcrossprod
 compute_snn_graph <- function(knn) {
     n <- nrow(knn)
     k <- ncol(knn)
 
     # 1. Create a binary sparse matrix (A)
     # Row i has a 1 at column j if j is a neighbor of i
-    i_idx <- rep(1:n, each = k)
+    i_idx <- rep(seq_len(n), each = k)
     j_idx <- as.vector(t(knn))
 
     adj_bin <- sparseMatrix(
@@ -580,11 +609,11 @@ compute_snn_graph <- function(knn) {
 
     # 2. Compute SNN weights for ALL pairs using Matrix Multiplication
     # The dot product of row i and row j equals the count of shared '1's
-    snn_matrix <- adj_bin %*% t(adj_bin)
+    snn_matrix <- tcrossprod(adj_bin)
 
     # 3. Convert to igraph
     # weighted = TRUE treats the shared neighbor count as the edge weight
-    g <- graph_from_adjacency_matrix(
+    g <- igraph::graph_from_adjacency_matrix(
         snn_matrix,
         mode = "undirected",
         weighted = TRUE,
@@ -615,15 +644,16 @@ compute_snn_graph <- function(knn) {
 #' @export calc_sil
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'
 #' # Extract necessary components
-#' dist_mat <- dist(slot(ecoda_object, "clr"))
-#' labels <- slot(ecoda_object, "metadata")$subject.cmv
+#' dist_mat <- dist(t(assay(se, "clr")))
+#' labels <- colData(se)$subject.cmv
 #'
 #' # Run the calculation
 #' calc_sil(dist_mat, labels)
@@ -644,18 +674,25 @@ calc_sil <- function(dist_mat, labels, digits = 3) {
 #'
 #' This function takes either the relative abundance (\code{freq}) or
 #' CLR-transformed abundance (\code{clr}) matrix from an
-#' \link[=ECODA-class]{ECODA} object, converts it from a wide (samples x cell
-#' types) to a long (sample, celltype, value) format, and optionally joins it
-#' with a specified column from the sample metadata.
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#' object, converts it from a wide (cell types x samples) to a long (sample,
+#' cell type, value) format for plotting, and optionally joins it with a
+#' specified column from the sample metadata.
 #'
-#' @param ecoda_object An initialized \link[=ECODA-class]{ECODA} object.
-#' @param data_slot Character string specifying the data matrix to use. Must be
-#'   either \code{"freq"} (for relative abundance) or \code{"clr"} (for
-#'   CLR-transformed abundance).
+#' @param se An initialized
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
+#' @param assay Character string (default: \code{"clr"}). The name of the assay
+#'   in the \code{SummarizedExperiment} object to use for plotting. Must be one
+#'   of: \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
+#'   (CLR-transformed abundances of only the most highly variable cell types
+#'   (HVCs)), \code{"counts"} (raw counts), \code{"counts_imp"} (imputed
+#'   counts), \code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+#'   frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in the \code{slot(ecoda_object, "metadata")} slot to merge into
-#'   the long data frame (e.g., "Disease_State" or "Batch"). If \code{NULL},
-#'   only the abundance data and sample/celltype IDs are returned.
+#'   of a column in \code{colData(se)} to merge into the long data frame (e.g.,
+#'   "Disease_State" or "Batch"). If \code{NULL}, only the abundance data and
+#'   sample/celltype IDs are returned.
 #'
 #' @return A tidy, long format data frame with columns:
 #'         \itemize{
@@ -672,24 +709,17 @@ calc_sil <- function(dist_mat, labels, digits = 3) {
 #' @importFrom dplyr %>% left_join
 #' @importFrom tidyr pivot_longer everything
 #' @importFrom rlang sym
+#' @importFrom SummarizedExperiment colData
 #'
-#' @seealso \link[=ECODA-class]{ECODA}
-create_long_data <- function(ecoda_object,
-                             data_slot,
+#' @seealso
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+create_long_data <- function(se,
+                             assay = c("clr", "freq", "asin_sqrt", "clr_hvc"),
                              label_col = NULL) {
-    # Ensure the data_slot is valid (freq or clr)
-    if (!(data_slot %in% c("freq", "clr"))) {
-        stop(
-            "Invalid data_slot. Must be 'freq' (Relative Abundance) ",
-            "or 'clr' (CLR Abundance)."
-        )
-    }
+    assay <- match.arg(assay)
 
-    # Determine the appropriate value column name based on the slot
-    value_name <- ifelse(data_slot == "freq", "rel_abundance", "clr_abundance")
-
-    # 1. Extract data (either @freq or @clr)
-    data_matrix <- slot(ecoda_object, data_slot)
+    # 1. Extract data
+    data_matrix <- as.data.frame(t(get_ecoda_assay(se, assay)))
     data_df <- as.data.frame(data_matrix)
     data_df <- data.frame(
         sample_id = rownames(data_df),
@@ -699,32 +729,18 @@ create_long_data <- function(ecoda_object,
     # 2. Reshape the data from wide to long format
     long_data <- data_df %>%
         pivot_longer(
-            cols = -sample_id,
+            cols = -.data$sample_id,
             names_to = "celltype",
-            values_to = value_name
+            values_to = "value"
         )
 
     # 3. Prepare the metadata (only if label_col is provided)
     if (!is.null(label_col)) {
-        # --- Check 1: Ensure metadata exists ---
-        if (!("metadata" %in% slotNames(ecoda_object)) ||
-            is.null(slot(ecoda_object, "metadata"))) {
-            stop(
-                "label_col was provided but ecoda_object@metadata slot ",
-                "is missing or NULL."
-            )
+        if (!(label_col %in% colnames(colData(se)))) {
+            stop("label_col '", label_col, "' not found in colData()")
         }
 
-        # --- Check 2: Ensure label_col exists in metadata ---
-        meta_colnames <- colnames(slot(ecoda_object, "metadata"))
-        if (!(label_col %in% meta_colnames)) {
-            stop(
-                "label_col '", label_col,
-                "' not found in ecoda_object@metadata."
-            )
-        }
-
-        metadata_df <- as.data.frame(slot(ecoda_object, "metadata"))
+        metadata_df <- colData(se)
         metadata_df <- data.frame(
             sample_id = rownames(metadata_df),
             metadata_df
@@ -748,11 +764,12 @@ create_long_data <- function(ecoda_object,
 #' across samples or across aggregated groups. It automatically handles data
 #' preparation and ordering based on the provided parameters.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing cell type
-#'   relative frequencies in the \code{freq} slot.
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object containing cell type relative frequencies in the \code{freq} assay.
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{slot(ecoda_object, "metadata")} used to define
-#'   grouping or groups (required if \code{plot_by = "group"}).
+#'   of a column in \code{colData(se))} used to define grouping or groups
+#'   (required if \code{plot_by = "group"}).
 #' @param plot_by Character string (default: \code{"sample"}). Specifies whether
 #'   to plot the relative abundance for each individual sample (\code{"sample"})
 #'   or the average relative abundance aggregated by a group (\code{"group"})
@@ -778,20 +795,21 @@ create_long_data <- function(ecoda_object,
 #'
 #' @export plot_barplot
 #'
-#' @seealso \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
+#' @seealso \code{\link{create_long_data}},
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 #'
 #' @examples
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$Zhang$cell_counts_lowresolution,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
-#' plot_barplot(ecoda_object)
+#' plot_barplot(se)
 #'
 #' # Plotting average cell type abundance by experimental group
 #' plot_barplot(
-#'     ecoda_object,
+#'     se,
 #'     label_col = "Tissue",
 #'     plot_by = "group",
 #'     title = "Mean Relative Abundance by Condition"
@@ -799,12 +817,12 @@ create_long_data <- function(ecoda_object,
 #'
 #' # Plotting cell type abundance for each sample separately
 #' plot_barplot(
-#'     ecoda_object,
+#'     se,
 #'     label_col = "Tissue",
 #'     plot_by = "sample",
 #'     title = "Relative Abundance for Each Sample"
 #' )
-plot_barplot <- function(ecoda_object,
+plot_barplot <- function(se,
                          label_col = NULL,
                          plot_by = c("sample", "group"),
                          custom_sample_order = NULL,
@@ -812,8 +830,8 @@ plot_barplot <- function(ecoda_object,
                          facet_by_label_col = TRUE) {
     # Use the helper function to get the long data from @freq
     plot_data <- create_long_data(
-        ecoda_object,
-        data_slot = "freq",
+        se,
+        assay = "freq",
         label_col = label_col
     )
 
@@ -826,19 +844,19 @@ plot_barplot <- function(ecoda_object,
 
         # Plotting by group
         plot_df <- plot_data %>%
-            group_by(celltype, !!sym(label_col)) %>%
+            group_by(.data$celltype, !!sym(label_col)) %>%
             summarise(
-                mean_rel_abund = mean(rel_abundance, na.rm = TRUE),
+                mean_rel_abund = mean(.data$value, na.rm = TRUE),
                 .groups = "drop"
             ) %>%
-            mutate(x_var = !!sym(label_col), y_var = mean_rel_abund)
+            mutate(x_var = !!sym(label_col), y_var = .data$mean_rel_abund)
 
         # Ensure group is a factor
         plot_df$x_var <- factor(plot_df$x_var)
     } else if (plot_by == "sample") {
         # Plotting by Sample
         plot_df <- plot_data %>%
-            mutate(x_var = sample_id, y_var = rel_abundance)
+            mutate(x_var = .data$sample_id, y_var = .data$value)
 
         current_levels <- unique(plot_df$x_var)
 
@@ -858,7 +876,7 @@ plot_barplot <- function(ecoda_object,
                 # 1. Get a unique list of samples
                 # and their corresponding label_col
                 sample_group_map <- plot_data %>%
-                    distinct(sample_id, !!sym(label_col))
+                    distinct(.data$sample_id, !!sym(label_col))
 
                 # 2. Order the samples by the group column first
                 # (using mixedsort on its values) and then
@@ -871,8 +889,8 @@ plot_barplot <- function(ecoda_object,
                             ordered = TRUE
                         )
                     ) %>%
-                    arrange(ordered_group, mixedsort(sample_id)) %>%
-                    pull(sample_id)
+                    arrange(.data$ordered_group, mixedsort(.data$sample_id)) %>%
+                    pull(.data$sample_id)
             } else {
                 ordered_levels <- mixedsort(unique(plot_data$sample_id))
             }
@@ -883,7 +901,10 @@ plot_barplot <- function(ecoda_object,
     }
 
     # --- Generate the plot ---
-    p <- ggplot(plot_df, aes(x = x_var, y = y_var, fill = celltype)) +
+    p <- ggplot(
+        plot_df,
+        aes(x = .data$x_var, y = .data$y_var, fill = .data$celltype)
+    ) +
         geom_col(position = "stack") +
         theme_minimal() +
         theme(
@@ -926,14 +947,20 @@ plot_barplot <- function(ecoda_object,
 #'         for the comparison across all groups.
 #' }
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object containing the
-#'   CLR-transformed abundances in the \code{clr} slot.
+#' @param se An
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object containing the CLR-transformed abundances in the \code{clr}.
+#' @param assay Character string (default: \code{"clr"}). The name of the assay
+#'   in the \code{SummarizedExperiment} object to use for plotting. Must be one
+#'   of: \code{"clr"} (CLR-transformed abundances, default),  \code{"clr_hvc"}
+#'   (CLR-transformed abundances of only the most highly variable cell types
+#'   (HVCs)) or \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string (optional, default: \code{NULL}). The name
-#'   of a column in \code{slot(ecoda_object, "metadata")} used to define groups
-#'   for comparison. If \code{NULL}, a single boxplot is generated per cell
-#'   type.
+#'   of a column in \code{colData(se)} used to define groups for comparison. If
+#'   \code{NULL}, a single boxplot is generated per cell type.
 #' @param selected_celltypes Specify selected celltypes you want to plot instead
-#'   of plotting boxplots for all.
+#'   of plotting boxplots for all. Note: this does not recalculate CLR-values on
+#'   subset.
 #' @param title Character string (default: \code{""}). The main title for the
 #'   plot.
 #' @param stat_method Character string (default: \code{"wilcox.test"}). The
@@ -961,44 +988,47 @@ plot_barplot <- function(ecoda_object,
 #'
 #' @export plot_boxplot
 #'
-#' @seealso \code{\link{create_long_data}}, \link[=ECODA-class]{ECODA}
+#' @seealso \code{\link{create_long_data}},
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
 #'
 #' @examples
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$Zhang$cell_counts_lowresolution,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
 #' # 1. Boxplots for CLR abundance without grouping (no stats calculated):
-#' plot_boxplot(ecoda_object)
+#' plot_boxplot(se)
 #'
 #' # 2. Boxplots grouped by 'Treatment' (2 groups) and applying Wilcoxon test:
 #' plot_boxplot(
-#'     ecoda_object,
+#'     se,
 #'     label_col = "Tissue",
 #'     stat_method = "wilcox.test",
 #'     title = "CLR Abundance by Tissue (with Wilcoxon Test)"
 #' )
-plot_boxplot <- function(ecoda_object,
+plot_boxplot <- function(se,
+                         assay = c("clr", "clr_hvc", "asin_sqrt"),
                          label_col = NULL,
                          selected_celltypes = NULL,
                          title = "",
                          stat_method = "wilcox.test",
                          paired = FALSE,
                          signif_label = c("p.signif", "p.format")) {
+    assay <- match.arg(assay)
     signif_label <- match.arg(signif_label)
+
     plot_data <- create_long_data(
-        ecoda_object,
-        data_slot = "clr",
+        se,
+        assay = assay,
         label_col = label_col
     )
 
     if (!is.null(selected_celltypes)) {
         if (!all(selected_celltypes %in% unique(plot_data$celltype))) {
             stop(
-                "Not all selected_celltypes found in ecoda_object. ",
-                "Please check colnames(ecoda_object@clr)."
+                "Not all selected_celltypes found in assay(se", assay, "). "
             )
         }
 
@@ -1016,9 +1046,9 @@ plot_boxplot <- function(ecoda_object,
     # Generate the base boxplot
     p <- ggboxplot(plot_data,
         x = "celltype",
-        y = "clr_abundance",
+        y = "value",
         xlab = "",
-        ylab = "CLR Abundance",
+        ylab = "Abundance",
         outlier.shape = NA,
         color = box_color_map # Color by group variable or "black"
     )
@@ -1071,14 +1101,14 @@ plot_boxplot <- function(ecoda_object,
                 hide.ns = TRUE
             )
         } else if (nr_of_boxplots > 2) {
-            y_var <- colnames(plot_data)[3]
-            x_group_var <- colnames(plot_data)[2]
-            fill_compare_var <- colnames(plot_data)[4]
+            y_var <- colnames(plot_data)[3] # "value"
+            x_group_var <- colnames(plot_data)[2] # "celltype"
+            fill_compare_var <- colnames(plot_data)[4] # label_col
 
             dsub_stats <- plot_data %>%
                 group_by(!!sym(x_group_var)) %>%
                 wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
-                add_xy_position(x = x_group_var)
+                add_xy_position(x = .data$x_group_var)
 
             p <- p +
                 # Add p-values using the generated stats table
@@ -1106,25 +1136,28 @@ plot_boxplot <- function(ecoda_object,
 
 # Heatmap ---------------------------
 
-#' Generates a Heatmap of Cell Abundance Data from an ECODA Slot.
+#' Generates a Heatmap of Cell Abundance Data from an SummarizedExperiment
+#' assay.
 #'
 #' This function visualizes a data matrix from a specified slot (e.g.,
 #' CLR-transformed, frequency, or pseudobulk data) after mean-centering. It
 #' supports optional filtering to only Highly Variable Cell Types (HVCs) and
 #' includes a sample annotation sidebar based on a specified metadata column.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
-#' @param slot Character string (default: \code{"clr"}). The name of the data
-#'   matrix slot in the \code{ECODA} object to use for the heatmap. Must be one
-#'   of: \code{"clr"} (CLR-transformed abundances, default), \code{"clr_hvc"}
-#'   (CLR-transformed abundances of only the most highly variable cell types
-#'   (HVCs)), \code{"pb"} (pseudobulk gene expression), \code{"counts"} (raw
-#'   counts), \code{"counts_imp"} (imputed counts), \code{"freq"} (relative
-#'   frequencies), \code{"freq_imp"} (imputed frequencies), or
-#'   \code{"asin_sqrt"} (arcsin-square root transformed data).
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
+#' @param assay Character string (default: \code{"clr"}). The name of the assay
+#'   in the \code{SummarizedExperiment} object to use for the heatmap. Must be
+#'   one of: \code{"clr"} (CLR-transformed abundances, default),
+#'   \code{"clr_hvc"} (CLR-transformed abundances of only the most highly
+#'   variable cell types (HVCs)), \code{"pb"} (pseudobulk gene expression),
+#'   \code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
+#'   \code{"freq"} (relative frequencies), \code{"freq_imp"} (imputed
+#'   frequencies), or \code{"asin_sqrt"} (arcsin-square root transformed data).
 #' @param label_col Character string. The name of the column in
-#'   \code{slot(ecoda_object, "metadata")} to use for annotating the samples
-#'   (columns) of the heatmap.
+#'   \code{colData(se)} to use for annotating the samples (columns) of the
+#'   heatmap.
 #' @param cluster_rows Logical (default: \code{TRUE}). Whether to apply
 #'   hierarchical clustering to the cell types (rows).
 #' @param cluster_cols Logical (default: \code{TRUE}). Whether to apply
@@ -1152,20 +1185,22 @@ plot_boxplot <- function(ecoda_object,
 #'
 #' @export plot_heatmap
 #'
-#' @seealso \link[=ECODA-class]{ECODA}, \code{\link{pheatmap}}
+#' @seealso
+#' \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment},
+#' \code{\link[pheatmap]{pheatmap}}
 #'
 #' @examples
 #' # Example for a simple dataset:
 #' data(example_data)
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$Zhang$cell_counts_lowresolution,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
-#' plot_heatmap(ecoda_object, label_col = c("Clinical.efficacy.", "Tissue"))
+#' plot_heatmap(se, label_col = c("Clinical.efficacy.", "Tissue"))
 #'
 #' plot_heatmap(
-#'     ecoda_object,
+#'     se,
 #'     label_col = c("Clinical.efficacy.", "Tissue"),
 #'     # Additional arguments for pheatmap:
 #'     cutree_rows = 3,
@@ -1173,13 +1208,13 @@ plot_boxplot <- function(ecoda_object,
 #' )
 #'
 #' # Example of a large cohort with 868 samples and 69 cell types
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'
 #' plot_heatmap(
-#'     ecoda_object,
+#'     se,
 #'     label_col = c("subject.cmv", "age_group"),
 #'     cutree_rows = 3,
 #'     cutree_cols = 5,
@@ -1188,17 +1223,18 @@ plot_boxplot <- function(ecoda_object,
 #'
 #' # Using only the most highly variable cell types (HVCs)
 #' plot_heatmap(
-#'     ecoda_object,
-#'     slot = "clr_hvc",
+#'     se,
+#'     assay = "clr_hvc",
 #'     label_col = c("subject.cmv", "age_group"),
 #'     cutree_rows = 3,
 #'     cutree_cols = 4,
 #'     show_colnames = FALSE
 #' )
-plot_heatmap <- function(ecoda_object,
-                         slot = c(
-                             "clr", "clr_hvc", "counts", "counts_imp",
-                             "freq", "freq_imp", "asin_sqrt", "pb"
+plot_heatmap <- function(se,
+                         assay = c(
+                             "clr", "counts", "counts_imp",
+                             "freq", "freq_imp", "asin_sqrt",
+                             "clr_hvc", "pb" # in metadata
                          ),
                          label_col,
                          cluster_rows = TRUE,
@@ -1207,15 +1243,15 @@ plot_heatmap <- function(ecoda_object,
                          clustering_method = "ward.D2",
                          angle_col = "90",
                          ...) {
-    slot <- match.arg(slot)
-    df_heatmap <- slot(ecoda_object, slot)
+    assay <- match.arg(assay)
+    df_heatmap <- t(get_ecoda_assay(se, assay))
 
     df_heatmap <- df_heatmap %>%
         scale(center = TRUE, scale = FALSE) %>%
         t() %>%
         as.data.frame()
 
-    metadata <- slot(ecoda_object, "metadata")[, label_col, drop = FALSE]
+    metadata <- as.data.frame(colData(se)[, label_col, drop = FALSE])
     metadata[] <- lapply(metadata, as.factor)
 
     heatmap <- pheatmap(
@@ -1239,17 +1275,19 @@ plot_heatmap <- function(ecoda_object,
 #'
 #' @description Calculates the pairwise Pearson correlation matrix for all cell
 #'   types (columns) using the Centered Log-Ratio (CLR) transformed abundances
-#'   stored in \code{slot(ecoda_object, "clr")}. It then visualizes this matrix
-#'   as a heatmap using \code{corrplot::corrplot}.
+#'   stored in \code{assay(se, "clr")}. It then visualizes this matrix as a
+#'   heatmap using \code{corrplot::corrplot}.
 #'
 #' @details The function uses the CLR matrix, where high correlation between two
 #'   cell types suggests they vary together across samples, indicating potential
 #'   co-occurrence or co-regulation.
 #'
-#' @param ecoda_object An \link[=ECODA-class]{ECODA} object.
-#' @param slot Character string (default: \code{"clr"}). The name of the data
-#'   matrix slot in the \code{ECODA} object to use for the correlation plot Must
-#'   be one of: \code{"clr"} (CLR-transformed abundances, default),
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
+#' @param assay Character string (default: \code{"clr"}). The name of the assay
+#'   in the \code{SummarizedExperiment} object to use for the correlation plot
+#'   Must be one of: \code{"clr"} (CLR-transformed abundances, default),
 #'   \code{"clr_hvc"} (CLR-transformed abundances of only the most highly
 #'   variable cell types (HVCs)), \code{"pb"} (pseudobulk gene expression),
 #'   \code{"counts"} (raw counts), \code{"counts_imp"} (imputed counts),
@@ -1279,23 +1317,53 @@ plot_heatmap <- function(ecoda_object,
 #' @examples
 #' data(example_data)
 #' # Example of a large cohort with 868 samples and 69 cell types
-#' ecoda_object <- ecoda(
+#' se <- ecoda(
 #'     data = example_data$GongSharma_full$cell_counts_highresolution,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
-#' plot_corr(ecoda_object)
-plot_corr <- function(ecoda_object,
-                      slot = c(
-                          "clr", "clr_hvc", "counts", "counts_imp",
-                          "freq", "freq_imp", "asin_sqrt", "pb"
+#' plot_corr(se)
+plot_corr <- function(se,
+                      assay = c(
+                          "clr", "counts", "counts_imp",
+                          "freq", "freq_imp", "asin_sqrt",
+                          "clr_hvc", "pb" # in metadata
                       ),
                       order = "hclust",
                       hclust.method = "ward.D2",
                       ...) {
-    slot <- match.arg(slot)
-    feat_mat <- slot(ecoda_object, slot)
+    assay <- match.arg(assay)
+    feat_mat <- t(get_ecoda_assay(se, assay))
 
     cor_matrix <- cor(feat_mat)
 
     corrplot(cor_matrix, order = "hclust", hclust.method = "ward.D2", ...)
+}
+
+
+# Helper function ---------------------------
+
+#' @title Helper to get assay for ecoda SummarizedExperiment objects
+#'
+#' @description Because not all data can be stored in assays (e.g. pseudobulk
+#'   and clr_hvc have different number of features (rows) than counts etc.)
+#'
+#' @param se A
+#'   \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+#'   object.
+#' @param assay Character string, the name of the assay.
+#'
+#' @return A data frame containing the assay data.
+#'
+#' @importFrom SummarizedExperiment assays
+#' @importFrom S4Vectors metadata
+get_ecoda_assay <- function(se, assay) {
+    if (assay %in% names(assays(se))) {
+        df <- assay(se, assay)
+    } else if (assay %in% names(metadata(se))) {
+        df <- metadata(se)[[assay]]
+    } else {
+        stop("Assay '", assay, "' not found in assays or metadata.")
+    }
+
+    return(df)
 }

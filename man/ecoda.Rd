@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.r
 \name{ecoda}
 \alias{ecoda}
-\title{Create an ECODA object from various data types}
+\title{Create an SummarizedExperiment object from various data types}
 \usage{
 ecoda(
   data = NULL,
@@ -23,7 +23,7 @@ ecoda(
 \itemize{
 \item A \code{Seurat} object.
 \item A \code{SingleCellExperiment} object.
-\item A sample x cell type matrix or data frame (counts or frequencies).
+\item A cell type x sample matrix or data frame (counts or frequencies).
 }}
 
 \item{data_is_freq}{Logical (default: \code{FALSE}). If \code{TRUE}, the
@@ -41,7 +41,7 @@ Required if \code{data} is a single-cell object.}
 Required if \code{data} is a single-cell object.}
 
 \item{get_pb}{Logical (default: \code{FALSE}). If \code{TRUE}, calculates and
-stores DESeq2-normalized pseudobulk data in the \code{pb} slot.}
+stores DESeq2-normalized pseudobulk data in \code{metadata(se)$pb}}
 
 \item{variance_explained}{Numeric (default: 0.5). Proportion of variance used
 to determine the number of highly variable cell types (HVCs).}
@@ -59,14 +59,17 @@ non-zero value when \code{rep_method = "frac_min"}.}
 cells or just the \code{"zeros"}?}
 }
 \value{
-A new \link[=ECODA-class]{ECODA} object.
+A new
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object.
 }
 \description{
 This is a smart constructor function used to initialize an
-\link[=ECODA-class]{ECODA} object. It handles the processing of single-cell
-objects (\code{Seurat} or \code{SingleCellExperiment}) or raw data frames to
-extract cell type counts, calculate sample metadata, and optionally generate
-DESeq2-normalized pseudobulk data.
+\link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment}
+object. It handles the processing of single-cell objects (\code{Seurat} or
+\code{SingleCellExperiment}) or raw data frames to extract cell type counts,
+calculate sample metadata, and optionally generate DESeq2-normalized
+pseudobulk data.
 }
 \examples{
 data(example_data)
@@ -75,7 +78,7 @@ counts <- Zhang$cell_counts_lowresolution
 freq <- calc_freq(counts)
 metadata <- Zhang$metadata
 
-ecoda_object <- ecoda(data = counts, metadata = metadata)
+se <- ecoda(data = counts, metadata = metadata)
 
-ecoda_object <- ecoda(data = freq, metadata = metadata)
+se <- ecoda(data = freq, metadata = metadata)
 }

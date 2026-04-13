@@ -40,8 +40,9 @@ Centered Log-Ratio (CLR) transformation.
 The function provides two methods for handling zeros:
 \itemize{
 \item \strong{counts:} Adds a fixed value (\code{pseudo_count}).
-\item \strong{frac_min:} Replaces zeros with a fraction (\code{pseudo_frac_min})
-of the smallest observed non-zero value in the dataset.
+\item \strong{frac_min:} Replaces zeros with a fraction
+(\code{pseudo_frac_min}) of the smallest observed non-zero value in
+the dataset.
 }
 }
 \examples{
@@ -50,6 +51,6 @@ counts_df <- data.frame(A = c(10, 0, 5), B = c(20, 10, 0))
 replace_zeros(counts_df, rep_method = "counts", add_to = "all")
 
 # Replace zeros in a frequency matrix
-freq_df <- data.frame(A = c(0.5, 0, 0.2), B = c(0.5, 1.0, 0.8))
+freq_df <- data.frame(A = c(0.5, 0.5), B = c(0.2, 0.8), C = c(0.0, 1.0))
 replace_zeros(freq_df, rep_method = "frac_min", add_to = "zeros")
 }

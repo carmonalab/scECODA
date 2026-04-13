@@ -2,23 +2,23 @@
 % Please edit documentation in R/main.r
 \name{calc_freq}
 \alias{calc_freq}
-\title{Calculate relative frequencies (percentages) row-wise.}
+\title{Calculate relative frequencies (percentages) column-wise.}
 \usage{
 calc_freq(df)
 }
 \arguments{
-\item{df}{A data frame or matrix of counts (samples/observations as rows,
-components as columns). Must contain only numeric, non-negative values.}
+\item{df}{A data frame or matrix of counts (samples/observations as columns,
+components as rows). Must contain only numeric, non-negative values.}
 }
 \value{
-A data frame of the same dimensions, where each row sums to 100.
+A data frame of the same dimensions, where each column sums to 100.
 }
 \description{
-This function takes a matrix or data frame of counts and transforms each row
-(assumed to be a sample or observation) into relative frequencies, expressing
-each component as a percentage of the row's total sum.
+This function takes a matrix or data frame of counts and transforms each
+column (assumed to be a sample or observation) into relative frequencies,
+expressing each component as a percentage of the column's total sum.
 }
 \examples{
-counts <- data.frame(A = c(10, 50), B = c(90, 50))
+counts <- data.frame(A = c(10, 90), B = c(50, 50))
 calc_freq(counts)
 }
