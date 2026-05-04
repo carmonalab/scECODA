@@ -22,11 +22,11 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 BiocManager::install("scECODA")
 ```
 
-To install specific versions of scECODA, please install from GitHub. For example, for version 0.99.5 (**compatible with R-4.4**):
+To install specific versions of scECODA, please install from GitHub. For example, for version 0.99.9 (**compatible with R-4.4**):
 ``` r
 install.packages("remotes")
 library(remotes)
-remotes::install_github("carmonalab/scECODA", ref="v0.99.5-legacy")
+remotes::install_github("carmonalab/scECODA", ref="compatibility-R-4.4")
 ```
 
 ### Example
