@@ -194,10 +194,10 @@ plot_pca <- function(se,
                     )
                 )
             } else if (assay == "pb") {
-                title <- paste0(title, "\nNumber of genes: ", nrow(feat_mat))
+                title <- paste0(title, "\nNumber of genes: ", ncol(feat_mat))
             } else {
                 title <- paste0(
-                    title, "\nNumber of cell types: ", nrow(feat_mat)
+                    title, "\nNumber of cell types: ", ncol(feat_mat)
                 )
             }
         }
