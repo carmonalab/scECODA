@@ -26,7 +26,7 @@ To install specific versions of scECODA, please install from GitHub. For example
 ``` r
 install.packages("remotes")
 library(remotes)
-remotes::install_github("carmonalab/scECODA", ref="v0.99.5-legacy")
+remotes::install_github("carmonalab/scECODA", ref="compatibility-R-4.4")
 ```
 
 ### Example
