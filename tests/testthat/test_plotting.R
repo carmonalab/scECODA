@@ -1,7 +1,7 @@
 test_that("create_long_data reshapes ECODA assays correctly", {
     data(example_data)
     d <- example_data$Zhang
-    se <- ecoda(data = d$cell_counts_lowresolution, metadata = d$metadata)
+    se <- ecoda(data = d$cell_counts$authors_LR, metadata = d$metadata)
 
     # Test with label join
     long_df <- scECODA:::create_long_data(se, assay = "clr", label_col = "Tissue")
@@ -14,7 +14,7 @@ test_that("create_long_data reshapes ECODA assays correctly", {
 test_that("Plotting functions return ggplot or pheatmap objects", {
     data(example_data)
     d <- example_data$Zhang
-    se <- ecoda(data = d$cell_counts_lowresolution, metadata = d$metadata)
+    se <- ecoda(data = d$cell_counts$authors_LR, metadata = d$metadata)
 
     p_pca <- plot_pca(se, label_col = "Tissue", anosim_parallel = 1)
     expect_s3_class(p_pca, "ggplot")
