@@ -1,3 +1,4 @@
-# scECODA 0.99.7
+# scECODA 1.1.3
 
-* Adopted SummarizedExperiment data structure
+* Fixed bug in plot_pca where number of samples were displayed instead of number of cell types/genes
+* Added HiTME annotations to example_data

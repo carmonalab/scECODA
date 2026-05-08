@@ -194,7 +194,7 @@ cancer cohort [@zhang2021]
 data(example_data)
 
 Zhang <- example_data$Zhang
-counts <- Zhang$cell_counts_lowresolution
+counts <- Zhang$cell_counts$authors_LR
 freq <- calc_freq(counts)
 metadata <- Zhang$metadata
 
@@ -215,7 +215,7 @@ se with `plot_pca(se)`.
 
 ```{r Show PCA based on cell type composition, message=FALSE, warning=FALSE}
 se <- ecoda(
-  data = example_data$Zhang$cell_counts_lowresolution,
+  data = example_data$Zhang$cell_counts$authors_LR,
   metadata = example_data$Zhang$metadata,
 )
 
@@ -366,8 +366,8 @@ As a second example, here's the same analysis using a large healthy cohort with
 
 ```{r Plot heatmap example 2, fig.height=16, fig.width=12}
 se <- ecoda(
-  data = example_data$GongSharma_full$cell_counts_highresolution,
-  metadata = example_data$GongSharma_full$metadata
+  data = example_data$Gongsharma_full$cell_counts$authors_HR,
+  metadata = example_data$Gongsharma_full$metadata
 )
 
 plot_heatmap(
@@ -551,7 +551,7 @@ pseudobulk analysis:
 # Load example datasets
 data(example_data)
 Stephenson <- example_data$Stephenson
-counts <- Stephenson$cell_counts_lowresolution
+counts <- Stephenson$cell_counts$authors_LR
 metadata <- Stephenson$metadata
 se <- ecoda(data = counts, metadata = metadata)
 

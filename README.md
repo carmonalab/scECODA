@@ -49,7 +49,7 @@ Code to reproduce this figure: [https://github.com/carmonalab/scECODA/blob/main/
 
 ### Tutorial
 
-Check out our step-by-step [scECODA tutorial](https://carmonalab.github.io/scECODA_demo/Tutorial.html) ([RMD](https://github.com/carmonalab/scECODA_demo/blob/master/Tutorial.rmd))
+Check out our step-by-step [scECODA tutorial](https://bioconductor.posit.co/packages/release/bioc/vignettes/scECODA/inst/doc/scECODA.html) ([RMD](https://github.com/carmonalab/scECODA/blob/main/vignettes/scECODA.rmd))
 
 
 ### Case studies
