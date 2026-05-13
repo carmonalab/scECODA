@@ -74,7 +74,7 @@ pseudobulk data.
 \examples{
 data(example_data)
 Zhang <- example_data$Zhang
-counts <- Zhang$cell_counts_lowresolution
+counts <- Zhang$cell_counts$authors_LR
 freq <- calc_freq(counts)
 metadata <- Zhang$metadata
 

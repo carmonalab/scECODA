@@ -50,7 +50,7 @@ preparation and ordering based on the provided parameters.
 \examples{
 data(example_data)
 se <- ecoda(
-    data = example_data$Zhang$cell_counts_lowresolution,
+    data = example_data$Zhang$cell_counts$authors_LR,
     metadata = example_data$Zhang$metadata,
 )
 

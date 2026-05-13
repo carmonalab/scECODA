@@ -44,7 +44,7 @@ matrix from the \code{ECODA} object (default: CLR-transformed abundances,
 \examples{
 data(example_data)
 se <- ecoda(
-    data = example_data$Zhang$cell_counts_lowresolution,
+    data = example_data$Zhang$cell_counts$authors_LR,
     metadata = example_data$Zhang$metadata,
 )
 

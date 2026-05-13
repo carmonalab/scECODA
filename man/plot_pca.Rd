@@ -153,7 +153,7 @@ data structure in the feature space defined by the PCA.
 \examples{
 data(example_data)
 se <- ecoda(
-    data = example_data$Zhang$cell_counts_lowresolution,
+    data = example_data$Zhang$cell_counts$authors_LR,
     metadata = example_data$Zhang$metadata,
 )
 

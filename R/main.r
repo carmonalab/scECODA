@@ -54,7 +54,7 @@
 #' @examples
 #' data(example_data)
 #' Zhang <- example_data$Zhang
-#' counts <- Zhang$cell_counts_lowresolution
+#' counts <- Zhang$cell_counts$authors_LR
 #' freq <- calc_freq(counts)
 #' metadata <- Zhang$metadata
 #'
@@ -589,7 +589,7 @@ get_sample_metadata <- function(cell_data_df,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
+#'     data = example_data$GongSharma_full$cell_counts$authors_HR,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'
@@ -671,7 +671,7 @@ find_hvcs <- function(se,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
+#'     data = example_data$GongSharma_full$cell_counts$authors_HR,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'
@@ -743,7 +743,7 @@ get_celltype_variances <- function(se, descending = TRUE) {
 #' @examples
 #' data(example_data)
 #' ecoda_object <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
+#'     data = example_data$GongSharma_full$cell_counts$authors_HR,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'
@@ -845,7 +845,7 @@ get_hvcs <- function(df_var,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
+#'     data = example_data$GongSharma_full$cell_counts$authors_HR,
 #'     metadata = example_data$GongSharma_full$metadata
 #' )
 #'

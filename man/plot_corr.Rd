@@ -61,7 +61,7 @@ co-occurrence or co-regulation.
 data(example_data)
 # Example of a large cohort with 868 samples and 69 cell types
 se <- ecoda(
-    data = example_data$GongSharma_full$cell_counts_highresolution,
+    data = example_data$GongSharma_full$cell_counts$authors_HR,
     metadata = example_data$GongSharma_full$metadata
 )
 plot_corr(se)
