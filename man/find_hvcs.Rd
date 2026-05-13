@@ -43,8 +43,8 @@ types.
 \examples{
 data(example_data)
 se <- ecoda(
-    data = example_data$GongSharma_full$cell_counts$authors_HR,
-    metadata = example_data$GongSharma_full$metadata
+    data = example_data$Gongsharma_full$cell_counts$authors_HR,
+    metadata = example_data$Gongsharma_full$metadata
 )
 
 # Select HVCs that explain 75\% of the total variance

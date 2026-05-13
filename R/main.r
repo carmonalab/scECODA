@@ -589,8 +589,8 @@ get_sample_metadata <- function(cell_data_df,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts$authors_HR,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' # Select HVCs that explain 75% of the total variance
@@ -671,8 +671,8 @@ find_hvcs <- function(se,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts$authors_HR,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' # Calculate variances without plotting, sorted by ascending variance
@@ -743,8 +743,8 @@ get_celltype_variances <- function(se, descending = TRUE) {
 #' @examples
 #' data(example_data)
 #' ecoda_object <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts$authors_HR,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' # Calculate variances
@@ -845,8 +845,8 @@ get_hvcs <- function(df_var,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts$authors_HR,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' # 1. Generate the plot, highlighting HVCs (default)
