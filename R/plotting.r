@@ -103,7 +103,7 @@
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$Zhang$cell_counts_lowresolution,
+#'     data = example_data$Zhang$cell_counts$authors_LR,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
@@ -308,7 +308,7 @@ plot_pca <- function(se,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$Zhang$cell_counts_lowresolution,
+#'     data = example_data$Zhang$cell_counts$authors_LR,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
@@ -388,8 +388,8 @@ plot_pca3d <- function(se,
 #' library(SummarizedExperiment)
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' # Extract necessary components
@@ -449,8 +449,8 @@ calc_anosim <- function(dist_mat,
 #' library(SummarizedExperiment)
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' # Extract necessary components
@@ -527,8 +527,8 @@ calc_ari <- function(dist_mat,
 #' library(SummarizedExperiment)
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' # Extract necessary components
@@ -665,8 +665,8 @@ compute_snn_graph <- function(knn) {
 #' library(SummarizedExperiment)
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' # Extract necessary components
@@ -819,7 +819,7 @@ create_long_data <- function(se,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$Zhang$cell_counts_lowresolution,
+#'     data = example_data$Zhang$cell_counts$authors_LR,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
@@ -1013,7 +1013,7 @@ plot_barplot <- function(se,
 #' @examples
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$Zhang$cell_counts_lowresolution,
+#'     data = example_data$Zhang$cell_counts$authors_LR,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
@@ -1212,7 +1212,7 @@ plot_boxplot <- function(se,
 #' # Example for a simple dataset:
 #' data(example_data)
 #' se <- ecoda(
-#'     data = example_data$Zhang$cell_counts_lowresolution,
+#'     data = example_data$Zhang$cell_counts$authors_LR,
 #'     metadata = example_data$Zhang$metadata,
 #' )
 #'
@@ -1228,8 +1228,8 @@ plot_boxplot <- function(se,
 #'
 #' # Example of a large cohort with 868 samples and 69 cell types
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #'
 #' plot_heatmap(
@@ -1339,8 +1339,8 @@ plot_heatmap <- function(se,
 #' data(example_data)
 #' # Example of a large cohort with 868 samples and 69 cell types
 #' se <- ecoda(
-#'     data = example_data$GongSharma_full$cell_counts_highresolution,
-#'     metadata = example_data$GongSharma_full$metadata
+#'     data = example_data$Gongsharma_full$cell_counts$authors_HR,
+#'     metadata = example_data$Gongsharma_full$metadata
 #' )
 #' plot_corr(se)
 plot_corr <- function(se,

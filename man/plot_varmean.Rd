@@ -53,8 +53,8 @@ red on the plot.
 \examples{
 data(example_data)
 se <- ecoda(
-    data = example_data$GongSharma_full$cell_counts_highresolution,
-    metadata = example_data$GongSharma_full$metadata
+    data = example_data$Gongsharma_full$cell_counts$authors_HR,
+    metadata = example_data$Gongsharma_full$metadata
 )
 
 # 1. Generate the plot, highlighting HVCs (default)
