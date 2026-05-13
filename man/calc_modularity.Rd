@@ -34,7 +34,7 @@ theoretical maximum modularity for the number of groups to always be between
 library(SummarizedExperiment)
 data(example_data)
 se <- ecoda(
-    data = example_data$GongSharma_full$cell_counts_highresolution,
+    data = example_data$GongSharma_full$cell_counts$authors_HR,
     metadata = example_data$GongSharma_full$metadata
 )
 

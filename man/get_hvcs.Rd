@@ -40,7 +40,7 @@ cell types.
 \examples{
 data(example_data)
 ecoda_object <- ecoda(
-    data = example_data$GongSharma_full$cell_counts_highresolution,
+    data = example_data$GongSharma_full$cell_counts$authors_HR,
     metadata = example_data$GongSharma_full$metadata
 )
 
