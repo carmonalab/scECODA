@@ -1,3 +1,9 @@
+# scECODA 1.1.6
+
+* plot_heatmap: Handled error case if user provided no label_col
+* Improved robustness: & -> && in plot_pca and plot_barplot
+* Updated roxygen documentation format to newest version
+
 # scECODA 1.0.1
 
 * plot_boxplot: Fixed critical bug which broke the function.

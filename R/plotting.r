@@ -240,7 +240,7 @@ plot_pca <- function(se,
         labels <- "none"
     }
 
-    if (!is.infinite(n_hv_feat_show) & all(invisible %in% c("var", "quali"))) {
+    if (!is.infinite(n_hv_feat_show) && all(invisible %in% c("var", "quali"))) {
         invisible <- "quali"
     }
 
@@ -937,7 +937,7 @@ plot_barplot <- function(se,
             fill = "Cell Type"
         )
 
-    if (!is.null(label_col) & plot_by == "sample" & facet_by_label_col) {
+    if (!is.null(label_col) && plot_by == "sample" & facet_by_label_col) {
         p <- p + facet_grid(reformulate(label_col), scales = "free_x")
     }
 
@@ -1260,7 +1260,7 @@ plot_heatmap <- function(se,
                              "freq", "freq_imp", "asin_sqrt",
                              "clr_hvc", "pb" # in metadata
                          ),
-                         label_col,
+                         label_col = NULL,
                          cluster_rows = TRUE,
                          cluster_cols = TRUE,
                          scale = "none",
@@ -1277,9 +1277,13 @@ plot_heatmap <- function(se,
         t() %>%
         as.data.frame()
 
-    metadata <- as.data.frame(colData(se)[, label_col, drop = FALSE])
-    metadata[] <- lapply(metadata, as.factor)
-
+    if (!is.null(label_col)) {
+        metadata <- as.data.frame(colData(se)[, label_col, drop = FALSE])
+        metadata[] <- lapply(metadata, as.factor)
+    } else {
+        metadata <- NA
+    }
+    
     heatmap <- pheatmap(
         df_heatmap,
         annotation_col = metadata,
@@ -1362,7 +1366,7 @@ plot_corr <- function(se,
 
     cor_matrix <- cor(feat_mat)
 
-    corrplot(cor_matrix, order = "hclust", hclust.method = "ward.D2", ...)
+    corrplot(cor_matrix, order = order, hclust.method = hclust.method, ...)
 }
 
 
