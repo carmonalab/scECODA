@@ -1131,7 +1131,7 @@ plot_boxplot <- function(se,
                 dsub_stats <- plot_data %>%
                     group_by(!!sym(x_group_var)) %>%
                     wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
-                    add_xy_position(x = .data$x_group_var)
+                    add_xy_position(x = x_group_var)
     
                 p <- p +
                     # Add p-values using the generated stats table
