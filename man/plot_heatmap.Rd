@@ -9,7 +9,7 @@ plot_heatmap(
   se,
   assay = c("clr", "counts", "counts_imp", "freq", "freq_imp", "asin_sqrt", "clr_hvc",
     "pb"),
-  label_col,
+  label_col = NULL,
   cluster_rows = TRUE,
   cluster_cols = TRUE,
   scale = "none",

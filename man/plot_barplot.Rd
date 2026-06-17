@@ -29,7 +29,7 @@ defined by \code{label_col}.}
 
 \item{custom_sample_order}{Character vector (optional, default: \code{NULL}).
 A vector of sample IDs to enforce a specific order when \code{plot_by =
-  "sample"}. If \code{NULL}, samples are ordered first by \code{label_col}
+"sample"}. If \code{NULL}, samples are ordered first by \code{label_col}
 (if provided) and then naturally.}
 
 \item{title}{Character string (default: \code{""}). The main title for the

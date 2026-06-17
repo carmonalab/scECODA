@@ -95,7 +95,7 @@
 #' @importFrom factoextra fviz_pca
 #' @importFrom dplyr bind_rows
 #' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal
-#'   scale_color_discrete
+#' @importFrom ggplot2 scale_color_discrete
 #' @importFrom S4Vectors metadata
 #'
 #' @export plot_pca
@@ -240,7 +240,7 @@ plot_pca <- function(se,
         labels <- "none"
     }
 
-    if (!is.infinite(n_hv_feat_show) & all(invisible %in% c("var", "quali"))) {
+    if (!is.infinite(n_hv_feat_show) && all(invisible %in% c("var", "quali"))) {
         invisible <- "quali"
     }
 
@@ -806,7 +806,7 @@ create_long_data <- function(se,
 #'
 #' @importFrom dplyr %>% group_by summarise mutate distinct arrange pull
 #' @importFrom ggplot2 ggplot aes geom_col theme_minimal theme element_text labs
-#'   facet_grid
+#' @importFrom ggplot2 facet_grid
 #' @importFrom rlang sym
 #' @importFrom gtools mixedsort
 #' @importFrom stats reformulate
@@ -937,7 +937,7 @@ plot_barplot <- function(se,
             fill = "Cell Type"
         )
 
-    if (!is.null(label_col) & plot_by == "sample" & facet_by_label_col) {
+    if (!is.null(label_col) && plot_by == "sample" & facet_by_label_col) {
         p <- p + facet_grid(reformulate(label_col), scales = "free_x")
     }
 
@@ -982,6 +982,8 @@ plot_barplot <- function(se,
 #'   subset.
 #' @param title Character string (default: \code{""}). The main title for the
 #'   plot.
+#' @param plot_signif Whether to plot significant group difference statistics or
+#'   not.
 #' @param stat_method Character string (default: \code{"wilcox.test"}). The
 #'   statistical method used for comparisons between 2 groups (e.g., "t.test",
 #'   "wilcox.test"). Note: This is overridden by "kruskal.test" for 3+ groups.
@@ -998,7 +1000,7 @@ plot_barplot <- function(se,
 #'   3+ groups).
 #'
 #' @importFrom ggplot2 aes geom_jitter labs theme element_text guides
-#'   position_jitterdodge
+#' @importFrom ggplot2 position_jitterdodge
 #' @importFrom ggpubr ggboxplot stat_compare_means stat_pvalue_manual
 #' @importFrom stringr str_to_title
 #' @importFrom rlang sym
@@ -1032,6 +1034,7 @@ plot_boxplot <- function(se,
                          label_col = NULL,
                          selected_celltypes = NULL,
                          title = "",
+                         plot_signif = TRUE,
                          stat_method = "wilcox.test",
                          paired = FALSE,
                          signif_label = c("p.signif", "p.format")) {
@@ -1091,7 +1094,7 @@ plot_boxplot <- function(se,
         # Calculate the number of boxplots for correct jitter-dodging
         nr_of_boxplots <- length(unique(plot_data[[label_col]]))
         label_col_sym <- sym(label_col)
-
+        
         # Add jittered points with dodging
         p <- p + geom_jitter(
             mapping = aes(color = !!label_col_sym), # Map color to group
@@ -1101,40 +1104,42 @@ plot_boxplot <- function(se,
         )
 
         # Add significance testing
-        if (stat_method == "kruskal.test") {
-            # Kruskal-Wallis: Overall test (no 'group' aesthetic needed)
-            p <- p + stat_compare_means(
-                method = stat_method,
-                label.y.npc = "top", # Place label at the top
-                label.x.npc = "center",
-                label = "p.format" # Show the overall p-value
-            )
-        } else if (nr_of_boxplots == 2) {
-            # Wilcoxon or t.test: Pairwise test (requires 'group' aesthetic)
-            p <- p + stat_compare_means(
-                aes(group = !!label_col_sym),
-                method = stat_method,
-                paired = paired,
-                label = signif_label, # Show significance stars
-                tip.length = 0,
-                hide.ns = TRUE
-            )
-        } else if (nr_of_boxplots > 2) {
-            y_var <- colnames(plot_data)[3] # "value"
-            x_group_var <- colnames(plot_data)[2] # "celltype"
-            fill_compare_var <- colnames(plot_data)[4] # label_col
-
-            dsub_stats <- plot_data %>%
-                group_by(!!sym(x_group_var)) %>%
-                wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
-                add_xy_position(x = .data$x_group_var)
-
-            p <- p +
-                # Add p-values using the generated stats table
-                stat_pvalue_manual(dsub_stats,
-                    label = "p.adj.signif",
-                    tip.length = 0.01
+        if (plot_signif) {
+            if (stat_method == "kruskal.test") {
+                # Kruskal-Wallis: Overall test (no 'group' aesthetic needed)
+                p <- p + stat_compare_means(
+                    method = stat_method,
+                    label.y.npc = "top", # Place label at the top
+                    label.x.npc = "center",
+                    label = "p.format" # Show the overall p-value
                 )
+            } else if (nr_of_boxplots == 2) {
+                # Wilcoxon or t.test: Pairwise test (requires 'group' aesthetic)
+                p <- p + stat_compare_means(
+                    aes(group = !!label_col_sym),
+                    method = stat_method,
+                    paired = paired,
+                    label = signif_label, # Show significance stars
+                    tip.length = 0,
+                    hide.ns = TRUE
+                )
+            } else if (nr_of_boxplots > 2) {
+                y_var <- colnames(plot_data)[3] # "value"
+                x_group_var <- colnames(plot_data)[2] # "celltype"
+                fill_compare_var <- colnames(plot_data)[4] # label_col
+    
+                dsub_stats <- plot_data %>%
+                    group_by(!!sym(x_group_var)) %>%
+                    wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
+                    add_xy_position(x = x_group_var)
+    
+                p <- p +
+                    # Add p-values using the generated stats table
+                    stat_pvalue_manual(dsub_stats,
+                        label = "p.adj.signif",
+                        tip.length = 0.01
+                    )
+            }
         }
 
         # Add legend title
@@ -1255,7 +1260,7 @@ plot_heatmap <- function(se,
                              "freq", "freq_imp", "asin_sqrt",
                              "clr_hvc", "pb" # in metadata
                          ),
-                         label_col,
+                         label_col = NULL,
                          cluster_rows = TRUE,
                          cluster_cols = TRUE,
                          scale = "none",
@@ -1272,9 +1277,13 @@ plot_heatmap <- function(se,
         t() %>%
         as.data.frame()
 
-    metadata <- as.data.frame(colData(se)[, label_col, drop = FALSE])
-    metadata[] <- lapply(metadata, as.factor)
-
+    if (!is.null(label_col)) {
+        metadata <- as.data.frame(colData(se)[, label_col, drop = FALSE])
+        metadata[] <- lapply(metadata, as.factor)
+    } else {
+        metadata <- NA
+    }
+    
     heatmap <- pheatmap(
         df_heatmap,
         annotation_col = metadata,
@@ -1357,7 +1366,7 @@ plot_corr <- function(se,
 
     cor_matrix <- cor(feat_mat)
 
-    corrplot(cor_matrix, order = "hclust", hclust.method = "ward.D2", ...)
+    corrplot(cor_matrix, order = order, hclust.method = hclust.method, ...)
 }
 
 
