@@ -95,7 +95,7 @@
 #' @importFrom factoextra fviz_pca
 #' @importFrom dplyr bind_rows
 #' @importFrom ggplot2 ggtitle scale_shape_manual coord_equal
-#'   scale_color_discrete
+#' @importFrom ggplot2 scale_color_discrete
 #' @importFrom S4Vectors metadata
 #'
 #' @export plot_pca
@@ -806,7 +806,7 @@ create_long_data <- function(se,
 #'
 #' @importFrom dplyr %>% group_by summarise mutate distinct arrange pull
 #' @importFrom ggplot2 ggplot aes geom_col theme_minimal theme element_text labs
-#'   facet_grid
+#' @importFrom ggplot2 facet_grid
 #' @importFrom rlang sym
 #' @importFrom gtools mixedsort
 #' @importFrom stats reformulate
@@ -1000,7 +1000,7 @@ plot_barplot <- function(se,
 #'   3+ groups).
 #'
 #' @importFrom ggplot2 aes geom_jitter labs theme element_text guides
-#'   position_jitterdodge facet_wrap element_blank
+#' @importFrom ggplot2 position_jitterdodge
 #' @importFrom ggpubr ggboxplot stat_compare_means stat_pvalue_manual
 #' @importFrom stringr str_to_title
 #' @importFrom rlang sym

@@ -42,7 +42,6 @@ BugReports: https://github.com/carmonalab/scECODA/issues
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends: R (>= 4.6.0)
 VignetteBuilder: knitr
 Suggests: 
@@ -78,3 +77,4 @@ Imports:
     SummarizedExperiment (>= 1.34.0),
     tidyr,
     vegan
+Config/roxygen2/version: 8.0.0
