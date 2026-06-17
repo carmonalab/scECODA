@@ -21,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Christian Halter \email{scecoda.dev@gmail.com} (\href{https://orcid.org/0009-0009-5479-2246}{ORCID})
   \item Massimo Andreatta \email{Massimo.Andreatta@unige.ch} (\href{https://orcid.org/0000-0002-8036-2647}{ORCID})
   \item Santiago Carmona \email{Santiago.Carmona@unige.ch} (\href{https://orcid.org/0000-0002-2495-0671}{ORCID})
 }

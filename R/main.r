@@ -492,7 +492,7 @@ get_celltype_counts <- function(cell_data_df,
 #'                 row names.
 #'         }
 #' @importFrom dplyr group_by summarise across everything n_distinct ungroup
-#'   select where all_of distinct %>%
+#' @importFrom dplyr select where all_of distinct %>%
 #' @importFrom rlang sym
 #' @export get_sample_metadata
 #' @examples
@@ -831,7 +831,7 @@ get_hvcs <- function(df_var,
 #' @return A \code{ggplot} object representing the mean-variance plot.
 #'
 #' @importFrom ggplot2 ggplot aes geom_point geom_smooth labs theme_classic xlab
-#'   ylab scale_color_manual theme
+#' @importFrom ggplot2 ylab scale_color_manual theme
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom dplyr mutate if_else filter
 #' @importFrom S4Vectors metadata

@@ -11,6 +11,7 @@ plot_boxplot(
   label_col = NULL,
   selected_celltypes = NULL,
   title = "",
+  plot_signif = TRUE,
   stat_method = "wilcox.test",
   paired = FALSE,
   signif_label = c("p.signif", "p.format")
@@ -37,6 +38,9 @@ subset.}
 
 \item{title}{Character string (default: \code{""}). The main title for the
 plot.}
+
+\item{plot_signif}{Whether to plot significant group difference statistics or
+not.}
 
 \item{stat_method}{Character string (default: \code{"wilcox.test"}). The
 statistical method used for comparisons between 2 groups (e.g., "t.test",

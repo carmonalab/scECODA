@@ -1,4 +1,12 @@
-# scECODA 1.1.5
+# scECODA 1.0.1
 
-* Fixed bug in plot_pca where number of samples were displayed instead of number of cell types/genes
-* Added HiTME annotations to example_data
+* plot_boxplot: Fixed critical bug which broke the function.
+* plot_boxplot: added parameter plot_signif to prevent clutter if many cell types and/or groups are plotted
+
+# scECODA 1.0.0
+
+* Initial release
+
+# scECODA 0.99.7
+
+* Adopted SummarizedExperiment data structure
