@@ -14,7 +14,8 @@ plot_boxplot(
   plot_signif = TRUE,
   stat_method = "wilcox.test",
   paired = FALSE,
-  signif_label = c("p.signif", "p.format")
+  signif_label = c("p.signif", "p.format"),
+  wrap_by_celltype = FALSE
 )
 }
 \arguments{
@@ -53,6 +54,9 @@ applicable for 2-group comparisons.}
 \item{signif_label}{Character string (default: \code{"p.signif"}). Controls
 how p-values are displayed for 2-group comparisons (e.g., "p.signif" for
 stars, "p.format" for numeric p-value).}
+
+\item{wrap_by_celltype}{Logical (default: FALSE). If TRUE, uses facet_wrap
+to plot each cell type in an individual panel.}
 }
 \value{
 A \code{ggplot} object (enhanced by \code{ggpubr}) representing the
