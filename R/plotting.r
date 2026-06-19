@@ -993,6 +993,8 @@ plot_barplot <- function(se,
 #' @param signif_label Character string (default: \code{"p.signif"}). Controls
 #'   how p-values are displayed for 2-group comparisons (e.g., "p.signif" for
 #'   stars, "p.format" for numeric p-value).
+#' @param wrap_by_celltype Logical (default: FALSE). If TRUE, uses facet_wrap 
+#'   to plot each cell type in an individual panel.
 #'
 #' @return A \code{ggplot} object (enhanced by \code{ggpubr}) representing the
 #'   CLR abundance boxplot, including jittered data points and dynamic
@@ -1000,7 +1002,8 @@ plot_barplot <- function(se,
 #'   3+ groups).
 #'
 #' @importFrom ggplot2 aes geom_jitter labs theme element_text guides
-#' @importFrom ggplot2 position_jitterdodge
+#' @importFrom ggplot2 position_jitterdodge facet_wrap scale_y_continuous
+#' @importFrom ggplot2 expansion
 #' @importFrom ggpubr ggboxplot stat_compare_means stat_pvalue_manual
 #' @importFrom stringr str_to_title
 #' @importFrom rlang sym
@@ -1037,123 +1040,166 @@ plot_boxplot <- function(se,
                          plot_signif = TRUE,
                          stat_method = "wilcox.test",
                          paired = FALSE,
-                         signif_label = c("p.signif", "p.format")) {
+                         signif_label = c("p.signif", "p.format"),
+                         wrap_by_celltype = FALSE) {
     assay <- match.arg(assay)
     signif_label <- match.arg(signif_label)
-
+    
+    if (!is.logical(wrap_by_celltype) || length(wrap_by_celltype) != 1 || is.na(wrap_by_celltype)) {
+        stop("Argument 'wrap_by_celltype' must be either TRUE or FALSE.")
+    }
+    if (is.null(label_col)) {
+        wrap_by_celltype <- FALSE
+    }
+    
     plot_data <- create_long_data(
         se,
         assay = assay,
         label_col = label_col
     )
-
+    
+    # --- Safety Checks & Data Filtering ---
     if (!is.null(selected_celltypes)) {
         if (!all(selected_celltypes %in% unique(plot_data$celltype))) {
             stop(
-                "Not all selected_celltypes found in assay(se", assay, "). "
+                "Not all selected_celltypes found in assay(se, ", assay, ")."
             )
         }
-
+        
         plot_data <- plot_data[plot_data$celltype %in% selected_celltypes, ]
     }
-
+    
     # Ensure celltype is a factor for plotting
     plot_data$celltype <- factor(plot_data$celltype)
-
-    # --- Setup for Plotting ---
-
-    # Determine color mapping for ggboxplot
+    
+    if (!is.null(label_col)) {
+        plot_data[[label_col]] <- factor(plot_data[[label_col]], exclude = NULL)
+    }
+    
+    # If wrapping by celltype AND a label_col is provided, put the groups on the X axis.
+    # Otherwise, default to celltype on the X axis.
+    x_var <- if (wrap_by_celltype && !is.null(label_col)) label_col else "celltype"
     box_color_map <- if (!is.null(label_col)) label_col else "black"
-
-    # Generate the base boxplot
+    
+    # Base Boxplot
     p <- ggboxplot(plot_data,
-        x = "celltype",
-        y = "value",
-        xlab = "",
-        ylab = "Abundance",
-        outlier.shape = NA,
-        color = box_color_map # Color by group variable or "black"
+                   x = x_var,
+                   y = "value",
+                   xlab = "",
+                   ylab = "Abundance",
+                   outlier.shape = NA,
+                   color = box_color_map
     )
-
+    
     # --- Add Jittered Points and Significance ---
-
+    
     if (is.null(label_col)) {
         # SCENARIO 1: No grouping variable provided
-        # (Single boxplot per cell type)
-
-        # Add simple jitter (no dodging)
-        p <- p + geom_jitter(
-            width = 0.2,
-            size = 1,
-            alpha = 0.6
-        ) +
+        p <- p + geom_jitter(width = 0.2, size = 1, alpha = 0.6) +
             guides(color = "none")
+        
     } else {
-        # SCENARIO 2: Grouping variable is provided (Comparison between groups)
-
-        # Calculate the number of boxplots for correct jitter-dodging
+        # SCENARIO 2: Grouping variable is provided
         nr_of_boxplots <- length(unique(plot_data[[label_col]]))
         label_col_sym <- sym(label_col)
         
-        # Add jittered points with dodging
-        p <- p + geom_jitter(
-            mapping = aes(color = !!label_col_sym), # Map color to group
-            position = position_jitterdodge(jitter.width = 1 / nr_of_boxplots),
-            size = 1,
-            alpha = 0.6
-        )
-
+        if (wrap_by_celltype) {
+            # When faceted, groups are on the X-axis. No need to dodge.
+            p <- p + geom_jitter(
+                mapping = aes(color = !!label_col_sym),
+                width = 0.2,
+                size = 1,
+                alpha = 0.6
+            )
+        } else {
+            # When not faceted, groups are clustered on "celltype" tick. Dodge needed.
+            p <- p + geom_jitter(
+                mapping = aes(color = !!label_col_sym),
+                position = position_jitterdodge(jitter.width = 1 / nr_of_boxplots),
+                size = 1,
+                alpha = 0.6
+            )
+        }
+        
         # Add significance testing
         if (plot_signif) {
             if (stat_method == "kruskal.test") {
                 # Kruskal-Wallis: Overall test (no 'group' aesthetic needed)
                 p <- p + stat_compare_means(
                     method = stat_method,
-                    label.y.npc = "top", # Place label at the top
+                    label.y.npc = "top",
                     label.x.npc = "center",
-                    label = "p.format" # Show the overall p-value
+                    label = "p.format"
                 )
             } else if (nr_of_boxplots == 2) {
-                # Wilcoxon or t.test: Pairwise test (requires 'group' aesthetic)
-                p <- p + stat_compare_means(
-                    aes(group = !!label_col_sym),
-                    method = stat_method,
-                    paired = paired,
-                    label = signif_label, # Show significance stars
-                    tip.length = 0,
-                    hide.ns = TRUE
-                )
+                
+                if (wrap_by_celltype) {
+                    p <- p + stat_compare_means(
+                        method = stat_method,
+                        paired = paired,
+                        label = signif_label,
+                        tip.length = 0,
+                        hide.ns = TRUE,
+                        label.x = 1.5
+                    )
+                } else {
+                    p <- p + stat_compare_means(
+                        aes(group = !!label_col_sym),
+                        method = stat_method,
+                        paired = paired,
+                        label = signif_label,
+                        tip.length = 0,
+                        hide.ns = TRUE
+                    )
+                }
+                
             } else if (nr_of_boxplots > 2) {
-                y_var <- colnames(plot_data)[3] # "value"
-                x_group_var <- colnames(plot_data)[2] # "celltype"
-                fill_compare_var <- colnames(plot_data)[4] # label_col
-    
+                y_var <- "value"
+                fill_compare_var <- label_col
+                
+                calc_x_var <- if (wrap_by_celltype) fill_compare_var else "celltype"
+                
                 dsub_stats <- plot_data %>%
-                    group_by(!!sym(x_group_var)) %>%
+                    group_by(celltype) %>%
                     wilcox_test(as.formula(paste(y_var, "~", fill_compare_var))) %>%
-                    add_xy_position(x = x_group_var)
-    
+                    add_xy_position(
+                        x = calc_x_var,
+                        dodge = if (wrap_by_celltype) 0 else 0.8
+                    )
+                
                 p <- p +
-                    # Add p-values using the generated stats table
-                    stat_pvalue_manual(dsub_stats,
+                    stat_pvalue_manual(
+                        dsub_stats,
                         label = "p.adj.signif",
-                        tip.length = 0.01
+                        tip.length = 0
                     )
             }
         }
-
+        
         # Add legend title
         p <- p + labs(color = str_to_title(label_col))
     }
-
+    
+    # --- Add Faceting ---
+    if (wrap_by_celltype) {
+        p <- p + facet_wrap(~celltype, scales = "free_y") +
+            scale_y_continuous(expand = expansion(mult = c(0.05, 0.20)))
+    }
+    
+    
     # --- Final Theme and Labels ---
     p <- p +
         theme(
-            axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, ),
+            # Adjust angle and justification depending on facet state to look clean
+            axis.text.x = element_text(
+                angle = if (wrap_by_celltype) 45 else 90, 
+                hjust = 1, 
+                vjust = if (wrap_by_celltype) 1 else 0.5
+            ),
             legend.title = element_text(face = "bold")
         ) +
         labs(title = title)
-
+    
     return(p)
 }
 

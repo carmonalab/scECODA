@@ -299,6 +299,19 @@ plot_boxplot(
 )
 ```
 
+If there are many cell types it might be useful to separate them into separate 
+panels using `wrap_by_celltype = TRUE`. It uses `facet_wrap` under the hood.
+
+```{r Grouped box plot faceted, fig.height=8, fig.width=8}
+plot_boxplot(
+  se,
+  label_col = "Tissue",
+  title = "CLR Abundance by Cell Type (with Wilcoxon Test)",
+  wrap_by_celltype = TRUE
+)
+```
+
+
 This can also be plotted as stacked bar plots but it is a bit harder to read.
 
 ```{r Bar plot by group}
